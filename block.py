@@ -13,11 +13,10 @@ class block:
             self.color=(255,255,255)
         self.time=0    
     
-    def update(self,flag,direction):
+    def update(self,flag):
         if flag:
             self.map_pos[1]+=1
-        self.move(direction)
-        
+
     def move(self,direction):
         self.map_pos+=direction
         
