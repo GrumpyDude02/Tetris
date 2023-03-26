@@ -3,14 +3,13 @@ import random,pygame
 from game_parameters import *
 
 class Tetraminos:
-    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int)->None:
+    def __init__(self,color:pygame.color,pivot_pos:pygame.Vector2,cooldown:int)->None:
         self.pivot=pivot_pos
-        self.blocks=[block((pos+self.pivot),cell_size,False) for pos in random.choice(list(shapes.values()))]
+        self.blocks=[block((pos+self.pivot),cell_size,color) for pos in shapes["S"]]#random.choice(list(shapes.values()))]
         self.update_time=cooldown
         self.direction_update=0
         self.last_update_time=0
         self.direction=v(0,0)
-
 
     def update(self,current_time: int ,event:pygame.Event)->None:
         update=False
@@ -24,15 +23,16 @@ class Tetraminos:
             if event.key==pygame.K_UP:
                 self.rotate()
         keys=pygame.key.get_pressed()
-        if current_time-self.direction_update>FPS:
+        if current_time-self.direction_update>FPS+15:
+            if keys[pygame.K_DOWN]:
+                self.direction_update=current_time
+                self.move(moves["down"])
             if keys[pygame.K_RIGHT]:
                 self.direction_update=current_time
                 self.move(moves["right"])
             elif keys[pygame.K_LEFT]:
                 self.direction_update=current_time
                 self.move(moves["left"])
-
-
             
     def move(self,direction:pygame.Vector2)->None:
         self.pivot+=direction
