@@ -3,10 +3,10 @@ import random,pygame
 from game_parameters import *
 
 class Tetraminos:
-    def __init__(self,pivot_pos:pygame.Vector2)->None:
+    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int)->None:
         self.pivot=pivot_pos
-        self.blocks=[block((pos+self.pivot),cell_size,False) for pos in shapes["I"]]
-        self.update_time=1000
+        self.blocks=[block((pos+self.pivot),cell_size,False) for pos in random.choice(list(shapes.values()))]
+        self.update_time=cooldown
         self.direction_update=0
         self.last_update_time=0
         self.direction=v(0,0)
@@ -24,20 +24,24 @@ class Tetraminos:
             if event.key==pygame.K_UP:
                 self.rotate()
         keys=pygame.key.get_pressed()
-        if keys[pygame.K_RIGHT] and current_time-self.u>75:
-            self.direction_update=current_time
-            self.move(moves["right"])
-        if keys[pygame.K_LEFT] and current_time-self.u>75:
-            self.direction_update=current_time
-            self.move(moves["left"])
+        if current_time-self.direction_update>FPS:
+            if keys[pygame.K_RIGHT]:
+                self.direction_update=current_time
+                self.move(moves["right"])
+            elif keys[pygame.K_LEFT]:
+                self.direction_update=current_time
+                self.move(moves["left"])
 
 
             
-    def move(self,direction:pygame.Vector2):
+    def move(self,direction:pygame.Vector2)->None:
         self.pivot+=direction
         for block in self.blocks:
             block.move(direction) 
-        
+
+    def collide(self)->bool:
+        pass
+
     def draw(self,window:pygame.Surface):
         for cube in self.blocks:
             cube.draw(window)

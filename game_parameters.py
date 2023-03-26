@@ -4,6 +4,9 @@ from pygame.math import Vector2 as v
 FPS = 60
 cell_size=20
 cell_number=30
+playable_num=10
+WIDTH=cell_number*cell_size
+HEIGHT=cell_number*cell_size
 t=(v(-1,0),v(0,0),v(0,-1),v(1,0))
 z=[v(-1,0),v(0,0),v(1,0),v(1,1)]
 shapes={"T":[v(-1,0),v(0,0),v(0,-1),v(1,0)],

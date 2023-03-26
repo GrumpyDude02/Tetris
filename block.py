@@ -23,3 +23,8 @@ class block:
     def draw(self,window):
         self.r_pos=v(self.map_pos[0]*cell_size,self.map_pos[1]*cell_size)
         pygame.draw.rect(window,(0,0,0),pygame.Rect(self.r_pos[0],self.r_pos[1],cell_size,cell_size))
+
+    def collide(self)->bool:
+        if self.map_pos.x>playable_num or self.map_pos.x<0 :
+            return True
+        return False
