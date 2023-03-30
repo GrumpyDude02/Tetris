@@ -21,7 +21,8 @@ while (1):
         sys.exit()
     draw_grid(screen,grid,(0,0,0))
     c.draw(screen)
-    c.update(pygame.time.get_ticks(),event)
+    if not c.isSet:
+        c.update(pygame.time.get_ticks(),event)
     clock.tick(FPS)
     pygame.display.flip()
 

@@ -2,7 +2,7 @@ import math,pygame
 from pygame.math import Vector2 as v
 
 FPS = 60
-cell_size=40
+cell_size=20
 v_cell_number=24
 h_cell_number=20
 playable_num=10
