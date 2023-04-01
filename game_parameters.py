@@ -13,7 +13,7 @@ shapes={"T":[v(-1,0),v(0,0),v(0,-1),v(1,0)],
         "Z":[v(-1,-1),v(0,-1),v(0,0),v(1,0)],
         "S":[v(1,-1),v(0,-1),v(0,0),v(-1,0)],
         "L":[v(0,-2),v(0,-1),v(0,0),v(1,0)],
-        "I":[v(-2,0),v(-1,0),v(0,0),v(1,0)]
+        "I":[v(-1,0),v(0,0),v(1,0),v(2,0)]
         }
 
 moves={"left":v(-1,0),"right":v(1,0),"down":v(0,1)}
@@ -23,7 +23,7 @@ sin_n90=math.sin(math.radians(-90))
 cos_n90=math.cos(math.radians(-90))
 
 grid=[]
-placement=[[0 for i in range(playable_num)]for j in range(v_cell_number)]
+placed_blocks=[[None for i in range(playable_num)]for j in range(v_cell_number)]
 
 for i in range(v_cell_number):
     for j in range(playable_num):
