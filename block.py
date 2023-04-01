@@ -20,11 +20,7 @@ class block:
         self.r_pos=v(self.map_pos[0]*cell_size,self.map_pos[1]*cell_size)
         pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],cell_size,cell_size))
 
-    def collide(self,dir:pygame.Vector2)->list:
-        if (self.map_pos.x+dir.x>=playable_num or self.map_pos.x+dir.x<=-1) and self.map_pos.y+dir.y>=v_cell_number:
-            return (True,True)
-        elif self.map_pos.x+dir.x>=playable_num or self.map_pos.x+dir.x<=-1:
-            return (True,False)
-        elif self.map_pos.y+dir.y>=v_cell_number:
-            return (False,True)
-        return (False,False)
+    def collide(self,pos:pygame.Vector2)->bool:
+        if (pos.x<playable_num and pos.x>=0) and pos.y<v_cell_number:
+            return False
+        return True

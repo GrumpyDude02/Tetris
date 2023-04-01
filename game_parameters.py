@@ -23,11 +23,13 @@ sin_n90=math.sin(math.radians(-90))
 cos_n90=math.cos(math.radians(-90))
 
 grid=[]
+placement=[[0 for i in range(playable_num)]for j in range(v_cell_number)]
+
 for i in range(v_cell_number):
-                for j in range(playable_num):
-                        grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
+    for j in range(playable_num):
+        grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
 
 
 def draw_grid(window:pygame.Surface,grid,color)->None:
-        for rect in grid:
-                pygame.draw.rect(window,color,rect)
+    for rect in grid:
+        pygame.draw.rect(window,color,rect)

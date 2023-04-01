@@ -1,7 +1,7 @@
 import pygame,sys
 from pygame.math import Vector2 as v
 from game_parameters import *
-from Tetraminos import *
+from Tetrominos import *
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -11,7 +11,7 @@ v1=v(0,1)
 v1=v1.rotate(90)
 direction=v(0,0)
 rotate=False
-c=Tetraminos((255, 165, 0),[4,0],1000)
+c=Tetrominos((255, 165, 0),[4,0],1000)
 pygame.key.set_repeat(0,0)
 
 while (1):
