@@ -19,4 +19,6 @@ def check_line(placed_blocks_ar:list[list[block.block]],playable_field:int)->Non
                 placed_blocks_ar[row][int(item.map_pos[0])] = None
             shift_blocks_down(placed_blocks_ar,playable_field,row)
             
-            
+    
+def mod(m,n):
+    return (m % n + n) % n        

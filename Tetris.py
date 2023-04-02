@@ -17,14 +17,15 @@ tetrominos=[Tetrominos((255, 165, 0),[5,-1],500)]
 pygame.key.set_repeat(0,0)
                            
 #main loop
+#fix spawing and rotation
 
 while (1):
     destroy=[]
-    screen.fill((255, 255, 255))
+    screen.fill((0, 0, 0))
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         sys.exit()
-    draw_grid(screen,grid,(0,0,0))
+    draw_grid(screen,grid,(255,255,255))
     if all(tetromino.isSet for tetromino in tetrominos):
         tetrominos.append(Tetrominos((255, 165, 0),[5,0],500))
     for tetromino in tetrominos:
@@ -33,7 +34,6 @@ while (1):
         if tetromino.destroy:
             destroy.append(tetromino)
     check_line(placed_blocks,playable_num)
-    print(len(tetrominos))
     clock.tick(FPS)
     if destroy:
         for item in destroy:

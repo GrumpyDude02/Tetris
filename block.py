@@ -21,7 +21,13 @@ class block:
         self.r_pos=v(self.map_pos[0]*cell_size,self.map_pos[1]*cell_size)
         pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],cell_size-1,cell_size-1))
 
+    def overlap(self,pos):
+        return bool(placed_blocks[int(pos.y)][int(pos.x)])
+
+    def in_bounds(self,pos):
+        return (0<=pos.x<playable_num) and pos.y<v_cell_number
+    
     def collide(self,pos:pygame.Vector2)->bool:
-        if (pos.x<playable_num and pos.x>=0) and pos.y<v_cell_number and not placed_blocks[int(pos.y)][int(pos.x)]:
+        if self.in_bounds(pos) and not self.overlap(pos):
             return False
         return True
