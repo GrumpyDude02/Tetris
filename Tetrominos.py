@@ -120,3 +120,10 @@ class Tetrominos:
             self.pivot[1]-=shift_y
             for block in self.blocks:
                 block.map_pos[1]-=shift_y
+        
+        
+    def change_pos(self,new_pos:pygame.Vector2)->None:
+        for block in self.blocks:
+            block.map_pos-=self.pivot
+            block.map_pos+=new_pos
+        self.pivot=new_pos
