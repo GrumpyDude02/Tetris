@@ -1,15 +1,17 @@
 from block import block
 import random,pygame
+from copy import deepcopy
 from game_parameters import *
 from functions import mod
 
 class Tetrominos:
-    def __init__(self,color:pygame.color,pivot_pos:pygame.Vector2,cooldown:int)->None:
+    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int,shape : str)->None:
         self.isSet=False
         self.pivot=pivot_pos
-        self.shape="O"#random.choice(list(shapes.keys()))
+        self.shape=shape
+        self.color=shapes[self.shape][1]
         self.rotation_index=0
-        self.blocks=[block((pos+self.pivot),cell_size,color,self) for pos in shapes[self.shape]]
+        self.blocks=[block((pos+self.pivot),cell_size,self.color,self) for pos in shapes[self.shape][0]]
         self.update_time=cooldown
         self.destroy=False
         self.direction_update=0
@@ -30,45 +32,66 @@ class Tetrominos:
                 self.rotate(True)
             elif event.key==pygame.K_a:
                 self.rotate(False)
-            if keys[pygame.K_DOWN]:
+            elif event.key==pygame.K_DOWN:
                 self.direction_update=current_time
                 self.move(moves["down"])
-            elif keys[pygame.K_LEFT]:
+            elif event.key==pygame.K_LEFT:
                 self.direction_update=current_time
                 self.move(moves["left"])
-            elif keys[pygame.K_RIGHT]:
+            elif event.key==pygame.K_RIGHT:
                 self.direction_update=current_time
                 self.move(moves["right"])
-     
+            elif event.key==pygame.K_SPACE:
+                self.move(moves["snap"])    
            
     def move(self,direction:pygame.Vector2)->None:
-        if not self.collide(direction):
+        if direction==moves["snap"]:
+            translate=self.project()
+            for block in self.blocks:
+                block.map_pos[1]+=translate-1
+                placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])]=block
+            self.isSet=True
+        elif not self.collide(direction):
             for block in self.blocks:
                 block.move(direction)
             self.pivot+=direction     
         elif direction==moves["down"]:
-            self.isSet=True
             for block in self.blocks:
                 placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])]=block
-
-
+            self.isSet=True
+          
+    def project(self)->int:
+        translate=0
+        while(translate<v_cell_number):
+            if any(int(block.map_pos[1])+translate >= v_cell_number or placed_blocks[int(block.map_pos[1])+translate][int(block.map_pos[0])] for block in self.blocks):
+                break
+            translate+=1
+        return translate
+           
     def collide(self,dir:pygame.Vector2)->bool:
         for block in self.blocks:
             if block.collide(block.map_pos+dir):
                 return True
         return False            
     
-    def overlap(self)->bool:
+    def overlap(self,dir)->bool:
         for block in self.blocks:
-            if block.overlap():
+            if block.overlap(block.map_pos+dir):
                 return True
             return False
     
-    def draw(self,window:pygame.Surface)->None:
-        for cube in self.blocks:
-            cube.draw(window)
-     
-         
+    def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface,hold:bool)->None:
+        for block in self.blocks:
+            block.draw(window)
+        if hold:
+            return
+        if hold or not self.isSet:
+            shadow=deepcopy(self)
+            translate=self.project()
+            for block in shadow.blocks:
+                block.map_pos[1]+=translate-1
+                block.draw(shadow_surf)
+        
     def rotate(self,clockwise : bool)->None:
         if self.shape=="O":
             return

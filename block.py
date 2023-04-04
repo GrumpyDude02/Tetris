@@ -18,10 +18,13 @@ class block:
         self.map_pos+=direction
        
     def draw(self,window:pygame.Surface)->None:
-        self.r_pos=v(self.map_pos[0]*cell_size,self.map_pos[1]*cell_size)
+        self.r_pos=v((self.map_pos[0])*cell_size,(self.map_pos[1]-shift)*cell_size)
         pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],cell_size-1,cell_size-1))
 
+    
     def overlap(self,pos):
+        if int(pos.y<=1):
+            return False
         return bool(placed_blocks[int(pos.y)][int(pos.x)])
 
     def in_bounds(self,pos):
