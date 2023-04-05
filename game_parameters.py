@@ -31,7 +31,6 @@ for i in range(0,v_cell_number-shift):
     for j in range(playable_num):
         grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
 
-
 def draw_grid(window:pygame.Surface,grid,color)->None:
     for rect in grid:
         pygame.draw.rect(window,color,rect)

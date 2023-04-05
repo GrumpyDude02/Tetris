@@ -7,6 +7,9 @@ from copy import deepcopy
 pygame.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT),pygame.RESIZABLE|pygame.DOUBLEBUF)
 clock = pygame.time.Clock()
+font=pygame.font.Font("kimberley bl.otf",30)
+NEXT=font.render("NEXT :",True,(255,255,255))
+HOLD=font.render("HOLD :",True,(255,255,255))
 
 #-----------initial setup--------------
 tetrominos=[]
@@ -73,7 +76,7 @@ while (1):
         next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape)
         append=True
         
-    draw_grid(screen,grid,(255,255,255))
+    draw_grid(screen,grid,(96,96,96))
     current_piece.draw(screen,shadow_surface,False)
     current_piece.update(pygame.time.get_ticks(),event)
     
@@ -87,8 +90,10 @@ while (1):
     
     #bliting elements surfaces on the main screen
     screen.blit(display_surface,(13*cell_size,5*cell_size))
-    screen.blit(hold_surface,(13*cell_size,10*cell_size))
+    screen.blit(hold_surface,(13*cell_size,15*cell_size))
     screen.blit(shadow_surface,(0,0))
+    screen.blit(NEXT,(13*cell_size,3*cell_size))
+    screen.blit(HOLD,(13*cell_size,13*cell_size))
     clock.tick(FPS)
     
     #removing tetrominos that have no blocks left 
