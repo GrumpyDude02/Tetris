@@ -9,7 +9,6 @@ class block:
         self.r_pos=self.map_pos*cell_size
         self.color=color
         self.tetromino=tetromino
-        self.time=0    
     
     def update(self)->None:
         self.map_pos[1]+=1
@@ -19,7 +18,7 @@ class block:
        
     def draw(self,window:pygame.Surface)->None:
         self.r_pos=v((self.map_pos[0])*cell_size,(self.map_pos[1]-shift)*cell_size)
-        pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],cell_size-1,cell_size-1))
+        pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],self.width,self.width))
 
     
     def overlap(self,pos):

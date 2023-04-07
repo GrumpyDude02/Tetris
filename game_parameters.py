@@ -19,11 +19,22 @@ shapes={"T":[[v(-1,0),v(0,0),v(0,-1),v(1,0)],(255, 68, 255)],
         "O":[[v(0,-1),v(0,0),v(1,0),v(1,-1)],(255, 255, 0)]
         }
 
+offsets_JLZST=((v(0,0),v(0,0),v(0,0),v(0,0),v(0,0)),
+            (v(0,0),v(1,0),v(1,-1),v(0,2),v(1,2)),
+            (v(0,0),v(0,0),v(0,0),v(0,0),v(0,0)),
+            (v(0,0),v(-1,0),v(-1,-1),v(0,2),v(-1,2)))
+
+offsets_I=[(v(0,0),v(-1,0),v(2,0),v(-1,0),v(2,0)),
+            (v(-1,0),v(0,0),v(0,0),v(0,1),v(0,-2)),
+            (v(-1,1),v(1,1),v(-2,1),v(1,0),v(-2,0)),
+            (v(0,1),v(0,1),v(0,1),v(0,1),v(0,2))]
+
 moves={"left":v(-1,0),"right":v(1,0),"down":v(0,1),"snap":v(0,-100)}
 sin_90=math.sin(math.radians(90))
 cos_90=math.cos(math.radians(90))
 sin_n90=math.sin(math.radians(-90))
 cos_n90=math.cos(math.radians(-90))
+
 
 grid=[]
 placed_blocks=[[None for i in range(playable_num)]for j in range(v_cell_number)]

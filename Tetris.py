@@ -18,9 +18,10 @@ hold_surface=pygame.Surface((5*cell_size,4*cell_size))
 shadow_surface=pygame.Surface((WIDTH,HEIGHT),pygame.HWSURFACE)
 pygame.key.set_repeat(0,0)
 append=True
-current_piece=Tetrominos([5,0],500,random.choice(list(shapes.keys())))
+current_piece=Tetrominos([5,0],500,random.choice(list(shapes.keys())),cell_size-1)
 next_tetromino_shape=random.choice(list(shapes.keys()))
-next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape)
+prev=next_tetromino_shape
+next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape,cell_size-1)
 held_piece=None
 
 
@@ -71,12 +72,16 @@ while (1):
     if current_piece.isSet:
         if append:
             tetrominos.append(current_piece)
-        current_piece=Tetrominos([5,0],500,next_tetromino_shape)
+        current_piece=Tetrominos([5,0],500,next_tetromino_shape,cell_size-1)
         next_tetromino_shape=random.choice(list(shapes.keys()))
-        next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape)
+        if next_tetromino_shape==prev:
+            next_tetromino_shape=exclude(shapes,prev)
+        prev=next_tetromino_shape
+        next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape,cell_size-1)
         append=True
         
     draw_grid(screen,grid,(96,96,96))
+    #pygame.draw.rect(screen,(96,96,96),pygame.Rect(0,0,10*cell_size,24*cell_size))
     current_piece.draw(screen,shadow_surface,False)
     current_piece.update(pygame.time.get_ticks(),event)
     

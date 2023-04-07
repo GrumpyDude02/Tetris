@@ -1,22 +1,27 @@
 from block import block
-import random,pygame
+import pygame
 from copy import deepcopy
 from game_parameters import *
 from functions import mod
 
 class Tetrominos:
-    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int,shape : str)->None:
+    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int,shape:str,block_width)->None:
         self.isSet=False
         self.pivot=pivot_pos
         self.shape=shape
         self.color=shapes[self.shape][1]
         self.rotation_index=0
-        self.blocks=[block((pos+self.pivot),cell_size,self.color,self) for pos in shapes[self.shape][0]]
+        self.blocks=[block((pos+self.pivot),block_width,self.color,self) for pos in shapes[self.shape][0]]
         self.update_time=cooldown
         self.destroy=False
         self.direction_update=0
         self.last_update_time=0
         self.direction=v(0,0)
+        self.offset_list=None
+        if self.shape!='I' and self.shape!='O':
+            self.offset_list=offsets_JLZST
+        elif self.shape=='I':
+            self.offset_list=offsets_I
 
     def update(self,current_time : int,event : pygame.Event)->None:
         if not self.blocks:
@@ -28,10 +33,10 @@ class Tetrominos:
             self.move(moves["down"])
         keys=pygame.key.get_pressed()
         if event.type==pygame.KEYDOWN:
-            if event.key==pygame.K_z:
-                self.rotate(True)
-            elif event.key==pygame.K_a:
-                self.rotate(False)
+            if event.key==pygame.K_UP:
+                self.SRS_Rotate(True)
+            elif event.key==pygame.K_z:
+                self.SRS_Rotate(False)
             elif event.key==pygame.K_DOWN:
                 self.direction_update=current_time
                 self.move(moves["down"])
@@ -74,11 +79,6 @@ class Tetrominos:
                 return True
         return False            
     
-    def overlap(self,dir)->bool:
-        for block in self.blocks:
-            if block.overlap(block.map_pos+dir):
-                return True
-            return False
     
     def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface,hold:bool)->None:
         for block in self.blocks:
@@ -91,11 +91,12 @@ class Tetrominos:
             for block in shadow.blocks:
                 block.map_pos[1]+=translate-1
                 block.draw(shadow_surf)
-        
+    
+#classic rotation but with wall kicks  
     def rotate(self,clockwise : bool)->None:
         if self.shape=="O":
             return
-        old=self.blocks
+        old=deepcopy(self.blocks)
         rot=(cos_90,sin_90) if clockwise else (cos_n90,sin_n90)
         for block in self.blocks:
             temp=block.map_pos-self.pivot
@@ -120,8 +121,34 @@ class Tetrominos:
             self.pivot[1]-=shift_y
             for block in self.blocks:
                 block.map_pos[1]-=shift_y
-        
-        
+        for block in self.blocks:
+            if block.overlap(block.map_pos):
+                self.blocks=old
+                return  
+  
+#Super Rotation System  
+    def SRS_Rotate(self,clockwise:bool)->None:
+        if self.shape=="O":
+            return
+        old_blocks=deepcopy(self.blocks)
+        old_r_index=self.rotation_index
+        self.rotation_index=mod(self.rotation_index+1,4) if clockwise else mod(self.rotation_index-1,4)
+        rot=1 if clockwise else -1
+        for block in self.blocks:
+            temp=block.map_pos-self.pivot
+            block.map_pos[0]=round(-temp[1]*rot+self.pivot[0])
+            block.map_pos[1]=round(temp[0]*rot+self.pivot[1])
+        for i in range(0,5):
+            offset=self.offset_list[old_r_index][i]-self.offset_list[self.rotation_index][i]
+            if not self.collide(offset):
+                self.pivot+=offset
+                for block in self.blocks:
+                    block.move(offset)
+                return
+        self.blocks=old_blocks
+        self.rotation_index=old_r_index
+       
+            
     def change_pos(self,new_pos:pygame.Vector2)->None:
         for block in self.blocks:
             block.map_pos-=self.pivot

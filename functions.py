@@ -1,4 +1,4 @@
-import block
+import block,random
 from game_parameters import *
 
 def shift_blocks_down(placed_blocks_ar : list[list[block.block]],playable_field,cleared_row: int) -> None:
@@ -9,8 +9,6 @@ def shift_blocks_down(placed_blocks_ar : list[list[block.block]],playable_field,
                 block.map_pos[1] += 1
                 placed_blocks_ar[row+1][col] = block
                 placed_blocks_ar[row][col] = None
-
-
 
 def check_line(placed_blocks_ar:list[list[block.block]],playable_field:int)->None:
     for row, lines in enumerate(placed_blocks_ar):
@@ -33,5 +31,10 @@ def reset_game(placed_blocks:int,tetrominos:int)->None:
                 placed_blocks[row][col] = None
     tetrominos.clear()
 
-def mod(m,n)->None:
-    return (m % n + n) % n        
+def mod(m,n)->int:
+    return (m % n + n) % n  
+
+def exclude(dictionary,exception:str)->str:
+    temp=[key for key in dictionary.keys() if key!=exception]
+    return random.choice(temp)
+    
