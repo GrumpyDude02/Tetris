@@ -34,9 +34,11 @@ class Tetrominos:
         keys=pygame.key.get_pressed()
         if event.type==pygame.KEYDOWN:
             if event.key==pygame.K_UP:
-                self.SRS_Rotate(True)
+                self.SRS_Rotate(True,1)
             elif event.key==pygame.K_z:
-                self.SRS_Rotate(False)
+                self.SRS_Rotate(False,1)
+            elif event.key==pygame.K_a:
+                self.SRS_Rotate(True,2)
             elif event.key==pygame.K_DOWN:
                 self.direction_update=current_time
                 self.move(moves["down"])
@@ -127,17 +129,18 @@ class Tetrominos:
                 return  
   
 #Super Rotation System  
-    def SRS_Rotate(self,clockwise:bool)->None:
+    def SRS_Rotate(self,clockwise:bool,turns)->None:
         if self.shape=="O":
             return
         old_blocks=deepcopy(self.blocks)
         old_r_index=self.rotation_index
-        self.rotation_index=mod(self.rotation_index+1,4) if clockwise else mod(self.rotation_index-1,4)
+        self.rotation_index=mod(self.rotation_index+turns,4) if clockwise else mod(self.rotation_index-turns,4)
         rot=1 if clockwise else -1
-        for block in self.blocks:
-            temp=block.map_pos-self.pivot
-            block.map_pos[0]=round(-temp[1]*rot+self.pivot[0])
-            block.map_pos[1]=round(temp[0]*rot+self.pivot[1])
+        for i in range(0,turns):
+            for block in self.blocks:
+                temp=block.map_pos-self.pivot
+                block.map_pos[0]=round(-temp[1]*rot+self.pivot[0])
+                block.map_pos[1]=round(temp[0]*rot+self.pivot[1])
         for i in range(0,5):
             offset=self.offset_list[old_r_index][i]-self.offset_list[self.rotation_index][i]
             if not self.collide(offset):

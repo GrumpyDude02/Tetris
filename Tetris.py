@@ -13,14 +13,16 @@ HOLD=font.render("HOLD :",True,(255,255,255))
 
 #-----------initial setup--------------
 tetrominos=[]
+shapes_list=list(shapes.keys())
 display_surface=pygame.Surface((5*cell_size,4*cell_size))
 hold_surface=pygame.Surface((5*cell_size,4*cell_size))
 shadow_surface=pygame.Surface((WIDTH,HEIGHT),pygame.HWSURFACE)
 pygame.key.set_repeat(0,0)
 append=True
-current_piece=Tetrominos([5,0],500,random.choice(list(shapes.keys())),cell_size-1)
-next_tetromino_shape=random.choice(list(shapes.keys()))
-prev=next_tetromino_shape
+index=1
+switch_available=True
+current_piece=Tetrominos([5,0],500,shapes_list[0],cell_size-1)
+next_tetromino_shape=shapes_list[index]
 next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape,cell_size-1)
 held_piece=None
 
@@ -44,6 +46,7 @@ while (1):
     display_surface.fill((255,255,255))
     shadow_surface.fill((0,0,0))
     hold_surface.fill((255,255,255))
+    
     next_tetromino.draw(display_surface,shadow_surface,True)
     if held_piece is not None:
         held_piece.draw(hold_surface,shadow_surface,True)
@@ -59,29 +62,35 @@ while (1):
                 held_piece=deepcopy(current_piece)
                 held_piece.change_pos([1.5,1.5+shift])
                 current_piece.isSet=True
+                switch_available=False
                 append=False
-            else:
+            elif switch_available:
                 temp=held_piece
                 held_piece=current_piece
                 current_piece=temp
                 held_piece.change_pos([1.5,1.5+shift])
                 current_piece.change_pos([5,0])
+                switch_available=False
                 
         
     #drawing elements on screen 
     if current_piece.isSet:
+        index+=1
+        index%=len(shapes_list)
+        if index==0:
+            random.shuffle(shapes_list)
         if append:
             tetrominos.append(current_piece)
+            switch_available=True
+        else:
+            switch_available=False
         current_piece=Tetrominos([5,0],500,next_tetromino_shape,cell_size-1)
-        next_tetromino_shape=random.choice(list(shapes.keys()))
-        if next_tetromino_shape==prev:
-            next_tetromino_shape=exclude(shapes,prev)
+        next_tetromino_shape=shapes_list[index]
         prev=next_tetromino_shape
         next_tetromino=Tetrominos([1.5,1.5+shift],500,next_tetromino_shape,cell_size-1)
         append=True
         
     draw_grid(screen,grid,(96,96,96))
-    #pygame.draw.rect(screen,(96,96,96),pygame.Rect(0,0,10*cell_size,24*cell_size))
     current_piece.draw(screen,shadow_surface,False)
     current_piece.update(pygame.time.get_ticks(),event)
     
