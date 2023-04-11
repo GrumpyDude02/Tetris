@@ -5,31 +5,32 @@ from game_parameters import *
 from functions import mod
 
 class Tetrominos:
-    def __init__(self,pivot_pos:pygame.Vector2,cooldown:int,shape:str,block_width)->None:
+    def __init__(self,pivot_pos:pygame.Vector2,shape:str,block_width)->None:
         self.isSet=False
         self.pivot=pivot_pos
         self.shape=shape
         self.color=shapes[self.shape][1]
         self.rotation_index=0
         self.blocks=[block((pos+self.pivot),block_width,self.color,self) for pos in shapes[self.shape][0]]
-        self.update_time=cooldown
+        self.acc=0
         self.destroy=False
-        self.direction_update=0
-        self.last_update_time=0
-        self.direction=v(0,0)
+        self.key_held=False
+        self.last_update=0
+        self.key_held_time=0
         self.offset_list=None
         if self.shape!='I' and self.shape!='O':
             self.offset_list=offsets_JLZST
         elif self.shape=='I':
             self.offset_list=offsets_I
 
-    def update(self,current_time : int,event : pygame.Event)->None:
+    def update(self,current_time,dt : int,event : pygame.Event,level)->None:
+        self.acc+=level_speed[level-1]*dt*game_speed
         if not self.blocks:
             self.destroy=True
         if self.isSet:
             return
-        if current_time-self.last_update_time>self.update_time :
-            self.last_update_time=current_time
+        if self.acc>1 :
+            self.acc=0
             self.move(moves["down"])
         keys=pygame.key.get_pressed()
         if event.type==pygame.KEYDOWN:
@@ -39,17 +40,30 @@ class Tetrominos:
                 self.SRS_Rotate(False,1)
             elif event.key==pygame.K_a:
                 self.SRS_Rotate(True,2)
-            elif event.key==pygame.K_DOWN:
-                self.direction_update=current_time
-                self.move(moves["down"])
-            elif event.key==pygame.K_LEFT:
-                self.direction_update=current_time
-                self.move(moves["left"])
-            elif event.key==pygame.K_RIGHT:
-                self.direction_update=current_time
-                self.move(moves["right"])
             elif event.key==pygame.K_SPACE:
-                self.move(moves["snap"])    
+                self.move(moves['snap'])
+            elif event.key==pygame.K_RIGHT:
+                self.key_held=True
+                self.key_held_time=0
+                self.move(moves["right"])
+            elif event.key==pygame.K_LEFT:
+                self.key_held=True
+                self.key_held_time=0
+                self.move(moves['left'])
+        elif event.type==pygame.KEYUP:
+            self.key_held=False
+            self.key_held_time=0
+        if self.key_held:
+            self.key_held_time+=1
+            if self.key_held_time>15:
+                if keys[pygame.K_RIGHT] and current_time-self.last_update>MOVE_DELAY:
+                    self.last_update=current_time
+                    self.move(moves['right'])
+                elif keys[pygame.K_LEFT] and current_time-self.last_update>MOVE_DELAY:
+                    self.last_update=current_time
+                    self.move(moves['left'])
+            
+            
            
     def move(self,direction:pygame.Vector2)->None:
         if direction==moves["snap"]:
@@ -82,24 +96,24 @@ class Tetrominos:
         return False            
     
     
-    def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface,hold:bool)->None:
+    def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface)->None:
         for block in self.blocks:
             block.draw(window)
-        if hold:
+        if shadow_surf is None:
             return
-        if hold or not self.isSet:
+        if not self.isSet:
             shadow=deepcopy(self)
             translate=self.project()
             for block in shadow.blocks:
                 block.map_pos[1]+=translate-1
                 block.draw(shadow_surf)
     
-#classic rotation but with wall kicks  
+#classic rotation but with wall kicks(boundaries only)  
     def rotate(self,clockwise : bool)->None:
         if self.shape=="O":
             return
         old=deepcopy(self.blocks)
-        rot=(cos_90,sin_90) if clockwise else (cos_n90,sin_n90)
+        rot=(1,0) if clockwise else (-1,0)
         for block in self.blocks:
             temp=block.map_pos-self.pivot
             block.map_pos[0]=round(temp[0]*rot[0]-temp[1]*rot[1]+self.pivot[0])

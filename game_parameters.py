@@ -9,6 +9,7 @@ h_cell_number=20
 playable_num=10
 WIDTH=h_cell_number*cell_size
 HEIGHT=(v_cell_number-shift)*cell_size
+MOVE_DELAY=100
 
 shapes={"T":[[v(-1,0),v(0,0),v(0,-1),v(1,0)],(255, 68, 255)],
         "Z":[[v(-1,-1),v(0,-1),v(0,0),v(1,0)],(255, 0, 0)],
@@ -30,10 +31,6 @@ offsets_I=[(v(0,0),v(-1,0),v(2,0),v(-1,0),v(2,0)),
             (v(0,1),v(0,1),v(0,1),v(0,1),v(0,2))]
 
 moves={"left":v(-1,0),"right":v(1,0),"down":v(0,1),"snap":v(0,-100)}
-sin_90=math.sin(math.radians(90))
-cos_90=math.cos(math.radians(90))
-sin_n90=math.sin(math.radians(-90))
-cos_n90=math.cos(math.radians(-90))
 
 
 grid=[]
@@ -45,3 +42,6 @@ for i in range(0,v_cell_number-shift):
 def draw_grid(window:pygame.Surface,grid,color)->None:
     for rect in grid:
         pygame.draw.rect(window,color,rect)
+        
+level_speed=[0.01667,0.021017,0.026977,0.035256,0.04693,0.06361,0.0879, 0.1236,0.1775, 0.2598, 0.388,0.59,0.92,1.42,2.36]
+game_speed=60
