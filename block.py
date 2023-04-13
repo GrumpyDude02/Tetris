@@ -16,7 +16,9 @@ class block:
     def move(self,direction:pygame.Vector2)->None:
         self.map_pos+=direction
        
-    def draw(self,window:pygame.Surface,shadow:bool)->None:
+    def draw(self,window:pygame.Surface,center:bool)->None:
+        if center:
+            self.color=(255,255,255)
         self.r_pos=v((self.map_pos[0]+vShift-1)*cell_size,(self.map_pos[1]-y_border_offset-1)*cell_size)
         pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],self.width,self.width))
 
