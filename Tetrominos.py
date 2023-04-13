@@ -14,8 +14,9 @@ class Tetrominos:
         self.blocks=[block((pos+self.pivot),block_width,self.color,self) for pos in shapes[self.shape][0]]
         self.acc=0
         self.destroy=False
-        self.key_held=False
-        self.last_update=0
+        self.keys_held=[False,False]
+        self.HUpdate=0
+        self.VUpdate=0
         self.key_held_time=0
         self.offset_list=None
         if self.shape!='I' and self.shape!='O':
@@ -33,6 +34,9 @@ class Tetrominos:
             self.acc=0
             self.move(moves["down"])
         keys=pygame.key.get_pressed()
+        if keys[pygame.K_DOWN] and current_time-self.VUpdate>MOVE_DELAY:
+            self.VUpdate=current_time
+            self.move(moves["down"])
         if event.type==pygame.KEYDOWN:
             if event.key==pygame.K_UP:
                 self.SRS_Rotate(True,1)
@@ -42,25 +46,32 @@ class Tetrominos:
                 self.SRS_Rotate(True,2)
             elif event.key==pygame.K_SPACE:
                 self.move(moves['snap'])
-            elif event.key==pygame.K_RIGHT:
-                self.key_held=True
-                self.key_held_time=0
-                self.move(moves["right"])
             elif event.key==pygame.K_LEFT:
-                self.key_held=True
+                self.keys_held[0]=True
                 self.key_held_time=0
                 self.move(moves['left'])
+            elif event.key==pygame.K_RIGHT:
+                self.keys_held[1]=True
+                self.key_held_time=0
+                self.move(moves['right'])
         elif event.type==pygame.KEYUP:
-            self.key_held=False
-            self.key_held_time=0
-        if self.key_held:
+            if event.key==pygame.K_LEFT:
+                self.keys_held[0]=False
+                self.key_held_time=0
+            if event.key==pygame.K_RIGHT:
+                self.keys_held[1]=False
+                self.key_held_time=0
+        if self.keys_held[1]:
             self.key_held_time+=1
             if self.key_held_time>15:
-                if keys[pygame.K_RIGHT] and current_time-self.last_update>MOVE_DELAY:
-                    self.last_update=current_time
+                if keys[pygame.K_RIGHT] and current_time-self.HUpdate>MOVE_DELAY:
+                    self.HUpdate=current_time
                     self.move(moves['right'])
-                elif keys[pygame.K_LEFT] and current_time-self.last_update>MOVE_DELAY:
-                    self.last_update=current_time
+        elif self.keys_held[0]:
+            self.key_held_time+=1
+            if self.key_held_time>15:
+                if keys[pygame.K_LEFT] and current_time-self.HUpdate>MOVE_DELAY:
+                    self.HUpdate=current_time
                     self.move(moves['left'])
             
             
@@ -75,7 +86,7 @@ class Tetrominos:
         elif not self.collide(direction):
             for block in self.blocks:
                 block.move(direction)
-            self.pivot+=direction     
+            self.pivot+=direction   
         elif direction==moves["down"]:
             for block in self.blocks:
                 placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])]=block
@@ -98,7 +109,7 @@ class Tetrominos:
     
     def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface)->None:
         for block in self.blocks:
-            block.draw(window)
+            block.draw(window,False)
         if shadow_surf is None:
             return
         if not self.isSet:
@@ -106,7 +117,7 @@ class Tetrominos:
             translate=self.project()
             for block in shadow.blocks:
                 block.map_pos[1]+=translate-1
-                block.draw(shadow_surf)
+                block.draw(shadow_surf,True)
     
 #classic rotation but with wall kicks(boundaries only)  
     def rotate(self,clockwise : bool)->None:

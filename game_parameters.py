@@ -2,9 +2,11 @@ import math,pygame
 from pygame.math import Vector2 as v
 
 FPS = 60
+vShift=2
 shift=2
+y_border_offset=2
 cell_size=20
-v_cell_number=24+shift
+v_cell_number=22+y_border_offset+shift
 h_cell_number=20
 playable_num=10
 WIDTH=h_cell_number*cell_size
@@ -35,9 +37,14 @@ moves={"left":v(-1,0),"right":v(1,0),"down":v(0,1),"snap":v(0,-100)}
 
 grid=[]
 placed_blocks=[[None for i in range(playable_num)]for j in range(v_cell_number)]
+
 for i in range(0,v_cell_number-shift):
-    for j in range(playable_num):
-        grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
+    for j in range(playable_num+vShift):
+        if j==0 or j==playable_num+1:
+            grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
+        elif i==0 or i==v_cell_number-shift-1:
+            grid.append(pygame.Rect(j*cell_size,i*cell_size,cell_size-1,cell_size-1))
+        
 
 def draw_grid(window:pygame.Surface,grid,color)->None:
     for rect in grid:

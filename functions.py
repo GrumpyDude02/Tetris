@@ -21,10 +21,10 @@ def check_line(placed_blocks_ar:list[list[block.block]],playable_field:int)->int
             shift_blocks_down(placed_blocks_ar,playable_field,row)
     return cleared_lines
             
-def game_over(placed_blocks_ar)->bool:
-    if any(block for block in placed_blocks_ar[0]):
+def game_over(placed_blocks_ar,spawn_column)->bool:
+    if any(block for block in placed_blocks_ar[spawn_column-1]):
         return True
-    if any(block for block in placed_blocks_ar[1]):
+    if any(block for block in placed_blocks_ar[spawn_column]):
         return True
     return False
 
