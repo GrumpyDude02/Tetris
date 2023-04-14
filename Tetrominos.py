@@ -136,6 +136,7 @@ class Tetrominos:
                 block.map_pos[1]+=translate-1
                 block.draw(shadow_surf,False)
         self.center.draw(window,True)
+    
 #classic rotation but with wall kicks(boundaries only)  
     def rotate(self,clockwise : bool)->None:
         if self.shape=="O":
@@ -172,6 +173,7 @@ class Tetrominos:
   
 #Super Rotation System  
     def SRS_Rotate(self,clockwise:bool,turns)->None:
+        global shared_lock_timer
         if self.shape=="O":
             return
         old_blocks=deepcopy(self.blocks)
@@ -186,13 +188,14 @@ class Tetrominos:
         for i in range(0,5):
             offset=self.offset_list[old_r_index][i]-self.offset_list[self.rotation_index][i]
             if not self.collide(offset):
+                shared_lock_timer=pygame.time.get_ticks()
                 self.pivot+=offset
                 for block in self.blocks:
                     block.move(offset)
                 return
         self.blocks=old_blocks
         self.rotation_index=old_r_index
-       
+        
             
     def change_pos(self,new_pos:pygame.Vector2)->None:
         for block in self.blocks:

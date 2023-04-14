@@ -24,8 +24,6 @@ class block:
 
     
     def overlap(self,pos):
-        if int(pos.y<=1):
-            return False
         return bool(placed_blocks[int(pos.y)][int(pos.x)])
 
     def in_bounds(self,pos):

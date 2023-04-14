@@ -27,7 +27,7 @@ total_cleared_lines=0
 level=1
 dt=1/FPS
 tetrominos=[]
-shapes_list=['Z']#list(shapes.keys())
+shapes_list=list(shapes.keys())
 index=0
 held_piece=None
 
@@ -70,7 +70,7 @@ while (1):
         random.shuffle(shapes_list)
         index=0
         current_piece=Tetrominos([5,spawn_column],shapes_list[0],BLOCK_SIZE)
-        index+=0
+        index+=1
         next_tetromino_shape=shapes_list[index]
         next_tetromino=Tetrominos([1.5,1.5+shift+1],next_tetromino_shape,BLOCK_SIZE)
         held_piece=None
@@ -145,8 +145,8 @@ while (1):
         pygame.display.flip()
         continue
     if current_piece.isSet:
-        index+=0
-        #index%=0
+        index+=1
+        index%=7
         if index==0:
             random.shuffle(shapes_list)
         if append:
