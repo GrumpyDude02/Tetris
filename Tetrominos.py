@@ -17,6 +17,7 @@ class Tetrominos:
         self.color=shapes[self.shape][1]
         self.rotation_index=0
         self.blocks=[block((pos+self.pivot),block_width,self.color,self) for pos in shapes[self.shape][0]]
+        self.center=self.blocks[0]
         self.acc=0
         self.destroy=False
         self.keys_held=[False,False]
@@ -28,10 +29,6 @@ class Tetrominos:
             self.offset_list=offsets_JLZST
         elif self.shape=='I':
             self.offset_list=offsets_I
-        for item in self.blocks:
-            if item.map_pos-pivot_pos==v():
-                self.center=item
-                break
         
     def update(self,current_time,dt : int,event : pygame.Event,level)->None:
         global down_pressed
@@ -126,16 +123,19 @@ class Tetrominos:
     
     def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface)->None:
         for block in self.blocks:
-            block.draw(window,False)
+            if block.map_pos-self.pivot==v():
+                block.draw(window)
+            else:
+                block.draw(window)
         if shadow_surf is None:
             return
         if not self.isSet:
+            pygame.draw.circle(window,(255,255,255),self.center.r_pos+v(self.center.width/2,self.center.width/2),2)
             shadow=deepcopy(self)
             translate=self.project()
-            for block in shadow.blocks:
+            for block in shadow.blocks:    
                 block.map_pos[1]+=translate-1
-                block.draw(shadow_surf,False)
-        self.center.draw(window,True)
+                block.draw(shadow_surf)
     
 #classic rotation but with wall kicks(boundaries only)  
     def rotate(self,clockwise : bool)->None:
