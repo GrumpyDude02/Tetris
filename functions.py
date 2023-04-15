@@ -1,4 +1,4 @@
-import block,random
+import random,block
 from game_parameters import *
 
 def shift_blocks_down(placed_blocks_ar : list[list[block.block]],playable_field,cleared_row: int) -> None:
@@ -52,3 +52,13 @@ def blurSurf(surface, amt):
     surf = pygame.transform.smoothscale(surface, scale_size)
     surf = pygame.transform.smoothscale(surf, surf_size)
     return surf
+
+def generate_surf(surf_size:tuple,transparency_amount:int)->pygame.Surface:
+    try:
+        surface=pygame.Surface(surf_size,pygame.HWACCEL)
+    except(pygame.error):
+        surface=pygame.Surface(surf_size)
+    if transparency_amount:
+        surface.set_colorkey(BLACK)
+        surface.set_alpha(transparency_amount)
+    return surface

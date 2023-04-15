@@ -7,9 +7,7 @@ from copy import deepcopy
 pygame.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT),pygame.DOUBLEBUF)
 clock = pygame.time.Clock()
-BLACK=(0,0,0)
-WHITE=(255,255,255)
-BLUE=(0,100,255)
+
 font=pygame.font.Font("kimberley bl.otf",24)
 NEXT=font.render("NEXT :",True,WHITE)
 HOLD=font.render("HOLD :",True,WHITE)
@@ -17,12 +15,11 @@ PAUSED=font.render("PAUSED",True,WHITE)
 SC_RECT=pygame.Rect(0,0,WIDTH,HEIGHT)
 font_rect=PAUSED.get_rect()
 font_rect.center=SC_RECT.center
-BLOCK_SIZE=cell_size-1
+
 
 
 #-----------initial varibale values--------------
 cleared_lines=0
-spawn_column=3
 total_cleared_lines=0
 level=1
 dt=1/FPS
@@ -33,7 +30,7 @@ held_piece=None
 
 #------------surfaces-------------
 display_surface=pygame.Surface((6*cell_size,5.5*cell_size))
-hold_surface=pygame.Surface((6*cell_size,6*cell_size))
+hold_surface=pygame.Surface((6*cell_size,5.5*cell_size))
 shadow_surface=pygame.Surface((WIDTH,HEIGHT),pygame.HWACCEL)
 pause_surface=pygame.Surface((WIDTH,HEIGHT),pygame.HWACCEL)
 
@@ -52,7 +49,7 @@ reset=False
 paused=False
 
 #-----------------------------
-current_piece=Tetrominos([5,spawn_column],shapes_list[0],BLOCK_SIZE)
+current_piece=Tetrominos(SPAWN_LOCATION,shapes_list[0],BLOCK_SIZE)
 next_tetromino_shape=shapes_list[index]
 next_tetromino=Tetrominos([1.5,1.5+shift+1],next_tetromino_shape,BLOCK_SIZE)
 
@@ -66,10 +63,10 @@ while (1):
     destroy=[]
     
     #checking game state to reset the game
-    if game_over(placed_blocks,spawn_column) or reset:
+    if game_over(placed_blocks,SPAWN_LOCATION[1]) or reset:
         random.shuffle(shapes_list)
         index=0
-        current_piece=Tetrominos([5,spawn_column],shapes_list[0],BLOCK_SIZE)
+        current_piece=Tetrominos(SPAWN_LOCATION,shapes_list[0],BLOCK_SIZE)
         index+=1
         next_tetromino_shape=shapes_list[index]
         next_tetromino=Tetrominos([1.5,1.5+shift+1],next_tetromino_shape,BLOCK_SIZE)
@@ -87,28 +84,29 @@ while (1):
     shadow_surface.fill(BLACK)
     
     #checking for events
-    event = pygame.event.poll()
-    if event.type == pygame.QUIT:
-        sys.exit()        
-    if event.type==pygame.KEYDOWN:
-        if event.key==pygame.K_h and not paused:
-            if held_piece is None:
-                held_piece=deepcopy(current_piece)
-                held_piece.change_pos([1.5,1.5+shift+1])
-                current_piece.isSet=True
-                switch_available=False
-                append=False
-            elif switch_available:
-                temp=held_piece
-                held_piece=current_piece
-                current_piece=temp
-                held_piece.change_pos([1.5,1.5+shift+1])
-                current_piece.change_pos([5,spawn_column])
-                switch_available=False
-        if event.key==pygame.K_r and not paused:
-            reset=True
-        if event.key==pygame.K_ESCAPE:
-            paused=not paused
+    events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.QUIT:
+            sys.exit()        
+        if event.type==pygame.KEYDOWN:
+            if event.key==pygame.K_h and not paused:
+                if held_piece is None:
+                    held_piece=deepcopy(current_piece)
+                    held_piece.change_pos([1.5,1.5+shift+1])
+                    current_piece.isSet=True
+                    switch_available=False
+                    append=False
+                elif switch_available:
+                    temp=held_piece
+                    held_piece=current_piece
+                    current_piece=temp
+                    held_piece.change_pos([1.5,1.5+shift+1])
+                    current_piece.change_pos(SPAWN_LOCATION)
+                    switch_available=False
+            if event.key==pygame.K_r and not paused:
+                reset=True
+            if event.key==pygame.K_ESCAPE:
+                paused=not paused
 #bliting elements surfaces on the main screen(find a system to place ui elements) 
     for tetromino in tetrominos:
         tetromino.draw(screen,None)
@@ -154,11 +152,11 @@ while (1):
             switch_available=True
         else:
             switch_available=False
-        current_piece=Tetrominos([5,spawn_column],next_tetromino_shape,BLOCK_SIZE)
+        current_piece=Tetrominos(SPAWN_LOCATION,next_tetromino_shape,BLOCK_SIZE)
         next_tetromino_shape=shapes_list[index]
         next_tetromino=Tetrominos([1.5,1.5+shift+1],next_tetromino_shape,BLOCK_SIZE)
         append=True
-    current_piece.update(pygame.time.get_ticks(),dt,event,level)
+    current_piece.update(pygame.time.get_ticks(),dt,events,level)
     
     #checking any full lines
     cleared_lines=check_line(placed_blocks,playable_num)

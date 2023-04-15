@@ -1,4 +1,3 @@
-from block import block
 import pygame
 from copy import deepcopy
 from game_parameters import *
@@ -8,6 +7,36 @@ lock_delay=500
 shared_lock_timer=0
 down_pressed=False
 successful_move=True
+
+class block:
+    def __init__(self,pos:pygame.Vector2,cell_size:int,color:pygame.color,tetromino)->None:
+        self.map_pos=v(pos[0],pos[1])
+        self.width=cell_size
+        self.r_pos=self.map_pos*cell_size
+        self.color=color
+        self.tetromino=tetromino
+    
+    def update(self)->None:
+        self.map_pos[1]+=1
+
+    def move(self,direction:pygame.Vector2)->None:
+        self.map_pos+=direction
+       
+    def draw(self,window:pygame.Surface)->None:
+        self.r_pos=v((self.map_pos[0]+vShift-1)*cell_size,(self.map_pos[1]-y_border_offset-1)*cell_size)
+        pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],self.width,self.width))
+
+    
+    def overlap(self,pos):
+        return bool(placed_blocks[int(pos.y)][int(pos.x)])
+
+    def in_bounds(self,pos):
+        return (0<=pos.x<playable_num) and pos.y<v_cell_number
+    
+    def collide(self,pos:pygame.Vector2)->bool:
+        if self.in_bounds(pos) and not self.overlap(pos):
+            return False
+        return True
 
 class Tetrominos:
     def __init__(self,pivot_pos:pygame.Vector2,shape:str,block_width)->None:
@@ -30,7 +59,7 @@ class Tetrominos:
         elif self.shape=='I':
             self.offset_list=offsets_I
         
-    def update(self,current_time,dt : int,event : pygame.Event,level)->None:
+    def update(self,current_time,dt : int,events : pygame.Event,level)->None:
         global down_pressed
         down_pressed=False
         self.acc+=level_speed[level-1]*dt*game_speed
@@ -46,30 +75,31 @@ class Tetrominos:
             down_pressed=True
             self.VUpdate=current_time
             self.move(moves["down"],current_time)
-        if event.type==pygame.KEYDOWN:
-            if event.key==pygame.K_UP:
-                self.SRS_Rotate(True,1)
-            elif event.key==pygame.K_z:
-                self.SRS_Rotate(False,1)
-            elif event.key==pygame.K_a:
-                self.SRS_Rotate(True,2)
-            elif event.key==pygame.K_SPACE:
-                self.move(moves['snap'],current_time)
-            elif event.key==pygame.K_LEFT:
-                self.keys_held[0]=True
-                self.key_held_time=0
-                self.move(moves['left'],current_time)
-            elif event.key==pygame.K_RIGHT:
-                self.keys_held[1]=True
-                self.key_held_time=0
-                self.move(moves['right'],current_time)
-        elif event.type==pygame.KEYUP:
-            if event.key==pygame.K_LEFT:
-                self.keys_held[0]=False
-                self.key_held_time=0
-            if event.key==pygame.K_RIGHT:
-                self.keys_held[1]=False
-                self.key_held_time=0
+        for event in events:
+            if event.type==pygame.KEYDOWN:
+                if event.key==pygame.K_UP:
+                    self.SRS_Rotate(True,1)
+                elif event.key==pygame.K_z:
+                    self.SRS_Rotate(False,1)
+                elif event.key==pygame.K_a:
+                    self.SRS_Rotate(True,2)
+                elif event.key==pygame.K_SPACE:
+                    self.move(moves['snap'],current_time)
+                elif event.key==pygame.K_LEFT:
+                    self.keys_held[0]=True
+                    self.key_held_time=0
+                    self.move(moves['left'],current_time)
+                elif event.key==pygame.K_RIGHT:
+                    self.keys_held[1]=True
+                    self.key_held_time=0
+                    self.move(moves['right'],current_time)
+            elif event.type==pygame.KEYUP:
+                if event.key==pygame.K_LEFT:
+                    self.keys_held[0]=False
+                    self.key_held_time=0
+                if event.key==pygame.K_RIGHT:
+                    self.keys_held[1]=False
+                    self.key_held_time=0
         if self.keys_held[1]:
             self.key_held_time+=1
             if self.key_held_time>15:

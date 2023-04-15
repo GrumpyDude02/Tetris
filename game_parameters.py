@@ -1,4 +1,4 @@
-import math,pygame
+import pygame
 from pygame.math import Vector2 as v
 
 FPS = 60
@@ -9,9 +9,16 @@ cell_size=20
 v_cell_number=22+y_border_offset+shift
 h_cell_number=20
 playable_num=10
+
+BLACK=(0,0,0)
+WHITE=(255,255,255)
+BLUE=(0,100,255)
 WIDTH=h_cell_number*cell_size
 HEIGHT=(v_cell_number-shift)*cell_size
 MOVE_DELAY=100
+BLOCK_SIZE=cell_size-1
+SPAWN_LOCATION=[5,3]
+PREVIEW_SURF_SIZE=(6*cell_size,5.5*cell_size)
 
 shapes={"T":[[v(0,0),v(-1,0),v(0,-1),v(1,0)],(255, 68, 255)],
         "Z":[[v(0,0),v(-1,-1),v(0,-1),v(1,0)],(255, 0, 0)],
