@@ -65,10 +65,12 @@ def generate_surf(surf_size:tuple,transparency_amount:int)->pygame.Surface:
         surface.set_alpha(transparency_amount)
     return surface
 
-def change_display_val():
+def change_display_val()->float:
     global WIDTH,HEIGHT,cell_size,board_width,board_height
     WIDTH=selected_res[0]
     HEIGHT=selected_res[1]
-    cell_size=round(base_cell_size*(HEIGHT/base_resolution[1]))
+    scale=(HEIGHT/base_resolution[1])
+    cell_size=round(base_cell_size*scale)
     board_width=12*cell_size
     board_height=(boardy_cell_number-shift)*cell_size
+    return scale

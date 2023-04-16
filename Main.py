@@ -20,7 +20,7 @@ class Main:
             channels=2,
             buffer=512,
         )
-        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",24)
+        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
         self.clock=pygame.time.Clock()
         self.dt=1/FPS
         self.state=GameStates.in_game
@@ -32,13 +32,16 @@ class Main:
     def start_game(self):
         self.Tetris=Tetris(self)
         self.Pause=PauseScreen(self.main_font,self)
-
-        self.game_screens.append(self.Tetris,self.Pause)
+        self.game_screens.append(self.Tetris)
+        self.game_screens.append(self.Pause)
         self.set_state(GameStates.in_game)
         self.loop()
     
     def resize_window(self,selected_res):
-        change_display_val(selected_res)
+        global font_scale
+        scale=change_display_val(selected_res)
+        font_scale*=scale
+        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
         bit_depth=pygame.display.mode_ok((WIDTH,HEIGHT),False,32)
         self.screen=pygame.display.set_mode((WIDTH,HEIGHT),depth=bit_depth)
         for screen in self.game_screens:
