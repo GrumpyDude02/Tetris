@@ -1,6 +1,6 @@
 from game_parameters import *
 from GamePlay import Tetris
-from Menu import Menu,PauseScreen
+from Menu import *
 from GameStates import GameStates
 from functions import change_display_val
 import sys
@@ -23,7 +23,7 @@ class Main:
         self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
         self.clock=pygame.time.Clock()
         self.dt=1/FPS
-        self.state=GameStates.in_game
+        self.state=GameStates.initilized
         self.game_screens=[]
     
     def set_state(self,new_state):
@@ -31,10 +31,11 @@ class Main:
     
     def start_game(self):
         self.Tetris=Tetris(self)
+        self.MainMenu=MainMenu(self,None,None)
         self.Pause=PauseScreen(self.main_font,self)
         self.game_screens.append(self.Tetris)
         self.game_screens.append(self.Pause)
-        self.set_state(GameStates.in_game)
+        self.set_state(GameStates.main_menu)
         self.loop()
     
     def resize_window(self,selected_res):
@@ -50,6 +51,9 @@ class Main:
     def loop(self):
         while self.state!=GameStates.quitting:
             events=pygame.event.get()
+            if self.state==GameStates.main_menu:
+                self.MainMenu.loop(events)
+                self.screen.blit(self.MainMenu.main_surface,(0,0))
             if self.state==GameStates.in_game:
                 self.Tetris.loop(events)
                 self.screen.blit(self.Tetris.main_surface,(0,0))
