@@ -16,8 +16,9 @@ class Tetris:
         self.held_piece=None
         self.destroy=[]
         self.tetrominos=[]
+        self.board_surface=generate_surf((board_width,board_height),0)
         self.main_surface=generate_surf((WIDTH,HEIGHT),0)
-        self.shadow_surf=generate_surf((WIDTH,HEIGHT),150)
+        self.shadow_surf=generate_surf((12*cell_size,HEIGHT),80)
         self.hold_surface=generate_surf(PREVIEW_SURF_SIZE,0)
         self.preview_surface=generate_surf(PREVIEW_SURF_SIZE,0)
         self.score=0
@@ -37,13 +38,22 @@ class Tetris:
         self.game.set_state(new_state)
         
     def draw(self):
-        self.main_surface.fill(BLACK)
+        #self.main_surface.fill(BLACK)
         self.shadow_surf.fill(BLACK)
+        self.board_surface.fill(BLACK)
         for tetromino in self.tetrominos:
-            tetromino.draw(self.main_surface,None)        
-        self.current_piece.draw(self.main_surface,self.shadow_surf)
-        self.main_surface.blit(self.shadow_surf,(0,0))
-        draw_grid(self.main_surface,grid,(96,96,96))
+            tetromino.draw(self.board_surface,None)        
+        self.current_piece.draw(self.board_surface,self.shadow_surf)
+        draw_grid(self.board_surface,grid,(96,96,96))
+        self.board_surface.blit(self.shadow_surf,(0,0))
+        self.main_surface.blit(self.board_surface,(((WIDTH-12*cell_size)//2),(HEIGHT-24*cell_size)//2))
+    
+    def resize(self):
+        self.main_surface=pygame.transform.scale(self.main_surface,(WIDTH,HEIGHT))
+        self.board_surface=pygame.transform.scale(self.main_surface,(board_width,board_height))
+        for tetromino in self.tetrominos:
+            for block in self.tetrominos:
+                pass
         
     def loop(self,events_list):
         current_time=pygame.time.get_ticks()
@@ -55,6 +65,8 @@ class Tetris:
                     self.set_state(GameStates.paused)
         self.current_piece.update(current_time,self.game.dt,events_list,self.level)
         self.draw()
+        
+    
 
 
         

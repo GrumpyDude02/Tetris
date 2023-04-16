@@ -1,7 +1,9 @@
-import random,block
+import random
 from game_parameters import *
+from block import block
 
-def shift_blocks_down(placed_blocks_ar : list[list[block.block]],playable_field,cleared_row: int) -> None:
+
+def shift_blocks_down(placed_blocks_ar : list[list[block]],playable_field,cleared_row: int) -> None:
     for row in range(cleared_row-1,-1,-1):
         for col in range(playable_field):
             block = placed_blocks_ar[row][col]
@@ -10,7 +12,7 @@ def shift_blocks_down(placed_blocks_ar : list[list[block.block]],playable_field,
                 placed_blocks_ar[row+1][col] = block
                 placed_blocks_ar[row][col] = None
 
-def check_line(placed_blocks_ar:list[list[block.block]],playable_field:int)->int:
+def check_line(placed_blocks_ar:list[list[block]],playable_field:int)->int:
     cleared_lines=0
     for row, lines in enumerate(placed_blocks_ar):
         if all(item for item in lines):
@@ -62,3 +64,11 @@ def generate_surf(surf_size:tuple,transparency_amount:int)->pygame.Surface:
         surface.set_colorkey(BLACK)
         surface.set_alpha(transparency_amount)
     return surface
+
+def change_display_val():
+    global WIDTH,HEIGHT,cell_size,board_width,board_height
+    WIDTH=selected_res[0]
+    HEIGHT=selected_res[1]
+    cell_size=round(base_cell_size*(HEIGHT/base_resolution[1]))
+    board_width=12*cell_size
+    board_height=(boardy_cell_number-shift)*cell_size
