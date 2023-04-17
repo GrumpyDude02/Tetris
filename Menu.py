@@ -4,9 +4,21 @@ import enum,sys
 
 
 class buttons:
-    def __init__(self,text,width:int,height:int,posx:int,posy:int,hover_color:tuple,color:tuple,text_color:tuple,gui_font)->None :
-        self.lrect=pygame.Rect(posx-5,posy-5,width+10,height+10)
-        self.rectangle=pygame.Rect(posx,posy,width,height)
+    def __init__(self, text , width : float, height : float, posx : float, posy : float,gui_font,outline : int=False ,color:tuple=(0,0,0),text_color:tuple=(255,255,255),hover_color:tuple=(0,0,0))->None :
+        self.pos=[posx,posy]
+        self.size=[width,height]
+        self.outline_size=outline
+        self.lrect=pygame.Rect(self.pos[0]*WIDTH-self.outline_size,
+                               self.pos[1]*HEIGHT-self.outline_size,
+                               self.size[0]*WIDTH+self.outline_size*2,
+                               self.size[1]*HEIGHT+self.outline_size*2
+                               ) if self.outline_size else None 
+        
+        self.rectangle=pygame.Rect(self.pos[0]*WIDTH,
+                                   self.pos[1]*HEIGHT,
+                                   self.size[0]*WIDTH,
+                                   self.size[1]*HEIGHT
+                                   )
         self.bg_color=color
         self.color=color
         self.hover_color=hover_color
@@ -15,7 +27,8 @@ class buttons:
         self.clicked=False
         
     def draw(self,screen):
-        pygame.draw.rect(screen,(255,255,255),self.lrect)
+        if self.lrect:
+            pygame.draw.rect(screen,(255,255,255),self.lrect)
         pygame.draw.rect(screen,self.color,self.rectangle)
         screen.blit(self.tex_surf,self.text_rect)
         self.checkclick()
@@ -33,39 +46,49 @@ class buttons:
                 self.clicked=False
         return clicked
     
-    def set_size(font):
+    def resize(font):
         pass
     
 class Menu:
-    def __init__(self,game,next_game_state,previous_game_state):
+    
+    def __init__(self,game,child_menus: list=None,previous_menu=None):
         self.game=game
         self.main_surface=generate_surf((WIDTH,HEIGHT),0)
-        self.next_game_state=next_game_state
-        self.previous_game_state=previous_game_state
+        self.child_menus=child_menus
+        self.previous_menu=previous_menu
+        self.buttons=None
         
     def set_state(self,new_state):
         self.game.set_state(new_state)
-
+    
+    def set_pending_state(self,next_state):
+        self.game.pending_state=next_state
+    
+    def draw(self,fill_color:tuple=None):
+        if fill_color:
+            self.main_surface.fill(fill_color)
+        for key in self.buttons.keys():
+            self.buttons[key].draw(self.main_surface)
+    
+    def resize(self):
+        pass
 
 
 
 
 
 class MainMenu(Menu):
-    def __init__(self, game, next_game_state, previous_game_state):
-        super().__init__(game, next_game_state, previous_game_state)
-        self.buttons={"PLAY":buttons("PLAY",int(WIDTH*0.16),int(HEIGHT*0.1),int(0.42*WIDTH),int(0.35*HEIGHT),BLUE,(0,0,0),(255,255,255),game.main_font),
-                      "EXIT":buttons("EXIT",int(WIDTH*0.16),int(HEIGHT*0.1),int(0.42*WIDTH),int(0.50*HEIGHT),BLUE,(0,0,0),(255,255,255),game.main_font)}
-    
-    def draw(self):
-        self.main_surface.fill((0,0,0))
-        self.buttons["PLAY"].draw(self.main_surface)
-        self.buttons["EXIT"].draw(self.main_surface)
+    def __init__(self, game):
+        super().__init__(game)
+        self.buttons={"PLAY":buttons("PLAY",0.16,0.1,0.42,0.35,game.main_font,5,hover_color=BLUE),
+                      "EXIT":buttons("EXIT",0.16,0.1,0.42,0.50,game.main_font,5,hover_color=BLUE)}
 
     def loop(self,events):
         for event in events:
             if event.type==pygame.QUIT:
                 self.set_state(GameStates.quitting)
+        if self.buttons["EXIT"].checkclick():
+            self.set_state(GameStates.quitting)
         if self.buttons["PLAY"].checkclick():
                 self.set_state(GameStates.in_game)
         self.draw()
@@ -73,13 +96,14 @@ class MainMenu(Menu):
 
 class PauseScreen(Menu):
     def __init__(self,font,game):
-        super().__init__(game,None,None)
+        super().__init__(game)
         self.transparent_surf=generate_surf((WIDTH,HEIGHT),150)
         self.rect=pygame.Rect(0,0,WIDTH,HEIGHT)
         self.text=font.render("PAUSED",True,WHITE)
         self.transparent_surf.fill(BLUE)
-        self.buttons= {"EXIT":buttons("EXIT",int(WIDTH*0.16),int(HEIGHT*0.1),int(0.52*WIDTH),int(0.60*HEIGHT),BLUE,(0,0,0),(255,255,255),game.main_font),
-                       "RESUME":buttons("RESUME",int(WIDTH*0.16),int(HEIGHT*0.1),int(0.32*WIDTH),int(0.60*HEIGHT),BLUE,(0,0,0),(255,255,255),game.main_font)}
+        #0.52 0.60 0.32 0.60
+        self.buttons= {"EXIT":buttons("EXIT", 0.16 , 0.1, 0.52, 0.60 ,game.main_font,5,hover_color=BLUE),
+                       "RESUME":buttons("RESUME", 0.16 , 0.1 , 0.32 ,0.60 ,game.main_font,5,hover_color=BLUE)}
     
     def draw(self,surface):
         blurred_surface=blurSurf(surface,5)
@@ -88,8 +112,7 @@ class PauseScreen(Menu):
         render_position=self.text.get_rect()
         render_position.center=self.rect.center
         self.main_surface.blit(self.text,render_position)
-        self.buttons["EXIT"].draw(self.main_surface)
-        self.buttons["RESUME"].draw(self.main_surface)
+        super().draw()
     
     def loop(self,events):
         for event in events:
@@ -99,6 +122,7 @@ class PauseScreen(Menu):
                 if event.key== pygame.K_ESCAPE:
                     self.set_state(GameStates.in_game)
         if self.buttons["EXIT"].checkclick():
-            self.set_state(GameStates.quitting)
+            self.set_pending_state(GameStates.main_menu)
+            self.set_state(GameStates.resetting)
         elif self.buttons["RESUME"].checkclick():
             self.set_state(GameStates.in_game)

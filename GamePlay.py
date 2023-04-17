@@ -24,6 +24,7 @@ class Tetris:
         self.score=0
         self.level=1
         self.cleared_lines=0
+        self.last_played_mode=None
         
     def reset_game(self):
         reset_board(placed_blocks,self.tetrominos)

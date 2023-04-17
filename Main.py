@@ -25,13 +25,18 @@ class Main:
         self.dt=1/FPS
         self.state=GameStates.initilized
         self.game_screens=[]
+        self.pending_state=None
     
     def set_state(self,new_state):
-        self.state=new_state
+        if new_state:
+            self.state=new_state
+    
+    def set_pending_state(self,next_state):
+        self.pending_state=next_state
     
     def start_game(self):
         self.Tetris=Tetris(self)
-        self.MainMenu=MainMenu(self,None,None)
+        self.MainMenu=MainMenu(self)
         self.Pause=PauseScreen(self.main_font,self)
         self.game_screens.append(self.Tetris)
         self.game_screens.append(self.Pause)
@@ -54,7 +59,7 @@ class Main:
             if self.state==GameStates.main_menu:
                 self.MainMenu.loop(events)
                 self.screen.blit(self.MainMenu.main_surface,(0,0))
-            if self.state==GameStates.in_game:
+            elif self.state==GameStates.in_game:
                 self.Tetris.loop(events)
                 self.screen.blit(self.Tetris.main_surface,(0,0))
             elif self.state==GameStates.changing_res:
@@ -65,6 +70,9 @@ class Main:
                 self.Pause.loop(events)
                 self.Pause.draw(self.Tetris.main_surface)
                 self.screen.blit(self.Pause.main_surface,(0,0))
+            elif self.state==GameStates.resetting:
+                self.Tetris.reset_game()
+                self.set_state(self.pending_state)
             elif self.state==GameStates.game_over:
                 pass
             

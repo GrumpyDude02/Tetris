@@ -7,4 +7,5 @@ class GameStates(enum.Enum):
     paused="paused"
     game_over="game_over"
     quitting="quitting"
+    resetting="resetting"
     changing_res="changinf_res"
