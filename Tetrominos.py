@@ -12,6 +12,8 @@ successful_move=True
 class Tetrominos:
     def __init__(self,pivot_pos:pygame.Vector2,shape:str,block_width)->None:
         self.isSet=False
+        self.isHeld=False
+        self.destroy=False
         self.pivot=pivot_pos
         self.shape=shape
         self.color=shapes[self.shape][1]
@@ -19,7 +21,6 @@ class Tetrominos:
         self.blocks=[block((pos+self.pivot),block_width,self.color,self) for pos in shapes[self.shape][0]]
         self.center=self.blocks[0]
         self.acc=0
-        self.destroy=False
         self.keys_held=[False,False]
         self.HUpdate=0
         self.VUpdate=0
@@ -30,40 +31,32 @@ class Tetrominos:
         elif self.shape=='I':
             self.offset_list=offsets_I
         
-    def update(self,current_time,dt : int,events : pygame.Event,level)->None:
+    def handle_events(self,current_time,events : list[pygame.Event],placed_blocks:list[list])->None:
         global down_pressed
         down_pressed=False
-        self.acc+=level_speed[level-1]*dt*game_speed
-        if not self.blocks:
-            self.destroy=True
-        if self.isSet:
-            return
-        if self.acc>1 :
-            self.acc=0
-            self.move(moves["down"],current_time)
         keys=pygame.key.get_pressed()
         if keys[pygame.K_DOWN] and current_time-self.VUpdate>MOVE_DELAY:
             down_pressed=True
             self.VUpdate=current_time
-            self.move(moves["down"],current_time)
+            self.move(moves["down"],current_time,placed_blocks)
         for event in events:
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_UP:
-                    self.SRS_Rotate(True,1)
+                    self.SRS_Rotate(True,1,placed_blocks)
                 elif event.key==pygame.K_z:
-                    self.SRS_Rotate(False,1)
+                    self.SRS_Rotate(False,1,placed_blocks)
                 elif event.key==pygame.K_a:
-                    self.SRS_Rotate(True,2)
+                    self.SRS_Rotate(True,2,placed_blocks)
                 elif event.key==pygame.K_SPACE:
-                    self.move(moves['snap'],current_time)
+                    self.move(moves['snap'],current_time,placed_blocks)
                 elif event.key==pygame.K_LEFT:
                     self.keys_held[0]=True
                     self.key_held_time=0
-                    self.move(moves['left'],current_time)
+                    self.move(moves['left'],current_time,placed_blocks)
                 elif event.key==pygame.K_RIGHT:
                     self.keys_held[1]=True
                     self.key_held_time=0
-                    self.move(moves['right'],current_time)
+                    self.move(moves['right'],current_time,placed_blocks)
             elif event.type==pygame.KEYUP:
                 if event.key==pygame.K_LEFT:
                     self.keys_held[0]=False
@@ -76,25 +69,48 @@ class Tetrominos:
             if self.key_held_time>15:
                 if keys[pygame.K_RIGHT] and current_time-self.HUpdate>MOVE_DELAY:
                     self.HUpdate=current_time
-                    self.move(moves['right'],current_time)
+                    self.move(moves['right'],current_time,placed_blocks)
         elif self.keys_held[0]:
             self.key_held_time+=1
             if self.key_held_time>15:
                 if keys[pygame.K_LEFT] and current_time-self.HUpdate>MOVE_DELAY:
                     self.HUpdate=current_time
-                    self.move(moves['left'],current_time)
+                    self.move(moves['left'],current_time,placed_blocks)
             
-            
+    
+    def fall(self,level,dt,current_time,placed_blocks):
+        global down_pressed
+        self.acc+=level_speed[level-1]*dt*game_speed
+        if not self.blocks:
+            self.destroy=True
+        if self.isSet:
+            return
+        if self.acc>1 :
+            self.acc=0
+            self.move(moves["down"],current_time,placed_blocks)  
+    
+    def smooth_fall(self,level,dt,placed_blocks:list[list[block]]=None):
+        movement=v(0,level_speed[level-1]*dt*game_speed)
+        if placed_blocks:
+            if not self.collide(movement):
+                for block in self.blocks:
+                    block.map_pos+=movement
+                self.pivot+=movement
+        else:
+            for block in self.blocks:
+                block.map_pos+=movement
+            self.pivot+=movement   
            
-    def move(self,direction:pygame.Vector2,current_time)->None:
+           
+    def move(self,direction:pygame.Vector2,current_time,placed_blocks:list[list])->None:
         global shared_lock_timer,down_pressed,successful_move
         if direction==moves['snap']:
-            translate=self.project()
+            translate=self.project(placed_blocks)
             for block in self.blocks:
                 block.map_pos[1]+=translate-1
                 placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])]=block
             self.isSet=True
-        elif not self.collide(direction):
+        elif not self.collide(direction,placed_blocks):
             shared_lock_timer=current_time
             successful_move=True
             for block in self.blocks:
@@ -107,7 +123,7 @@ class Tetrominos:
                 self.set_blocks(placed_blocks)
             
           
-    def project(self)->int:
+    def project(self,placed_blocks)->int:
         translate=0
         while(translate<boardy_cell_number):
             if any(int(block.map_pos[1])+translate >= boardy_cell_number or placed_blocks[int(block.map_pos[1])+translate][int(block.map_pos[0])] for block in self.blocks):
@@ -115,14 +131,14 @@ class Tetrominos:
             translate+=1
         return translate
            
-    def collide(self,dir:pygame.Vector2)->bool:
+    def collide(self,dir:pygame.Vector2,placed_blocks)->bool:
         for block in self.blocks:
-            if block.collide(block.map_pos+dir):
+            if block.collide(block.map_pos+dir,placed_blocks):
                 return True
         return False            
     
     
-    def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface)->None:
+    def draw(self,window:pygame.Surface,shadow_surf:pygame.Surface=None,placed_blocks:list[list]=None)->None:
         for block in self.blocks:
             if block.map_pos-self.pivot==v():
                 block.draw(window)
@@ -130,16 +146,16 @@ class Tetrominos:
                 block.draw(window)
         if shadow_surf is None:
             return
-        if not self.isSet:
+        if not self.isSet and placed_blocks:
             pygame.draw.circle(window,(255,255,255),self.center.r_pos+v(self.center.width/2,self.center.width/2),2)
             shadow=deepcopy(self)
-            translate=self.project()
+            translate=self.project(placed_blocks)
             for block in shadow.blocks:    
                 block.map_pos[1]+=translate-1
                 block.draw(shadow_surf)
     
 #classic rotation but with wall kicks(boundaries only)  
-    def rotate(self,clockwise : bool)->None:
+    def rotate(self,clockwise : bool,placed_blocks)->None:
         if self.shape=="O":
             return
         old=deepcopy(self.blocks)
@@ -168,12 +184,12 @@ class Tetrominos:
             for block in self.blocks:
                 block.map_pos[1]-=shift_y
         for block in self.blocks:
-            if block.overlap(block.map_pos):
+            if block.overlap(block.map_pos,placed_blocks):
                 self.blocks=old
                 return  
   
 #Super Rotation System  
-    def SRS_Rotate(self,clockwise:bool,turns)->None:
+    def SRS_Rotate(self,clockwise:bool,turns,placed_blocks:list[list[block]]=None)->None:
         global shared_lock_timer
         if self.shape=="O":
             return
@@ -186,9 +202,11 @@ class Tetrominos:
                 temp=block.map_pos-self.pivot
                 block.map_pos[0]=(-temp[1]*rot+self.pivot[0])
                 block.map_pos[1]=(temp[0]*rot+self.pivot[1])
+        if not placed_blocks:
+            return
         for i in range(0,5):
             offset=self.offset_list[old_r_index][i]-self.offset_list[self.rotation_index][i]
-            if not self.collide(offset):
+            if not self.collide(offset,placed_blocks):
                 shared_lock_timer=pygame.time.get_ticks()
                 self.pivot+=offset
                 for block in self.blocks:

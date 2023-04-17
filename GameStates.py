@@ -8,4 +8,4 @@ class GameStates(enum.Enum):
     game_over="game_over"
     quitting="quitting"
     resetting="resetting"
-    changing_res="changinf_res"
+    changing_res="changing_res"

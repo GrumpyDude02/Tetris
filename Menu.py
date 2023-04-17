@@ -1,5 +1,6 @@
 from functions import *
 from GameStates import GameStates
+from Tetrominos import *
 import enum,sys
 
 
@@ -69,6 +70,7 @@ class Menu:
             self.main_surface.fill(fill_color)
         for key in self.buttons.keys():
             self.buttons[key].draw(self.main_surface)
+        self.game.screen.blit(self.main_surface,(0,0))
     
     def resize(self):
         pass
@@ -78,20 +80,60 @@ class Menu:
 
 
 class MainMenu(Menu):
+    last_spawn_time=0
     def __init__(self, game):
         super().__init__(game)
+        self.tetrominos=[]
+        self.destroy=[]
         self.buttons={"PLAY":buttons("PLAY",0.16,0.1,0.42,0.35,game.main_font,5,hover_color=BLUE),
                       "EXIT":buttons("EXIT",0.16,0.1,0.42,0.50,game.main_font,5,hover_color=BLUE)}
 
-    def loop(self,events):
-        for event in events:
+    def handle_events(self):
+        for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 self.set_state(GameStates.quitting)
         if self.buttons["EXIT"].checkclick():
             self.set_state(GameStates.quitting)
         if self.buttons["PLAY"].checkclick():
-                self.set_state(GameStates.in_game)
-        self.draw()
+            self.set_state(GameStates.in_game)   
+    
+    def generate_tetromino(self)->Tetrominos:
+        t=Tetrominos([random.randrange(0,(WIDTH//BLOCK_SIZE)),0],random.choice(list(shapes.keys())),BLOCK_SIZE)
+        t.SRS_Rotate(random.choice([bool("True"),bool("False")]),random.randint(0,2))
+        return t
+    
+    def draw_and_update(self,current_time,dt):
+        self.destroy=[]
+        self.main_surface.fill(BLACK)
+        if current_time-MainMenu.last_spawn_time>random.randrange(3000,6000,1000):
+            MainMenu.last_spawn_time=current_time
+            self.tetrominos.append(self.generate_tetromino())
+        for tetromino in self.tetrominos:
+            tetromino.smooth_fall(4,dt)
+            tetromino.draw(self.main_surface)
+            if tetromino.pivot.y>HEIGHT//BLOCK_SIZE+5:
+                self.destroy.append(tetromino)
+        for key,item in self.buttons.items():
+            item.draw(self.main_surface)
+        self.game.screen.blit(self.main_surface,(0,0))
+        
+    
+    def destroy_tetrominos(self):
+        for tetromino in self.destroy:
+            self.tetrominos.remove(tetromino)
+    
+    def loop(self):
+        dt=1/FPS
+        MainMenu.last_spawn_time=-10000
+        self.tetrominos=[]
+        while self.game.state==GameStates.main_menu:
+            current_time=pygame.time.get_ticks()
+            self.handle_events()
+            self.draw_and_update(current_time,dt)
+            dt=pygame.time.Clock().tick(FPS)/1000
+            pygame.display.flip()
+            self.destroy_tetrominos()
+            
             
 
 class PauseScreen(Menu):
@@ -105,8 +147,15 @@ class PauseScreen(Menu):
         self.buttons= {"EXIT":buttons("EXIT", 0.16 , 0.1, 0.52, 0.60 ,game.main_font,5,hover_color=BLUE),
                        "RESUME":buttons("RESUME", 0.16 , 0.1 , 0.32 ,0.60 ,game.main_font,5,hover_color=BLUE)}
     
-    def draw(self,surface):
-        blurred_surface=blurSurf(surface,5)
+    def handl_events(self):
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                    self.set_state(GameStates.quitting)
+            elif event.type==pygame.KEYDOWN:
+                if event.key== pygame.K_ESCAPE:
+                    self.set_state(GameStates.in_game)
+    
+    def draw(self,blurred_surface):
         self.main_surface.blit(blurred_surface,(0,0))
         self.main_surface.blit(self.transparent_surf,(0,0))
         render_position=self.text.get_rect()
@@ -114,15 +163,15 @@ class PauseScreen(Menu):
         self.main_surface.blit(self.text,render_position)
         super().draw()
     
-    def loop(self,events):
-        for event in events:
-            if event.type==pygame.QUIT:
-                self.set_state(GameStates.quitting)
-            elif event.type==pygame.KEYDOWN:
-                if event.key== pygame.K_ESCAPE:
-                    self.set_state(GameStates.in_game)
-        if self.buttons["EXIT"].checkclick():
-            self.set_pending_state(GameStates.main_menu)
-            self.set_state(GameStates.resetting)
-        elif self.buttons["RESUME"].checkclick():
-            self.set_state(GameStates.in_game)
+    def loop(self,surface):
+        blurred_surface=blurSurf(surface,5)
+        while self.game.state==GameStates.paused:
+            self.handl_events()
+            if self.buttons["EXIT"].checkclick():
+                self.set_pending_state(GameStates.main_menu)
+                self.set_state(GameStates.resetting)
+            elif self.buttons["RESUME"].checkclick():
+                self.set_state(GameStates.in_game)
+            self.draw(blurred_surface)
+            pygame.time.Clock().tick(FPS)
+            pygame.display.flip()

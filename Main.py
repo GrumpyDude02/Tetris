@@ -55,29 +55,21 @@ class Main:
      
     def loop(self):
         while self.state!=GameStates.quitting:
-            events=pygame.event.get()
             if self.state==GameStates.main_menu:
-                self.MainMenu.loop(events)
-                self.screen.blit(self.MainMenu.main_surface,(0,0))
+                self.MainMenu.loop()
             elif self.state==GameStates.in_game:
-                self.Tetris.loop(events)
-                self.screen.blit(self.Tetris.main_surface,(0,0))
+                self.Tetris.loop()
             elif self.state==GameStates.changing_res:
                 last_state=self.state
                 self.resize_window()
                 self.set_state(last_state)
             elif self.state==GameStates.paused:
-                self.Pause.loop(events)
-                self.Pause.draw(self.Tetris.main_surface)
-                self.screen.blit(self.Pause.main_surface,(0,0))
+                self.Pause.loop(self.Tetris.main_surface)
             elif self.state==GameStates.resetting:
                 self.Tetris.reset_game()
                 self.set_state(self.pending_state)
             elif self.state==GameStates.game_over:
                 pass
-            
-            self.dt=self.clock.tick(FPS)/1000
-            pygame.display.flip()
         sys.exit()
 
 
