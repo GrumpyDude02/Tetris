@@ -98,14 +98,14 @@ class MainMenu(Menu):
             self.set_state(GameStates.in_game)   
     
     def generate_tetromino(self)->Tetrominos:
-        t=Tetrominos([random.randrange(0,(WIDTH//BLOCK_SIZE)),0],random.choice(list(shapes.keys())),BLOCK_SIZE)
+        t=Tetrominos([random.randrange(2,(WIDTH//BLOCK_SIZE)-4,4),0],random.choice(list(shapes.keys())),BLOCK_SIZE)
         t.SRS_Rotate(random.choice([bool("True"),bool("False")]),random.randint(0,2))
         return t
     
     def draw_and_update(self,current_time,dt):
         self.destroy=[]
         self.main_surface.fill(BLACK)
-        if current_time-MainMenu.last_spawn_time>random.randrange(3000,6000,1000):
+        if current_time-MainMenu.last_spawn_time>random.randrange(1200,6000,500):
             MainMenu.last_spawn_time=current_time
             self.tetrominos.append(self.generate_tetromino())
         for tetromino in self.tetrominos:
