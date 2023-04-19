@@ -47,7 +47,7 @@ class Tetrominos:
                     self.SRS_Rotate(False,1,placed_blocks)
                 elif event.key==pygame.K_a:
                     self.SRS_Rotate(True,2,placed_blocks)
-                elif event.key==pygame.K_SPACE:
+                elif event.key==pygame.K_SPACE and not down_pressed:
                     self.move(moves['snap'],current_time,placed_blocks)
                 elif event.key==pygame.K_LEFT:
                     self.keys_held[0]=True
@@ -116,10 +116,10 @@ class Tetrominos:
             for block in self.blocks:
                 block.move(direction)
             self.pivot+=direction  
-        elif direction==moves['left'] or direction==moves['right']:
-            successful_move=False 
+        # elif direction==moves['left'] or direction==moves['right']:
+        #     successful_move=False 
         elif direction==moves['down']:
-            if down_pressed or not successful_move or current_time-shared_lock_timer>lock_delay :
+            if down_pressed or current_time-shared_lock_timer>lock_delay :
                 self.set_blocks(placed_blocks)
             
           
@@ -214,7 +214,6 @@ class Tetrominos:
                 return
         self.blocks=old_blocks
         self.rotation_index=old_r_index
-        
             
     def change_pos(self,new_pos:pygame.Vector2)->None:
         for block in self.blocks:
@@ -226,3 +225,7 @@ class Tetrominos:
         self.isSet=True
         for block in self.blocks:
             placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])]=block 
+            
+    def set_shape(self,new_shape:str)->None:
+        block_size=self.blocks[0].width
+        self.blocks=[block(pos+self.pivot,block_size,shapes[new_shape][1],self) for pos in shapes[new_shape][0]]
