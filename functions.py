@@ -3,6 +3,8 @@ from game_parameters import *
 from block import block
 
 
+
+
 def shift_blocks_down(placed_blocks_ar : list[list[block]],playable_field,cleared_row: int) -> None:
     for row in range(cleared_row-1,-1,-1):
         for col in range(playable_field):

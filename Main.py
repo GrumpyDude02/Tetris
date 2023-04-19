@@ -14,6 +14,7 @@ class Main:
         pygame.init()
         bit_depth=pygame.display.mode_ok(sc_size,window_style,32)
         self.screen=pygame.display.set_mode(sc_size,window_style,bit_depth,vsync=vsync_active)
+        pygame.display.set_caption("Tetris")
         pygame.mixer.pre_init(
             frequency=44100,
             size=32,

@@ -2,13 +2,13 @@ import pygame
 from pygame.math import Vector2 as v
 
 
-Resolutions=[(960,540),(1024,576),(1366,768),(1600,900),(1920,1080),(2560,1440)]
+Resolutions=[(960,540),(1024,576),(1280,720),(1366,768),(1600,900),(1920,1080),(2560,1440)]
 base_cell_size=22
 base_resolution=Resolutions[0]
-selected_res=Resolutions[1]
+selected_res=Resolutions[3]
 WIDTH=(selected_res[0])
 HEIGHT=(selected_res[1])
-font_scale=30
+font_scale=28
 
 cell_size=round(base_cell_size*(HEIGHT/base_resolution[1]))
 
