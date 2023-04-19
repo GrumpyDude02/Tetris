@@ -121,8 +121,7 @@ class Tetrominos:
         elif direction==moves['down']:
             if down_pressed or current_time-shared_lock_timer>lock_delay :
                 self.set_blocks(placed_blocks)
-            
-          
+    
     def project(self,placed_blocks)->int:
         translate=0
         while(translate<boardy_cell_number):

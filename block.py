@@ -30,3 +30,9 @@ class block:
         if self.in_bounds(pos) and not self.overlap(pos,placed_blocks):
             return False
         return True
+    
+    def resize(self,block_size:tuple=None):
+        if block_size is None:
+            self.width=BLOCK_SIZE
+        else:
+            self.width=BLOCK_SIZE
