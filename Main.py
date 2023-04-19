@@ -22,7 +22,6 @@ class Main:
         )
         self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
         self.clock=pygame.time.Clock()
-        self.dt=1/FPS
         self.state=GameStates.initilized
         self.game_screens=[]
         self.pending_state=None

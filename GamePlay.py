@@ -1,4 +1,4 @@
-import random
+import random,time
 from functions import *
 from game_parameters import *
 from Tetrominos import Tetrominos
@@ -11,7 +11,6 @@ class GameMode:
     resumed="resumed"
     paused="paused"
     initialized="initialized"
-    running="running"
     start_time=0
     def __init__(self,game,shape:str=None) -> None:
         if shape:
@@ -26,10 +25,11 @@ class GameMode:
         self.main_surface=generate_surf((WIDTH,HEIGHT),0)
         self.shadow_surf=generate_surf((12*cell_size,HEIGHT),80)
         self.score=0
-        self.level=15
+        self.level=1
+        self.state=GameMode.initialized  
         self.cleared_lines=0
         self.switch_available=False
-        self.time=0
+        self.timer=0
         self.placed_blocks=[[None for i in range(playable_num)]for j in range(boardy_cell_number)]
         
     def reset_game(self):
@@ -51,6 +51,11 @@ class GameMode:
             self.held_piece=temp
             self.switch_available=False
     
+    def render_timer(self)->pygame.Surface:
+        int_timer=int(self.timer)
+        time=self.game.main_font.render(f'TIME : {(int_timer//1000)//60:02d}:{(int_timer//1000)%60:02d}:{(int_timer//10)%100}',True,WHITE)
+        return time
+
     def resize(self):
         self.main_surface=pygame.transform.scale(self.main_surface,(WIDTH,HEIGHT))
         self.board_surface=pygame.transform.scale(self.main_surface,(board_width,board_height))
@@ -90,7 +95,6 @@ class Tetris(GameMode):
         self.next_shapes.append(self.shapes_list[self.index])
         self.preview_tetrominos=[Tetrominos(pos,shape,BLOCK_SIZE) for pos,shape in zip(preview_tetrominos_pos,self.shapes_list)]
         self.index+=1  
-        self.timer_state=GameMode.running  
         
     def reset_game(self):
         super().reset_game()
@@ -98,6 +102,7 @@ class Tetris(GameMode):
         self.next_shapes=[shape for shape in self.shapes_list]
         random.shuffle(self.shapes_list)
         self.current_piece=self.update_queue()
+        self.state=GameMode.initialized
         self.destroy=[]
         
     def draw(self):
@@ -115,15 +120,14 @@ class Tetris(GameMode):
         LEVEL=self.game.main_font.render(f'LEVEL : {self.level}',True,WHITE)
         HOLD=self.game.main_font.render("HOLD : ",True,WHITE)
         NEXT=self.game.main_font.render("NEXT : ",True,WHITE)
-        time=self.game.main_font.render(f'TIME : {self.time//60:02d}:{self.time%60:02d}',True,WHITE)
         draw_grid(self.board_surface,grid,(96,96,96))
         self.board_surface.blit(self.shadow_surf,(0,0))
         self.main_surface.blit(self.board_surface,(((WIDTH-12*cell_size)//2),(HEIGHT-24*cell_size)//2))
         self.main_surface.blit(NEXT,(round(WIDTH*0.68),(HEIGHT-24*cell_size)//2))
-        self.main_surface.blit(time,(50,50))
+        self.main_surface.blit(self.render_timer(),(50,50))
         self.draw_to_screen()
     
-    def handle_events(self,current_time):
+    def handle_events(self,current_time,dt):
         events=pygame.event.get()
         for event in events:
             if event.type==pygame.QUIT:
@@ -131,10 +135,10 @@ class Tetris(GameMode):
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_ESCAPE:
                     self.set_state(GameStates.paused)
-                    self.timer_state=Tetris.paused
+                    self.state=GameMode.paused
                 if event.key==pygame.K_c:
                     self.swap_pieces()           
-        self.current_piece.handle_events(current_time,events,self.placed_blocks)
+        self.current_piece.handle_events(current_time,events,self.placed_blocks,dt)
     
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
@@ -153,7 +157,7 @@ class Tetris(GameMode):
         for shape,tetromino in zip(self.next_shapes,self.preview_tetrominos):
             tetromino.set_shape(shape)
 
-    def update(self,dt,current_time):
+    def update(self,current_time,dt):
         if self.current_piece.isSet:
             self.tetrominos.append(self.current_piece)
             self.current_piece=self.update_queue()
@@ -170,20 +174,22 @@ class Tetris(GameMode):
         
 
     def loop(self):
-        dt=1/FPS
         temp=0
-        GameMode.start_time=pygame.time.get_ticks()
-        if self.timer_state==GameMode.paused:
-            temp=self.time
-            self.timer_state=GameMode.resumed
+        last_time=time.time()
+        GameMode.start_time=last_time*1000
+        if self.state==GameMode.paused:
+            temp=self.timer
+            self.state=GameMode.resumed
         while self.game.state==GameStates.in_game:
+            dt=(time.time()-last_time)
+            last_time=time.time()
             self.destroy=[]
-            current_time=pygame.time.get_ticks()
-            self.time=temp+(current_time-GameMode.start_time)//1000 #in seconds   
-            self.handle_events(current_time)
-            self.update(dt,current_time)
+            current_time=last_time*1000
+            self.timer=temp+(current_time-GameMode.start_time) #in seconds   
+            self.handle_events(current_time,dt)
+            self.update(current_time,dt)
             self.draw()
-            dt=pygame.time.Clock().tick(FPS)/1000
+            self.game.clock.tick(FPS)/1000
             pygame.display.flip()
             self.destroy_tetrominos()    
            

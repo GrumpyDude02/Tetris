@@ -130,7 +130,7 @@ class MainMenu(Menu):
             current_time=pygame.time.get_ticks()
             self.handle_events()
             self.draw_and_update(current_time,dt)
-            dt=pygame.time.Clock().tick(FPS)/1000
+            dt=self.game.clock.tick(FPS)/1000
             pygame.display.flip()
             self.destroy_tetrominos()
             

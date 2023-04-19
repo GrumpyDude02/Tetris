@@ -31,7 +31,7 @@ class Tetrominos:
         elif self.shape=='I':
             self.offset_list=offsets_I
         
-    def handle_events(self,current_time,events : list[pygame.Event],placed_blocks:list[list])->None:
+    def handle_events(self,current_time,events : list[pygame.Event],placed_blocks:list[list],dt:float)->None:
         global down_pressed
         down_pressed=False
         keys=pygame.key.get_pressed()
@@ -65,14 +65,14 @@ class Tetrominos:
                     self.keys_held[1]=False
                     self.key_held_time=0
         if self.keys_held[1]:
-            self.key_held_time+=1
-            if self.key_held_time>15:
+            self.key_held_time+=dt*1000
+            if self.key_held_time>250:
                 if keys[pygame.K_RIGHT] and current_time-self.HUpdate>MOVE_DELAY:
                     self.HUpdate=current_time
                     self.move(moves['right'],current_time,placed_blocks)
         elif self.keys_held[0]:
-            self.key_held_time+=1
-            if self.key_held_time>15:
+            self.key_held_time+=dt*1000
+            if self.key_held_time>250:
                 if keys[pygame.K_LEFT] and current_time-self.HUpdate>MOVE_DELAY:
                     self.HUpdate=current_time
                     self.move(moves['left'],current_time,placed_blocks)
