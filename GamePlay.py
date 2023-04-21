@@ -9,13 +9,15 @@ from copy import deepcopy
 preview_pos=pygame.Vector2(1,6)
 
 
-elements_coor={'board':Position(0.364,0.01666,gp.WIDTH,gp.HEIGHT),
-               'next_text':Position(0.68,0.01666,gp.WIDTH,gp.HEIGHT),
-               'hold_text':Position(0.24,0.40,gp.WIDTH,gp.HEIGHT),
-               'line_text':Position(0.15,0.26,gp.WIDTH,gp.HEIGHT),
-               'level_text':Position(0.15,0.173,gp.WIDTH,gp.HEIGHT),
-               'preview_surface':Position(0.68,0.05,gp.WIDTH,gp.HEIGHT),
-               'time':Position(0.15,0.08,gp.WIDTH,gp.HEIGHT)}
+
+elements_coor={'board':(0.364,0.01666),
+               'next_text':(0.68,0.01666),
+               'hold_text':(0.24,0.40),
+               'line_text':(0.15,0.26),
+               'level_text':(0.15,0.173),
+               'preview_surface':(0.68,0.05),
+               'time':(0.15,0.08)
+}
 
 preview_tetrominos_pos=[[preview_pos.x,preview_pos.y+i] for i in range(0,21,3)]
 
@@ -83,8 +85,6 @@ class GameMode:
 
     def resize(self):
         self.init_surfaces()
-        for key,position in elements_coor.items():
-            position.update(gp.WIDTH,gp.HEIGHT)
         for line in self.placed_blocks:
             for block in line:
                 if block is not None:
@@ -150,7 +150,6 @@ class Tetris(GameMode):
                 if event.key==pygame.K_ESCAPE:
                     self.set_state(GameStates.paused)
                     self.timer.pause_timer()
-                    self.state=GameMode.paused
                 if event.key==pygame.K_c:
                     self.swap_pieces()        
         self.current_piece.handle_events(current_time,events,self.placed_blocks,dt)
@@ -173,7 +172,6 @@ class Tetris(GameMode):
         return Tetrominos(gp.SPAWN_LOCATION,shape,gp.cell_size)
     
     def update(self,current_time,dt):
-        self.timer.update_timer()
         if self.current_piece.isSet:
             self.tetrominos.append(self.current_piece)
             self.current_piece=self.update_queue()
@@ -217,19 +215,21 @@ class Tetris(GameMode):
         
         
         self.board_surface.blit(self.shadow_surf,(0,0))
-        self.main_surface.blit(self.board_surface,elements_coor['board'].get_pos())
-        self.main_surface.blit(HOLD,elements_coor['hold_text'].get_pos())
-        self.main_surface.blit(NEXT,elements_coor['next_text'].get_pos())
-        self.main_surface.blit(self.render_timer(),elements_coor['time'].get_pos())
-        self.main_surface.blit(LEVEL,elements_coor['level_text'].get_pos())
-        self.main_surface.blit(LINES,elements_coor['line_text'].get_pos())
-        self.main_surface.blit(self.preview_surface,elements_coor['preview_surface'].get_pos())
+        self.main_surface.blit(self.board_surface,(int(elements_coor['board'][0]*gp.WIDTH),int(elements_coor['board'][1]*gp.HEIGHT)))
+        self.main_surface.blit(HOLD,(int(elements_coor['hold_text'][0]*gp.WIDTH),int(elements_coor['hold_text'][1]*gp.HEIGHT)))
+        self.main_surface.blit(NEXT,(int(elements_coor['next_text'][0]*gp.WIDTH),int(elements_coor['next_text'][1]*gp.HEIGHT)))
+        self.main_surface.blit(self.render_timer(),(int(elements_coor['time'][0]*gp.WIDTH),int(elements_coor['time'][1]*gp.HEIGHT)))
+        self.main_surface.blit(LEVEL,(int(elements_coor['level_text'][0]*gp.WIDTH),int(elements_coor['level_text'][1]*gp.HEIGHT)))
+        self.main_surface.blit(LINES,(int(elements_coor['line_text'][0]*gp.WIDTH),int(elements_coor['line_text'][1]*gp.HEIGHT)))
+        self.main_surface.blit(self.preview_surface,(int(elements_coor['preview_surface'][0]*gp.WIDTH),int(elements_coor['preview_surface'][1]*gp.HEIGHT)))
+
         
         self.draw_to_screen()
      
     def loop(self):
         self.timer.start_timer()
         while self.game.state==GameStates.in_game:
+            self.timer.update_timer()
             dt=min(self.timer.delta_time(),0.066)
             self.destroy=[]
             current_time=self.timer.current_time()*1000
