@@ -1,8 +1,6 @@
-import random
-from game_parameters import *
+import random,pygame
+import game_parameters as gp
 from block import block
-
-
 
 
 def shift_blocks_down(placed_blocks_ar : list[list[block]],playable_field,cleared_row: int) -> None:
@@ -63,16 +61,11 @@ def generate_surf(surf_size:tuple,transparency_amount:int)->pygame.Surface:
     except(pygame.error):
         surface=pygame.Surface(surf_size)
     if transparency_amount:
-        surface.set_colorkey(BLACK)
+        surface.set_colorkey(gp.BLACK)
         surface.set_alpha(transparency_amount)
     return surface
 
-def change_display_val()->float:
-    global WIDTH,HEIGHT,cell_size,board_width,board_height
-    WIDTH=selected_res[0]
-    HEIGHT=selected_res[1]
-    scale=(HEIGHT/base_resolution[1])
-    cell_size=round(base_cell_size*scale)
-    board_width=12*cell_size
-    board_height=(boardy_cell_number-shift)*cell_size
-    return scale
+
+def draw_grid(window:pygame.Surface,grid,color)->None:
+    for rect in grid:
+        pygame.draw.rect(window,color,rect)

@@ -1,9 +1,8 @@
-from game_parameters import *
+import game_parameters as gp
 from GamePlay import Tetris
-from Menu import *
+from Menu import MainMenu,PauseScreen
 from GameStates import GameStates
-from functions import change_display_val
-import sys
+import sys,pygame
 
 
 
@@ -21,7 +20,7 @@ class Main:
             channels=2,
             buffer=512,
         )
-        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
+        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",gp.font_scale)
         self.clock=pygame.time.Clock()
         self.state=GameStates.initilized
         self.game_screens=[]
@@ -43,15 +42,14 @@ class Main:
         self.set_state(GameStates.main_menu)
         self.loop()
     
-    def resize_window(self,selected_res):
-        global font_scale
-        scale=change_display_val(selected_res)
-        font_scale*=scale
-        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",font_scale)
-        bit_depth=pygame.display.mode_ok((WIDTH,HEIGHT),False,32)
-        self.screen=pygame.display.set_mode((WIDTH,HEIGHT),depth=bit_depth)
-        for screen in self.game_screens:
-            screen.resize()
+    def resize(self,selected_res):
+        scale=gp.change_display_val(selected_res)
+        gp.font_scale=int(gp.font_scale*scale[1])
+        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",int(gp.font_scale))
+        bit_depth=pygame.display.mode_ok((gp.WIDTH,gp.HEIGHT),False,32)
+        self.screen=pygame.display.set_mode((gp.WIDTH,gp.HEIGHT),depth=bit_depth)
+        self.MainMenu.resize()
+        self.Tetris.resize()
      
     def loop(self):
         while self.state!=GameStates.quitting:
@@ -60,9 +58,8 @@ class Main:
             elif self.state==GameStates.in_game:
                 self.Tetris.loop()
             elif self.state==GameStates.changing_res:
-                last_state=self.state
-                self.resize_window()
-                self.set_state(last_state)
+                self.resize(gp.Resolutions[2])
+                self.set_state(self.pending_state)
             elif self.state==GameStates.paused:
                 self.Pause.loop(self.Tetris.main_surface)
             elif self.state==GameStates.resetting:
@@ -74,5 +71,5 @@ class Main:
 
 
 
-new_game=Main((WIDTH,HEIGHT),False,False)
+new_game=Main((gp.WIDTH,gp.HEIGHT),False,False)
 new_game.start_game()
