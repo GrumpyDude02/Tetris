@@ -8,7 +8,7 @@ base_resolution=Resolutions[0]
 selected_res=Resolutions[1]
 WIDTH=(selected_res[0])
 HEIGHT=(selected_res[1])
-font_scale=int(36*(HEIGHT)/(WIDTH))
+base_font_scale=22
 
 cell_size=round(base_cell_size*(HEIGHT/base_resolution[1]))
 
