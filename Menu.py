@@ -14,8 +14,8 @@ class Menu:
         self.previous_menu=previous_menu
         self.buttons=None
         
-    def set_state(self,new_state):
-        self.game.set_state(new_state)
+    def set_state(self,new_state,last_mode:str=None):
+        self.game.set_state(new_state,last_mode)
     
     def set_pending_state(self,next_state):
         self.game.pending_state=next_state
@@ -53,7 +53,7 @@ class MainMenu(Menu):
         if self.buttons["EXIT"].checkclick():
             self.set_state(GameStates.quitting)
         if self.buttons["PLAY"].checkclick():
-            self.set_state(GameStates.in_game)  
+            self.set_state(GameStates.Tetris)  
         if self.buttons["SETTINGS"].checkclick():
             self.set_state(GameStates.in_settings)
     
@@ -109,7 +109,8 @@ class PauseScreen(Menu):
         self.create_blurred_surface()
         #0.52 0.60 0.32 0.60
         self.buttons= {"EXIT":Buttons("EXIT",( 0.16 , 0.1), (0.52, 0.60) ,game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
-                       "RESUME":Buttons("RESUME", (0.16 , 0.1) , (0.32 ,0.60) ,game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT))}
+                       "RESUME":Buttons("RESUME", (0.16 , 0.1) , (0.32 ,0.60) ,game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
+                       "RESET":Buttons("RESET", (0.16 , 0.1) , (0.42 ,0.75) ,game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT))}
     
     def resize(self):
         super().resize()
@@ -121,7 +122,15 @@ class PauseScreen(Menu):
                     self.set_state(GameStates.quitting)
             elif event.type==pygame.KEYDOWN:
                 if event.key== pygame.K_ESCAPE:
-                    self.set_state(GameStates.in_game)
+                    self.set_state(self.game.last_played)
+        if self.buttons["EXIT"].checkclick():
+            self.set_pending_state(GameStates.main_menu)
+            self.set_state(GameStates.resetting)
+        elif self.buttons["RESUME"].checkclick():
+            self.set_state(self.game.last_played)
+        elif self.buttons["RESET"].checkclick():
+            self.set_state(GameStates.resetting)
+            self.set_pending_state(self.game.last_played)
     
     def draw(self,blurred_surface):
         self.main_surface.blit(blurred_surface,(0,0))
@@ -135,11 +144,6 @@ class PauseScreen(Menu):
         blurred_surface=functions.blurSurf(surface,5)
         while self.game.state==GameStates.paused:
             self.handl_events()
-            if self.buttons["EXIT"].checkclick():
-                self.set_pending_state(GameStates.main_menu)
-                self.set_state(GameStates.resetting)
-            elif self.buttons["RESUME"].checkclick():
-                self.set_state(GameStates.in_game)
             self.draw(blurred_surface)
             pygame.time.Clock().tick(gp.FPS)
             pygame.display.flip()

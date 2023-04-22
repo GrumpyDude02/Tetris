@@ -24,22 +24,23 @@ class Main:
         self.clock=pygame.time.Clock()
         self.state=GameStates.initilized
         self.game_screens=[]
+        self.last_played=None
         self.pending_state=None
     
-    def set_state(self,new_state):
-        if new_state:
-            self.state=new_state
+    def set_state(self,new_state,last_mode:str=None):
+        if last_mode:
+            self.last_played=last_mode
+        self.state=new_state
+    
     
     def set_pending_state(self,next_state):
         self.pending_state=next_state
     
     def start_game(self):
-        self.Tetris=Tetris(self)
+        self.GameModes={GameStates.Tetris:Tetris(self)}
         self.MainMenu=Menu.MainMenu(self)
         self.Pause=Menu.PauseScreen(self)
         self.Settings=Menu.SettingsMenu(self)
-        self.game_screens.append(self.Tetris)
-        self.game_screens.append(self.Pause)
         self.set_state(GameStates.main_menu)
         self.loop()
     
@@ -49,34 +50,36 @@ class Main:
         bit_depth=pygame.display.mode_ok((gp.WIDTH,gp.HEIGHT),False,32)
         self.screen=pygame.display.set_mode((gp.WIDTH,gp.HEIGHT),depth=bit_depth)
         self.MainMenu.resize()
-        self.Tetris.resize()
         self.Pause.resize()
         self.Settings.resize()
+        for key,item in self.GameModes.items():
+            item.resize()
      
     def loop(self):
         while self.state!=GameStates.quitting:
-            if self.state==GameStates.main_menu:
+            if self.state in list(self.GameModes.keys()):
+                self.GameModes[self.state].loop()
+
+            elif self.state==GameStates.main_menu:
                 self.MainMenu.loop()
-                
-            elif self.state==GameStates.in_game:
-                self.Tetris.loop()
                 
             elif self.state==GameStates.changing_res:
                 self.resize(gp.selected_res)
                 self.set_state(self.pending_state)
                 
             elif self.state==GameStates.paused:
-                self.Pause.loop(self.Tetris.main_surface)
+                self.Pause.loop(self.GameModes[self.last_played].main_surface)
                 
             elif self.state==GameStates.in_settings:
                 self.Settings.loop()
                 
             elif self.state==GameStates.resetting:
-                self.Tetris.reset_game()
+                self.GameModes[self.last_played].reset_game()
                 self.set_state(self.pending_state)
                 
             elif self.state==GameStates.game_over:
                 pass
+
         sys.exit()
 
 
