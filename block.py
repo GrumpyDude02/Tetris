@@ -7,7 +7,7 @@ class block:
         self.spacing=block_spacing
         self.map_pos=v(pos[0],pos[1])
         self.width=cell_size
-        self.r_pos=self.map_pos*cell_size
+        self.sc_pos=self.map_pos*cell_size
         self.color=color
         self.tetromino=tetromino
     
@@ -18,8 +18,8 @@ class block:
         self.map_pos+=direction
        
     def draw(self,window:pygame.Surface)->None:
-        self.r_pos=v((self.map_pos[0]+1)*self.width,(self.map_pos[1]-gp.y_border_offset-1)*self.width)
-        pygame.draw.rect(window,self.color,pygame.Rect(self.r_pos[0],self.r_pos[1],self.width-self.spacing,self.width-self.spacing))
+        self.sc_pos=v((self.map_pos[0]+1)*self.width,(self.map_pos[1]-gp.y_border_offset-1)*self.width)
+        pygame.draw.rect(window,self.color,pygame.Rect(self.sc_pos[0],self.sc_pos[1],self.width-self.spacing,self.width-self.spacing))
  
     def overlap(self,pos,placed_blocks:list[list]):
         return bool(placed_blocks[int(pos.y)][int(pos.x)])

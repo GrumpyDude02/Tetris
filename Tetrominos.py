@@ -79,7 +79,7 @@ class Tetrominos:
                     self.move(gp.moves['left'],current_time,placed_blocks)
             
     
-    def fall(self,level,dt,current_time,placed_blocks):
+    def update(self,level,dt,current_time,placed_blocks):
         global down_pressed
         self.acc+=gp.level_speed[level-1]*dt*gp.game_speed
         if not self.blocks:
@@ -147,7 +147,7 @@ class Tetrominos:
         if shadow_surf is None:
             return
         if not self.isSet and placed_blocks:
-            pygame.draw.circle(window,(255,255,255),self.center.r_pos+v(self.center.width/2,self.center.width/2),2)
+            pygame.draw.circle(window,(255,255,255),self.center.sc_pos+v(self.center.width/2,self.center.width/2),2)
             shadow=deepcopy(self)
             translate=self.project(placed_blocks)
             for block in shadow.blocks:    

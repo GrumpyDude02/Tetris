@@ -61,8 +61,8 @@ class GameMode:
         self.cleared_lines=0
         self.held_piece=None
         
-    def set_state(self,new_state):
-        self.game.set_state(new_state)
+    def set_state(self,new_state,last_mode:str=None):
+        self.game.set_state(new_state,last_mode)
 
     def swap_pieces(self):
         if self.held_piece is None:
@@ -148,7 +148,7 @@ class Tetris(GameMode):
                     self.set_state(GameStates.paused)
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_ESCAPE:
-                    self.set_state(GameStates.paused)
+                    self.set_state(GameStates.paused,GameStates.Tetris)
                     self.timer.pause_timer()
                 if event.key==pygame.K_c:
                     self.swap_pieces()        
@@ -183,7 +183,7 @@ class Tetris(GameMode):
             self.switch_available=False
         if self.cleared_lines>self.level*10:
             self.level+=1
-        self.current_piece.fall(self.level,dt,current_time,self.placed_blocks)
+        self.current_piece.update(self.level,dt,current_time,self.placed_blocks)
         self.cleared_lines+=functions.check_line(self.placed_blocks,gp.playable_num)
     
     def draw(self):
@@ -228,7 +228,7 @@ class Tetris(GameMode):
      
     def loop(self):
         self.timer.start_timer()
-        while self.game.state==GameStates.in_game:
+        while self.game.state==GameStates.Tetris:
             self.timer.update_timer()
             dt=min(self.timer.delta_time(),0.066)
             self.destroy=[]
@@ -243,6 +243,3 @@ class Tetris(GameMode):
             self.game.clock.tick(gp.FPS)/1000
             pygame.display.flip()
             self.destroy_tetrominos()    
- 
-  
-        
