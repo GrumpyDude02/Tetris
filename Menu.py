@@ -4,30 +4,41 @@ from GameStates import GameStates
 from Tetrominos import Tetrominos
 from Tools.Buttons import Buttons
 
+
+direction={"up":0,"right":1,"down":2,"left":3}
     
 class Menu:
     
     class Cursor:
-        def __init__(self,color):
+        def set_attr(self):
+            attr=self.button.get_attributes()
+            self.rect.width=attr[1][0]
+            self.rect.height=attr[1][1]
+            self.rect.center=attr[0]
+        
+        def __init__(self,color,button):
+            self.index=0
+            self.button=button
             self.rect=pygame.Rect(0,0,0,0)
+            self.set_attr()
             self.color=color
         
-        def move_to(self,new_pos,new_size,button):
-            self.rect.width=new_size[0]
-            self.rect.height=new_size[1]
-            self.rect.center=new_pos
-            self.button=button
+        def move_to(self,direction):
+            if self.button.next_buttons[direction]:
+                self.button=self.button.next_buttons[direction]
+                self.set_attr()
          
         def draw(self,surface):
             pygame.draw.rect(surface,self.color,self.rect,width=5)
     
     def __init__(self,game,child_menus: list=None,previous_menu=None):
-        self.cursor=Menu.Cursor(gp.BLUE)
         self.game=game
         self.main_surface=functions.generate_surf((gp.WIDTH,gp.HEIGHT),0)
         self.child_menus=child_menus
         self.previous_menu=previous_menu
         self.buttons=None
+        self.cursor=None
+        self.nav_mode=1
         
     def set_state(self,new_state,last_mode:str=None):
         self.game.set_state(new_state,last_mode)
@@ -56,19 +67,30 @@ class MainMenu(Menu):
         self.buttons={"PLAY":Buttons("PLAY",(0.16,0.1),(0.42,0.35),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
                       "SETTINGS":Buttons("SETTINGS",(0.16,0.1),(0.42,0.50),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
                       "EXIT":Buttons("EXIT",(0.16,0.1),(0.42,0.65),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT))}
-        attr=self.buttons["PLAY"].get_attributes()
-        self.cursor.move_to(attr[0],attr[1],self.buttons["PLAY"])
+        self.cursor=Menu.Cursor(gp.BLUE,self.buttons["PLAY"])
+        self.buttons["PLAY"].next_buttons=[self.buttons["EXIT"],None,self.buttons["SETTINGS"],None]
+        self.buttons["SETTINGS"].next_buttons=[self.buttons["PLAY"],None,self.buttons["EXIT"],None]
+        self.buttons["EXIT"].next_buttons=[self.buttons["SETTINGS"],None,self.buttons["PLAY"],None]
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 self.set_state(GameStates.quitting)
-        if self.buttons["EXIT"].checkclick():
-            self.set_state(GameStates.quitting)
-        if self.buttons["PLAY"].checkclick():
-            self.set_state(GameStates.Tetris)  
-        if self.buttons["SETTINGS"].checkclick():
-            self.set_state(GameStates.in_settings)
+            if event.type==pygame.KEYDOWN:
+                self.nav_mode=0
+                if event.key==pygame.K_DOWN:
+                    self.cursor.move_to(direction["down"])
+                if event.key==pygame.K_UP:
+                    self.cursor.move_to(direction["up"])
+            if event.type==pygame.MOUSEMOTION:
+                self.nav_mode=1
+        if self.nav_mode==1:
+            if self.buttons["EXIT"].checkclick():
+                self.set_state(GameStates.quitting)
+            if self.buttons["PLAY"].checkclick():
+                self.set_state(GameStates.Tetris)  
+            if self.buttons["SETTINGS"].checkclick():
+                self.set_state(GameStates.in_settings)
     
     def generate_tetromino(self)->Tetrominos:
         t=Tetrominos([random.randrange(2,(gp.WIDTH//gp.cell_size)-4,4),0],random.choice(list(gp.shapes.keys())),gp.cell_size)
@@ -88,11 +110,10 @@ class MainMenu(Menu):
                 self.destroy.append(tetromino)
         for key,item in self.buttons.items():
             item.draw(self.main_surface)
-        self.cursor.draw(self.main_surface)
+        if self.nav_mode==0:
+            self.cursor.draw(self.main_surface)
         self.game.screen.blit(self.main_surface,(0,0))
         
-        
-    
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
             self.tetrominos.remove(tetromino)

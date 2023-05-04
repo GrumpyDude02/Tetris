@@ -4,7 +4,7 @@ class Buttons:
     idle="idle"
     armed="armed"
     
-    def __init__(self, text ,size:list , pos:list,gui_font,outline : int=False ,color:tuple=(0,0,0),text_color:tuple=(255,255,255),hover_color:tuple=(0,0,0),sc_size:list=(1,1))->None :
+    def __init__(self, text ,size:list , pos:list,gui_font,outline : int=False ,color:tuple=(0,0,0),text_color:tuple=(255,255,255),hover_color:tuple=(0,0,0),sc_size:list=(1,1),Next:list=None)->None :
         self.pos=pos
         self.size=size
         self.outline_size=outline
@@ -16,6 +16,7 @@ class Buttons:
         self.hover_color=hover_color
         self.resize(sc_size,gui_font)
         self.clicked=False
+        self.next_buttons=Next
         
     def draw(self,screen):
         if self.lrect:
