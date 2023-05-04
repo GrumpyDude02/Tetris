@@ -20,7 +20,7 @@ class Main:
             channels=2,
             buffer=512,
         )
-        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",gp.base_font_scale)
+        self.main_font=pygame.font.SysFont("arialblack",gp.base_font_scale)
         self.clock=pygame.time.Clock()
         self.state=GameStates.initilized
         self.game_screens=[]
@@ -46,7 +46,7 @@ class Main:
     
     def resize(self,selected_res):
         scale=gp.change_display_val(selected_res)
-        self.main_font=pygame.font.Font("Assets/kimberley bl.otf",int(gp.base_font_scale*scale[1]))
+        self.main_font=pygame.font.SysFont("arialblack",int(gp.base_font_scale*scale[1]))#pygame.font.Font("Assets/kimberley bl.otf",int(gp.base_font_scale*scale[1]))
         bit_depth=pygame.display.mode_ok((gp.WIDTH,gp.HEIGHT),False,32)
         self.screen=pygame.display.set_mode((gp.WIDTH,gp.HEIGHT),depth=bit_depth)
         self.MainMenu.resize()

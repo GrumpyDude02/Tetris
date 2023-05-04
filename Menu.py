@@ -7,7 +7,22 @@ from Tools.Buttons import Buttons
     
 class Menu:
     
+    class Cursor:
+        def __init__(self,color):
+            self.rect=pygame.Rect(0,0,0,0)
+            self.color=color
+        
+        def move_to(self,new_pos,new_size,button):
+            self.rect.width=new_size[0]
+            self.rect.height=new_size[1]
+            self.rect.center=new_pos
+            self.button=button
+         
+        def draw(self,surface):
+            pygame.draw.rect(surface,self.color,self.rect,width=5)
+    
     def __init__(self,game,child_menus: list=None,previous_menu=None):
+        self.cursor=Menu.Cursor(gp.BLUE)
         self.game=game
         self.main_surface=functions.generate_surf((gp.WIDTH,gp.HEIGHT),0)
         self.child_menus=child_menus
@@ -41,6 +56,8 @@ class MainMenu(Menu):
         self.buttons={"PLAY":Buttons("PLAY",(0.16,0.1),(0.42,0.35),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
                       "SETTINGS":Buttons("SETTINGS",(0.16,0.1),(0.42,0.50),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
                       "EXIT":Buttons("EXIT",(0.16,0.1),(0.42,0.65),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT))}
+        attr=self.buttons["PLAY"].get_attributes()
+        self.cursor.move_to(attr[0],attr[1],self.buttons["PLAY"])
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -71,7 +88,9 @@ class MainMenu(Menu):
                 self.destroy.append(tetromino)
         for key,item in self.buttons.items():
             item.draw(self.main_surface)
+        self.cursor.draw(self.main_surface)
         self.game.screen.blit(self.main_surface,(0,0))
+        
         
     
     def destroy_tetrominos(self):

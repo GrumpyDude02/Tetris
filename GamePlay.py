@@ -80,7 +80,7 @@ class GameMode:
     
     def render_timer(self)->pygame.Surface:
         int_timer=int(self.timer.time)
-        time=self.game.main_font.render(f'TIME : {(int_timer//1000)//60:02d}:{(int_timer//1000)%60:02d}:{(int_timer//10)%100}',True,gp.WHITE)
+        time=self.game.main_font.render(f'TIME : {(int_timer//1000)//60:02d}:{(int_timer//1000)%60:02d}:{(int_timer//10)%100:02d}',True,gp.WHITE)
         return time
 
     def resize(self):
