@@ -23,8 +23,11 @@ class Menu:
             self.set_attr()
             self.color=color
         
-        def move_to(self,direction):
-            if self.button.next_buttons[direction]:
+        def move_to(self,direction:int=None,button:Buttons=None):
+            if button:
+                self.button=button
+                self.set_attr()
+            elif self.button.next_buttons[direction]:
                 self.button=self.button.next_buttons[direction]
                 self.set_attr()
          
@@ -38,7 +41,7 @@ class Menu:
         self.previous_menu=previous_menu
         self.buttons=None
         self.cursor=None
-        self.nav_mode=1
+        self.mouse_mode=True
         
     def set_state(self,new_state,last_mode:str=None):
         self.game.set_state(new_state,last_mode)
@@ -68,33 +71,43 @@ class MainMenu(Menu):
                       "SETTINGS":Buttons("SETTINGS",(0.16,0.1),(0.42,0.50),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT)),
                       "EXIT":Buttons("EXIT",(0.16,0.1),(0.42,0.65),game.main_font,5,hover_color=gp.BLUE,sc_size=(gp.WIDTH,gp.HEIGHT))}
         self.cursor=Menu.Cursor(gp.BLUE,self.buttons["PLAY"])
+        
         self.buttons["PLAY"].next_buttons=[self.buttons["EXIT"],None,self.buttons["SETTINGS"],None]
         self.buttons["SETTINGS"].next_buttons=[self.buttons["PLAY"],None,self.buttons["EXIT"],None]
         self.buttons["EXIT"].next_buttons=[self.buttons["SETTINGS"],None,self.buttons["PLAY"],None]
 
+    
     def handle_events(self):
+        
+        if self.mouse_mode:
+            for key in self.buttons.keys():
+                if self.buttons[key].move_cursor(self.cursor):
+                    print(self.button_state[key])
+        
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 self.set_state(GameStates.quitting)
             if event.type==pygame.KEYDOWN:
-                self.nav_mode=0
+                self.mouse_mode=False
                 if event.key==pygame.K_DOWN:
                     self.cursor.move_to(direction["down"])
                 if event.key==pygame.K_UP:
                     self.cursor.move_to(direction["up"])
             if event.type==pygame.MOUSEMOTION:
-                self.nav_mode=1
-        if self.nav_mode==1:
-            if self.buttons["EXIT"].checkclick():
-                self.set_state(GameStates.quitting)
-            if self.buttons["PLAY"].checkclick():
-                self.set_state(GameStates.Tetris)  
-            if self.buttons["SETTINGS"].checkclick():
+                self.mouse_mode=True
+                
+        b=self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["PLAY"]:
+                self.set_state(GameStates.Tetris)
+            elif b is self.buttons["SETTINGS"]:
                 self.set_state(GameStates.in_settings)
+            elif b is self.buttons["EXIT"]:
+                self.set_state(GameStates.quitting)
     
     def generate_tetromino(self)->Tetrominos:
         t=Tetrominos([random.randrange(2,(gp.WIDTH//gp.cell_size)-4,4),0],random.choice(list(gp.shapes.keys())),gp.cell_size)
-        t.SRS_Rotate(random.choice([bool("True"),bool("False")]),random.randint(0,2))
+        t.SRS_Rotate(random.choice([True,False]),random.randint(0,2))
         return t
     
     def draw_and_update(self,current_time,dt):
@@ -110,8 +123,7 @@ class MainMenu(Menu):
                 self.destroy.append(tetromino)
         for key,item in self.buttons.items():
             item.draw(self.main_surface)
-        if self.nav_mode==0:
-            self.cursor.draw(self.main_surface)
+        self.cursor.draw(self.main_surface)
         self.game.screen.blit(self.main_surface,(0,0))
         
     def destroy_tetrominos(self):
@@ -157,12 +169,12 @@ class PauseScreen(Menu):
             elif event.type==pygame.KEYDOWN:
                 if event.key== pygame.K_ESCAPE:
                     self.set_state(self.game.last_played)
-        if self.buttons["EXIT"].checkclick():
+        if self.buttons["EXIT"].check_input():
             self.set_pending_state(GameStates.main_menu)
             self.set_state(GameStates.resetting)
-        elif self.buttons["RESUME"].checkclick():
+        elif self.buttons["RESUME"].check_input():
             self.set_state(self.game.last_played)
-        elif self.buttons["RESET"].checkclick():
+        elif self.buttons["RESET"].check_input():
             self.set_state(GameStates.resetting)
             self.set_pending_state(self.game.last_played)
     
@@ -199,12 +211,12 @@ class SettingsMenu(Menu):
             if event.type==pygame.QUIT:
                 self.set_state(GameStates.quitting)
         for key,i in zip(self.buttons.keys(),range(0,7)):
-            if self.buttons[key].checkclick():
+            if self.buttons[key].check_input():
                 gp.selected_res=gp.Resolutions[i]
                 self.set_state(GameStates.changing_res)
                 self.set_pending_state(GameStates.in_settings)
                 break
-        if self.buttons['BACK'].checkclick():
+        if self.buttons['BACK'].check_input():
             self.set_state(GameStates.main_menu)
     
     def loop(self):
