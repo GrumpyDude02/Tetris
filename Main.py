@@ -1,6 +1,6 @@
 import game_parameters as gp
 from GamePlay import Tetris
-import Menu
+import GameMenus
 from GameStates import GameStates
 import sys, pygame
 
@@ -28,7 +28,7 @@ class Main:
         self.game_screens = []
         self.last_played = None
         self.pending_state = None
-        self.shared_bg=Menu.Background()
+        self.shared_bg = GameMenus.Background()
 
     def set_state(self, new_state, last_mode: str = None):
         if last_mode:
@@ -40,10 +40,10 @@ class Main:
 
     def start_game(self):
         self.GameModes = {GameStates.Tetris: Tetris(self)}
-        self.MainMenu = Menu.MainMenu(self,backdround=self.shared_bg)
-        self.Pause = Menu.PauseScreen(self)
-        self.Settings = Menu.SettingsMenu(self,backdround=self.shared_bg)
-        self.GameOver = Menu.GameOver(self)
+        self.MainMenu = GameMenus.MainMenu(self, backdround=self.shared_bg)
+        self.Pause = GameMenus.PauseScreen(self)
+        self.Settings = GameMenus.SettingsMenu(self, backdround=self.shared_bg)
+        self.GameOver = GameMenus.GameOver(self)
         self.set_state(GameStates.main_menu)
         self.loop()
 
