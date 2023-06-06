@@ -28,6 +28,7 @@ class Main:
         self.game_screens = []
         self.last_played = None
         self.pending_state = None
+        self.shared_bg=Menu.Background()
 
     def set_state(self, new_state, last_mode: str = None):
         if last_mode:
@@ -39,9 +40,9 @@ class Main:
 
     def start_game(self):
         self.GameModes = {GameStates.Tetris: Tetris(self)}
-        self.MainMenu = Menu.MainMenu(self)
+        self.MainMenu = Menu.MainMenu(self,backdround=self.shared_bg)
         self.Pause = Menu.PauseScreen(self)
-        self.Settings = Menu.SettingsMenu(self)
+        self.Settings = Menu.SettingsMenu(self,backdround=self.shared_bg)
         self.GameOver = Menu.GameOver(self)
         self.set_state(GameStates.main_menu)
         self.loop()
