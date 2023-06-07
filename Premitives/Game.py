@@ -14,8 +14,10 @@ elements_coor = {
     "hold_text": (0.24, 0.40),
     "line_text": (0.15, 0.26),
     "level_text": (0.15, 0.173),
-    "preview_surface": (0.68, 0.05),
     "time": (0.15, 0.08),
+    "score":(0.15,0.7),
+    "preview_surface": (0.68, 0.05),
+    
 }
 
 preview_tetrominos_pos = [[preview_pos.x, preview_pos.y + i] for i in range(0, 21, 3)]
@@ -48,11 +50,13 @@ class GameMode:
             ]
         self.init_surfaces()
         self.game = game
+        self.score=0
+        self.curr_drop_score=None
         self.held_piece = None
         self.destroy = []
         self.tetrominos = []
         self.score = 0
-        self.level = 1
+        self.level = 0
         self.state = GameMode.initialized
         self.cleared_lines = 0
         self.switch_available = False
@@ -64,8 +68,7 @@ class GameMode:
     def reset_game(self):
         functions.reset_board(self.placed_blocks, self.tetrominos)
         self.timer.reset()
-        self.level = 1
-        self.cleared_lines = 0
+        self.level = self.cleared_lines = self.score = 0
         self.held_piece = None
 
     def set_state(self, new_state, last_mode: str = None):
@@ -126,14 +129,27 @@ class GameMode:
             ),
         )
 
+    def update_HUD(self,cleared_lines : int,score_list : list)->None:
+        if cleared_lines>0:
+            self.score+=score_list[cleared_lines-1]*(self.level+1)
+        if self.curr_drop_score is not None:
+            if self.curr_drop_score[0]:
+                self.score+=self.curr_drop_score[1]*2
+            if self.curr_drop_score and not self.curr_drop_score[0]:
+                self.score+=1 
+        self.cleared_lines+=cleared_lines
+    
     def draw_HUD(self, target_lines: str = "\u221E"):
         self.preview_surface.fill(gp.BLACK)
         LINES = self.game.main_font.render(
             f"LINES : {self.cleared_lines} / {target_lines}", True, gp.WHITE
         )
+        
         LEVEL = self.game.main_font.render(f"LEVEL : {self.level}", True, gp.WHITE)
         HOLD = self.game.main_font.render("HOLD : ", True, gp.WHITE)
         NEXT = self.game.main_font.render("NEXT : ", True, gp.WHITE)
+        SCORE=self.game.main_font.render(f"SCORE : {self.score}", True, gp.WHITE)
+        
         for preview in self.preview_tetrominos:
             preview.draw(self.preview_surface, None, self.placed_blocks)
         self.current_piece.draw(
@@ -181,6 +197,7 @@ class GameMode:
                 int(elements_coor["preview_surface"][1] * gp.HEIGHT),
             ),
         )
+        self.main_surface.blit(SCORE,(int(elements_coor["score"][0]*gp.WIDTH),int(elements_coor["score"][1]*gp.HEIGHT)))
 
     def draw_board(self):
         self.current_piece.draw(

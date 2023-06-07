@@ -85,6 +85,12 @@ class Menu:
     def set_pending_state(self, next_state):
         self.game.pending_state = next_state
 
+    def switch_input(self,event:pygame.event):
+        if event.type == pygame.MOUSEMOTION:
+            self.mouse_mode = True
+        elif event.type == pygame.KEYDOWN:
+                self.mouse_mode = False
+    
     def draw(
         self, fill_color: tuple = None, current_time: float = 0, dt: float = 1 / 60
     ):

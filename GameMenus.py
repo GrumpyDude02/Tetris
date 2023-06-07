@@ -69,6 +69,7 @@ class MainMenu(Menu):
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             if event.type == pygame.KEYDOWN:
+                #Moving cursor
                 self.mouse_mode = False
                 if event.key == pygame.K_DOWN:
                     self.cursor.move_to(direction["down"])
@@ -134,26 +135,54 @@ class PauseScreen(TransparentMenu):
                 sc_size=(gp.WIDTH, gp.HEIGHT),
             ),
         }
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
+        self.buttons["EXIT"].next_buttons=[self.buttons["RESET"],self.buttons["RESET"],self.buttons["RESET"],self.buttons["RESUME"]]
+        self.buttons["RESUME"].next_buttons=[self.buttons["RESET"],self.buttons["EXIT"],self.buttons["RESET"],self.buttons["RESET"]]
+        self.buttons["RESET"].next_buttons=[self.buttons["RESUME"],self.buttons["RESUME"],self.buttons["EXIT"],self.buttons["EXIT"]]
+
 
     def resize(self):
         super().resize()
         self.create_blurred_surface()
 
     def handle_events(self):
+        if self.mouse_mode:
+            for key in self.buttons.keys():
+                if self.buttons[key].move_cursor(self.cursor):
+                    print(self.button_state[key])
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
+                self.mouse_mode=False
                 if event.key == pygame.K_ESCAPE:
                     self.set_state(self.game.last_played)
-        if self.buttons["EXIT"].check_input():
-            self.set_pending_state(GameStates.main_menu)
-            self.set_state(GameStates.resetting)
-        elif self.buttons["RESUME"].check_input():
-            self.set_state(self.game.last_played)
-        elif self.buttons["RESET"].check_input():
-            self.set_state(GameStates.resetting)
-            self.set_pending_state(self.game.last_played)
+                
+                if event.key == pygame.K_DOWN:
+                    self.cursor.move_to(direction["down"])
+                if event.key == pygame.K_UP:
+                    self.cursor.move_to(direction["up"])
+                if event.key == pygame.K_LEFT:
+                    self.cursor.move_to(direction["left"])
+                if event.key == pygame.K_RIGHT:
+                    self.cursor.move_to(direction["right"])
+                    
+            elif event.type == pygame.MOUSEMOTION:
+                 self.mouse_mode = True
+        
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["RESUME"]:
+                self.set_state(self.game.last_played)
+            elif b is self.buttons["RESET"]:
+                self.set_state(GameStates.resetting)
+                self.set_pending_state(self.game.last_played)
+            elif b is self.buttons["EXIT"]:
+                self.set_pending_state(GameStates.main_menu)
+                self.set_state(GameStates.resetting)
+        
+       
 
     def loop(self, surface):
         blurred_surface = pygame.transform.gaussian_blur(surface, 4, False)

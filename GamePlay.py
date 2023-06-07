@@ -43,7 +43,6 @@ class Tetris(GameMode):
                 self.set_state(GameStates.quitting)
             if event.type == pygame.ACTIVEEVENT:
                 if event.state == 2:
-                    print("gg")
                     self.state = GameMode.paused
                     self.set_state(GameStates.paused)
             if event.type == pygame.KEYDOWN:
@@ -52,7 +51,7 @@ class Tetris(GameMode):
                     self.timer.pause_timer()
                 if event.key == pygame.K_c:
                     self.swap_pieces()
-        self.current_piece.handle_events(current_time, events, self.placed_blocks, dt)
+        self.curr_drop_score=self.current_piece.handle_events(current_time, events, self.placed_blocks, dt)
 
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
@@ -64,8 +63,7 @@ class Tetris(GameMode):
 
     def update_queue(self) -> Tetrominos:
         self.next_shapes.append(self.shapes_list[self.index])
-        self.index += 1
-        self.index %= 7
+        self.index = (self.index + 1) % 7
         if self.index == 0:
             random.shuffle(self.shapes_list)
         shape = self.next_shapes.pop(0)
@@ -81,10 +79,12 @@ class Tetris(GameMode):
             self.current_piece = self.update_queue()
             self.set_shapes()
             self.switch_available = False
-        if self.cleared_lines > self.level * 10:
+        if self.cleared_lines > (self.level+1) * 10:
             self.level += 1
         self.current_piece.update(self.level, dt, current_time, self.placed_blocks)
-        self.cleared_lines += functions.check_line(self.placed_blocks, gp.playable_num)
+        
+        self.update_HUD(functions.check_line(self.placed_blocks,gp.playable_num),gp.score_lines)
+        
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
@@ -120,6 +120,6 @@ class Tetris(GameMode):
             self.handle_events(current_time, dt)
             self.update(current_time, dt)
             self.draw()
-            self.game.clock.tick(gp.FPS) / 1000
+            self.game.clock.tick() / 1000
             pygame.display.flip()
             self.destroy_tetrominos()
