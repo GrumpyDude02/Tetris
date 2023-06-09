@@ -79,7 +79,7 @@ class Menu:
         self.cursor = None
         self.mouse_mode = True
 
-    def set_state(self, new_state, last_mode: str = None):
+    def set_state(self, new_state, last_mode: str = None) :
         self.game.set_state(new_state, last_mode)
 
     def set_pending_state(self, next_state):
@@ -91,9 +91,7 @@ class Menu:
         elif event.type == pygame.KEYDOWN:
                 self.mouse_mode = False
     
-    def draw(
-        self, fill_color: tuple = None, current_time: float = 0, dt: float = 1 / 60
-    ):
+    def draw(self, fill_color: tuple = None, current_time: float = 0, dt: float = 1 / 60):
         if fill_color:
             self.main_surface.fill(fill_color)
         if self.background is not None:
@@ -112,7 +110,7 @@ class Menu:
 
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
-        self.transparent_surf = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 150)
+        self.transparent_surf = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 150,(0,0,0))
         self.text_render = self.game.main_font.render(self.text, True, gp.WHITE)
         self.title_pos = self.text_render.get_rect(
             center=pygame.Rect(0, 0, gp.WIDTH, gp.HEIGHT).center

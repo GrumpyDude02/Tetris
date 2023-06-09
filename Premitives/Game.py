@@ -1,8 +1,9 @@
-import random, pygame, Tools.functions as functions
+import pygame, Tools.functions as functions
+from Main import Main
+from GameStates import GameStates
 from Tools.Timer import Timer
 import game_parameters as gp
 from Tetrominos import Tetrominos
-from GameStates import GameStates
 from copy import deepcopy
 
 preview_pos = pygame.Vector2(1, 6)
@@ -16,6 +17,7 @@ elements_coor = {
     "level_text": (0.15, 0.173),
     "time": (0.15, 0.08),
     "score":(0.15,0.7),
+    "clearance_type":(0.15,0.76),
     "preview_surface": (0.68, 0.05),
     
 }
@@ -30,51 +32,50 @@ class GameMode:
     paused = "paused"
     initialized = "initialized"
     start_time = 0
+    last_time=0
+    timer=Timer()
 
-    def init_surfaces(self):
-        self.board_surface = functions.generate_surf(
-            (gp.board_width, gp.board_height), 0
-        )
-        self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 0)
-        self.shadow_surf = functions.generate_surf((12 * gp.cell_size, gp.HEIGHT), 80)
-        self.preview_surface = functions.generate_surf((5 * gp.cell_size, gp.HEIGHT), 0)
-        self.preview_surface.set_colorkey(gp.BLACK)
+    def init_surfaces(self)->None:
+        self.board_surface = functions.generate_surf((gp.board_width, gp.board_height))
+        self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT))
+        self.shadow_surf = functions.generate_surf((12 * gp.cell_size, gp.HEIGHT), 80,(0,0,0))
+        self.preview_surface = functions.generate_surf((5 * gp.cell_size, gp.HEIGHT), 0,(0,0,0))
+        self.clearance_type_surf=functions.generate_surf((int(0.20*gp.WIDTH),int(0.20*gp.HEIGHT)),color_key=(0,0,0))
+        self.clearance_type_surf.set_alpha(255)
 
-    def __init__(self, game, shape: str = None) -> None:
+    def __init__(self, game : Main, shape: str = None) -> None:
         if shape:
             self.shape = shape
-            self.currnet_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, gp.cell_size)
+            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, gp.cell_size)
             self.preview_tetrominos = [
                 Tetrominos(pos, self.shape, gp.cell_size / 2)
                 for pos in preview_tetrominos_pos
             ]
         self.init_surfaces()
         self.game = game
-        self.score=0
-        self.curr_drop_score=None
-        self.held_piece = None
+        self.score = self.level = self.cleared_lines = self.combo = self.current_time = self.dt = 0 
+        self.clearance_type=""
         self.destroy = []
         self.tetrominos = []
-        self.score = 0
-        self.level = 0
-        self.state = GameMode.initialized
-        self.cleared_lines = 0
         self.switch_available = False
-        self.timer = Timer()
+        self.curr_drop_score=None
+        self.held_piece = None
+        self.state = GameMode.initialized
         self.placed_blocks = [
             [None for i in range(gp.playable_num)] for j in range(gp.boardy_cell_number)
         ]
+        
 
-    def reset_game(self):
+    def reset_game(self) -> None:
         functions.reset_board(self.placed_blocks, self.tetrominos)
-        self.timer.reset()
+        GameMode.timer.reset()
         self.level = self.cleared_lines = self.score = 0
         self.held_piece = None
 
-    def set_state(self, new_state, last_mode: str = None):
+    def set_state(self, new_state : GameStates , last_mode: str = None):
         self.game.set_state(new_state, last_mode)
 
-    def swap_pieces(self):
+    def swap_pieces(self) -> None:
         if self.held_piece is None:
             self.current_piece.isHeld = True
             self.held_piece = deepcopy(self.current_piece)
@@ -89,7 +90,7 @@ class GameMode:
             self.switch_available = False
 
     def render_timer(self) -> pygame.Surface:
-        int_timer = int(self.timer.time)
+        int_timer = int(GameMode.timer.time)
         time = self.game.main_font.render(
             f"TIME : {(int_timer//1000)//60:02d}:{(int_timer//1000)%60:02d}:{(int_timer//10)%100:02d}",
             True,
@@ -97,7 +98,7 @@ class GameMode:
         )
         return time
 
-    def resize(self):
+    def resize(self) -> None:
         self.init_surfaces()
         for line in self.placed_blocks:
             for block in line:
@@ -109,8 +110,7 @@ class GameMode:
         for preview_piece in self.preview_tetrominos:
             preview_piece.resize(gp.cell_size * 0.80)
 
-    def draw(self):
-        # self.main_surface.fill(BLACK)
+    def draw(self) -> None:
         self.shadow_surf.fill(gp.BLACK)
         self.board_surface.fill(gp.BLACK)
         for line in self.placed_blocks:
@@ -129,26 +129,51 @@ class GameMode:
             ),
         )
 
-    def update_HUD(self,cleared_lines : int,score_list : list)->None:
+    def update_HUD(self, cleared_lines : int , score_list : list)->None:
         if cleared_lines>0:
+            self.combo+=1
+            self.clearance_type_surf.set_alpha(255)
             self.score+=score_list[cleared_lines-1]*(self.level+1)
+            match cleared_lines:
+                case 1:
+                    self.clearance_type="Single"
+                case 2:
+                    self.clearance_type="Double"
+                case 3:
+                    self.clearance_type="Triple"
+                case 4: 
+                    self.clearance_type="Tetris"
+            if self.combo>1:
+                self.clearance_type+=f"\ncombo x{self.combo}"
+                self.score=(self.level+1)*50*self.combo
+        else:
+            self.combo=0
         if self.curr_drop_score is not None:
             if self.curr_drop_score[0]:
                 self.score+=self.curr_drop_score[1]*2
             if self.curr_drop_score and not self.curr_drop_score[0]:
                 self.score+=1 
         self.cleared_lines+=cleared_lines
+
     
-    def draw_HUD(self, target_lines: str = "\u221E"):
+    def draw_HUD(self, target_lines: str = "\u221E") -> None:
+        a=self.clearance_type_surf.get_alpha()
+        curr_time=GameMode.timer.current_time()*1000
+        if a>0 and curr_time-GameMode.last_time>25 :
+            self.clearance_type_surf.set_alpha(a-5)
+            GameMode.last_time=curr_time
+        
         self.preview_surface.fill(gp.BLACK)
+        self.clearance_type_surf.fill(gp.BLACK)
         LINES = self.game.main_font.render(
             f"LINES : {self.cleared_lines} / {target_lines}", True, gp.WHITE
         )
-        
         LEVEL = self.game.main_font.render(f"LEVEL : {self.level}", True, gp.WHITE)
         HOLD = self.game.main_font.render("HOLD : ", True, gp.WHITE)
         NEXT = self.game.main_font.render("NEXT : ", True, gp.WHITE)
         SCORE=self.game.main_font.render(f"SCORE : {self.score}", True, gp.WHITE)
+        line_clear_type=self.game.main_font.render(self.clearance_type,True,gp.WHITE)
+        self.clearance_type_surf.blit(line_clear_type,(0,0))
         
         for preview in self.preview_tetrominos:
             preview.draw(self.preview_surface, None, self.placed_blocks)
@@ -198,8 +223,9 @@ class GameMode:
             ),
         )
         self.main_surface.blit(SCORE,(int(elements_coor["score"][0]*gp.WIDTH),int(elements_coor["score"][1]*gp.HEIGHT)))
+        self.main_surface.blit(self.clearance_type_surf,(int(elements_coor["clearance_type"][0]*gp.WIDTH),int(elements_coor["clearance_type"][1]*gp.HEIGHT)))
 
-    def draw_board(self):
+    def draw_board(self) -> None:
         self.current_piece.draw(
             self.board_surface, self.shadow_surf, self.placed_blocks
         )
