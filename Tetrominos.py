@@ -38,17 +38,17 @@ class Tetrominos:
         if keys[pygame.K_DOWN] and current_time-self.VUpdate>gp.MOVE_DELAY:
             down_pressed=True
             self.VUpdate=current_time
-            return (0,self.move(gp.moves["down"],current_time,placed_blocks))
+            return (False,self.move(gp.moves["down"],current_time,placed_blocks),None)
         for event in events:
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_UP:
-                    self.SRS_Rotate(True,1,placed_blocks,current_time)
+                    return (None,None,self.SRS_rotate(True,1,placed_blocks,current_time))
                 elif event.key==pygame.K_z:
-                    self.SRS_Rotate(False,1,placed_blocks,current_time)
+                    return (None,None,self.SRS_rotate(False,1,placed_blocks,current_time))
                 elif event.key==pygame.K_a:
-                    self.SRS_Rotate(True,2,placed_blocks,current_time)
+                    return (None,None,self.SRS_rotate(True,2,placed_blocks,current_time))
                 elif event.key==pygame.K_SPACE and not down_pressed:
-                    return (1,self.hard_drop(placed_blocks))
+                    return (True,self.hard_drop(placed_blocks),None)
                 elif event.key==pygame.K_LEFT:
                     self.keys_held[0]=True
                     self.key_held_time=0
@@ -193,10 +193,10 @@ class Tetrominos:
                 return  
   
 #Super Rotation System  
-    def SRS_Rotate(self,clockwise:bool,turns,placed_blocks:list[list[block]]=None,current_time:float=0)->None:
+    def SRS_rotate(self,clockwise:bool,turns,placed_blocks:list[list[block]]=None,current_time:float=0)->int:
         global shared_lock_timer
-        if self.shape=="O":
-            return
+        if self.shape=="O" or not placed_blocks:
+            return 0
         old_blocks=deepcopy(self.blocks)
         old_r_index=self.rotation_index
         self.rotation_index=mod(self.rotation_index+turns,4) if clockwise else mod(self.rotation_index-turns,4)
@@ -206,8 +206,6 @@ class Tetrominos:
                 temp=block.map_pos-self.pivot
                 block.map_pos[0]=(-temp[1]*rot+self.pivot[0])
                 block.map_pos[1]=(temp[0]*rot+self.pivot[1])
-        if not placed_blocks:
-            return
         for i in range(0,5):
             offset=self.offset_list[old_r_index][i]-self.offset_list[self.rotation_index][i]
             if not self.collide(offset,placed_blocks):
@@ -215,9 +213,10 @@ class Tetrominos:
                 self.pivot+=offset
                 for block in self.blocks:
                     block.move(offset)
-                return
+                return i
         self.blocks=old_blocks
         self.rotation_index=old_r_index
+        return 0
             
     def set_pos(self,new_pos:pygame.Vector2)->None:
         for block in self.blocks:

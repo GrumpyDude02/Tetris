@@ -19,7 +19,7 @@ class Background:
             random.choice(list(gp.shapes.keys())),
             gp.cell_size,
         )
-        t.SRS_Rotate(random.choice([True, False]), random.randint(0, 2))
+        t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))
         return t
 
     def draw_and_update(self, surface, current_time, dt):

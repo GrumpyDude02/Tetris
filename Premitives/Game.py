@@ -1,5 +1,4 @@
 import pygame, Tools.functions as functions
-from Main import Main
 from GameStates import GameStates
 from Tools.Timer import Timer
 import game_parameters as gp
@@ -40,10 +39,10 @@ class GameMode:
         self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT))
         self.shadow_surf = functions.generate_surf((12 * gp.cell_size, gp.HEIGHT), 80,(0,0,0))
         self.preview_surface = functions.generate_surf((5 * gp.cell_size, gp.HEIGHT), 0,(0,0,0))
-        self.clearance_type_surf=functions.generate_surf((int(0.20*gp.WIDTH),int(0.20*gp.HEIGHT)),color_key=(0,0,0))
+        self.clearance_type_surf=functions.generate_surf((int(0.20*gp.WIDTH),int(0.3*gp.HEIGHT)),color_key=(0,0,0))
         self.clearance_type_surf.set_alpha(255)
 
-    def __init__(self, game : Main, shape: str = None) -> None:
+    def __init__(self, game , shape: str = None) -> None:
         if shape:
             self.shape = shape
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, gp.cell_size)
@@ -60,6 +59,7 @@ class GameMode:
         self.switch_available = False
         self.curr_drop_score=None
         self.held_piece = None
+        self.last_spin_kick=""
         self.state = GameMode.initialized
         self.placed_blocks = [
             [None for i in range(gp.playable_num)] for j in range(gp.boardy_cell_number)
@@ -71,6 +71,7 @@ class GameMode:
         GameMode.timer.reset()
         self.level = self.cleared_lines = self.score = 0
         self.held_piece = None
+        self.last_spin_kick=""
 
     def set_state(self, new_state : GameStates , last_mode: str = None):
         self.game.set_state(new_state, last_mode)
@@ -129,30 +130,39 @@ class GameMode:
             ),
         )
 
-    def update_HUD(self, cleared_lines : int , score_list : list)->None:
+    def update_HUD(self, isSet :bool, cleared_lines : int , score_list : list)->None:
+        if self.curr_drop_score is not None:
+            if self.curr_drop_score[0] is True:
+                self.score+=self.curr_drop_score[1]*2
+            elif self.curr_drop_score[0] is False:
+                self.score+=1
+            elif self.curr_drop_score[0] is None and self.curr_drop_score[2]!=0:
+                if all([self.current_piece.collide(direction,self.placed_blocks) for direction in gp.moves.values()]):
+                    self.last_spin_kick=f"{self.current_piece.shape}-SPIN\n" 
+                else:
+                    self.last_spin_kick=""
+            
         if cleared_lines>0:
             self.combo+=1
             self.clearance_type_surf.set_alpha(255)
             self.score+=score_list[cleared_lines-1]*(self.level+1)
             match cleared_lines:
                 case 1:
-                    self.clearance_type="Single"
+                    self.clearance_type="Single\n"
                 case 2:
-                    self.clearance_type="Double"
+                    self.clearance_type="Double\n"
                 case 3:
-                    self.clearance_type="Triple"
+                    self.clearance_type="Triple\n"
                 case 4: 
-                    self.clearance_type="Tetris"
+                    self.clearance_type="Tetris\n"
+            self.clearance_type+=f"{self.last_spin_kick}"
+            self.last_spin_kick=""
+            
             if self.combo>1:
-                self.clearance_type+=f"\ncombo x{self.combo}"
+                self.clearance_type+=f"combo x{self.combo}"
                 self.score=(self.level+1)*50*self.combo
-        else:
+        elif isSet:
             self.combo=0
-        if self.curr_drop_score is not None:
-            if self.curr_drop_score[0]:
-                self.score+=self.curr_drop_score[1]*2
-            if self.curr_drop_score and not self.curr_drop_score[0]:
-                self.score+=1 
         self.cleared_lines+=cleared_lines
 
     

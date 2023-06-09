@@ -70,8 +70,11 @@ class Tetris(GameMode):
         return Tetrominos(gp.SPAWN_LOCATION, shape, gp.cell_size)
 
     def update(self):
+        cleared=0
+        wasSet=False
         if self.current_piece.isSet:
-            self.update_HUD(functions.check_line(self.placed_blocks,gp.playable_num),gp.score_lines)
+            wasSet=True
+            cleared=functions.check_line(self.placed_blocks,gp.playable_num)
             self.tetrominos.append(self.current_piece)
             self.current_piece = self.update_queue()
             self.set_shapes()
@@ -82,6 +85,7 @@ class Tetris(GameMode):
             self.switch_available = False
         if self.cleared_lines > (self.level+1) * 10:
             self.level += 1
+        self.update_HUD(wasSet,cleared,gp.line_number_score)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
         
         
