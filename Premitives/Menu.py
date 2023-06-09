@@ -107,6 +107,20 @@ class Menu:
         for button in self.buttons.values():
             button.resize((gp.WIDTH, gp.HEIGHT), self.game.main_font)
 
+    def handle_nav(self,event : pygame.event):
+        if event.type == pygame.KEYDOWN:
+            self.mouse_mode = False
+            if event.key == pygame.K_DOWN:
+                self.cursor.move_to(direction["down"])
+            if event.key == pygame.K_UP:
+                self.cursor.move_to(direction["up"])
+            if event.key == pygame.K_LEFT:
+                self.cursor.move_to(direction["left"])
+            if event.key == pygame.K_RIGHT:
+                self.cursor.move_to(direction["right"])
+        if event.type == pygame.MOUSEMOTION:
+            self.mouse_mode = True
+
 
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
