@@ -2,38 +2,43 @@ import pygame
 from pygame.math import Vector2 as v
 import game_parameters as gp
 
-class block:
-    def __init__(self,pos:pygame.Vector2,cell_size:int,color:pygame.color,tetromino,block_spacing:int=1)->None:
-        self.spacing=block_spacing
-        self.map_pos=v(pos[0],pos[1])
-        self.width=cell_size
-        self.sc_pos=self.map_pos*cell_size
-        self.color=color
-        self.tetromino=tetromino
-    
-    def update(self)->None:
-        self.map_pos[1]+=1
 
-    def move(self,direction:pygame.Vector2)->None:
-        self.map_pos+=direction
-       
-    def draw(self,window:pygame.Surface)->None:
-        self.sc_pos=v((self.map_pos[0]+1)*self.width,(self.map_pos[1]-gp.y_border_offset-1)*self.width)
-        pygame.draw.rect(window,self.color,pygame.Rect(self.sc_pos[0],self.sc_pos[1],self.width-self.spacing,self.width-self.spacing))
- 
-    def overlap(self,pos,placed_blocks:list[list]):
+class block:
+    def __init__(self, pos: pygame.Vector2, cell_size: int, color: pygame.color, tetromino, block_spacing: int = 1) -> None:
+        self.spacing = block_spacing
+        self.map_pos = v(pos[0], pos[1])
+        self.width = cell_size
+        self.sc_pos = self.map_pos * cell_size
+        self.color = color
+        self.tetromino = tetromino
+
+    def update(self) -> None:
+        self.map_pos[1] += 1
+
+    def move(self, direction: pygame.Vector2) -> None:
+        self.map_pos += direction
+
+    def draw(self, window: pygame.Surface) -> None:
+        self.sc_pos = v((self.map_pos[0] + 1) * self.width, (self.map_pos[1] - gp.y_border_offset - 1) * self.width)
+        pygame.draw.rect(
+            window,
+            self.color,
+            pygame.Rect(self.sc_pos[0], self.sc_pos[1], self.width - self.spacing, self.width - self.spacing),
+        )
+
+    def overlap(self, pos, placed_blocks: list[list]):
         return bool(placed_blocks[int(pos.y)][int(pos.x)])
 
-    def in_bounds(self,pos):
-        return (0<=pos.x<gp.playable_num) and pos.y<gp.boardy_cell_number
-    
-    def collide(self,pos:pygame.Vector2,placed_blocks:list[list])->bool:
-        if self.in_bounds(pos) and not self.overlap(pos,placed_blocks):
+    def in_bounds(self, pos):
+        return (0 <= pos.x < gp.playable_num) and pos.y < gp.boardy_cell_number
+
+    def collide(self, pos: pygame.Vector2, placed_blocks: list[list]) -> bool:
+        if self.in_bounds(pos) and not self.overlap(pos, placed_blocks):
             return False
         return True
-    
-    def resize(self,block_size:int=None):
+
+    def resize(self, block_size: int = None):
         if block_size is None:
-            self.width=gp.cell_size
+            self.width = gp.cell_size
         else:
-            self.width=block_size
+            self.width = block_size

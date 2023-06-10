@@ -63,15 +63,15 @@ class MainMenu(Menu):
         if self.mouse_mode:
             for value in self.buttons.values():
                 value.move_cursor(self.cursor)
-                    
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
-                self.mouse_mode=False
+                self.mouse_mode = False
                 self.handle_nav(event)
             elif event.type == pygame.MOUSEMOTION:
-                self.mouse_mode = True 
+                self.mouse_mode = True
 
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
@@ -131,10 +131,24 @@ class PauseScreen(TransparentMenu):
             ),
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
-        self.buttons["EXIT"].next_buttons=[self.buttons["RESET"],self.buttons["RESET"],self.buttons["RESET"],self.buttons["RESUME"]]
-        self.buttons["RESUME"].next_buttons=[self.buttons["RESET"],self.buttons["EXIT"],self.buttons["RESET"],self.buttons["RESET"]]
-        self.buttons["RESET"].next_buttons=[self.buttons["RESUME"],self.buttons["RESUME"],self.buttons["EXIT"],self.buttons["EXIT"]]
-
+        self.buttons["EXIT"].next_buttons = [
+            self.buttons["RESET"],
+            self.buttons["RESET"],
+            self.buttons["RESET"],
+            self.buttons["RESUME"],
+        ]
+        self.buttons["RESUME"].next_buttons = [
+            self.buttons["RESET"],
+            self.buttons["EXIT"],
+            self.buttons["RESET"],
+            self.buttons["RESET"],
+        ]
+        self.buttons["RESET"].next_buttons = [
+            self.buttons["RESUME"],
+            self.buttons["RESUME"],
+            self.buttons["EXIT"],
+            self.buttons["EXIT"],
+        ]
 
     def resize(self):
         super().resize()
@@ -149,11 +163,11 @@ class PauseScreen(TransparentMenu):
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
-                self.mouse_mode=False
+                self.mouse_mode = False
                 self.handle_nav(event)
             elif event.type == pygame.MOUSEMOTION:
-                self.mouse_mode = True 
-        
+                self.mouse_mode = True
+
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["RESUME"]:
@@ -164,8 +178,6 @@ class PauseScreen(TransparentMenu):
             elif b is self.buttons["EXIT"]:
                 self.set_pending_state(GameStates.main_menu)
                 self.set_state(GameStates.resetting)
-        
-       
 
     def loop(self, surface):
         blurred_surface = pygame.transform.gaussian_blur(surface, 4, False)
@@ -254,14 +266,13 @@ class SettingsMenu(Menu):
             ),
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
-        self.buttons["960x540"].next_buttons=[self.buttons["BACK"],None,self.buttons["1024x576"],None]
-        self.buttons["BACK"].next_buttons=[self.buttons["2560x1440"],None,self.buttons["960x540"],None]
-        keys=list(self.buttons.keys())
-        for i in range(1,len(keys)-1):
-            self.buttons[keys[i]].next_buttons=[self.buttons[keys[i-1]],None,self.buttons[keys[i+1]],None]
-  
+        self.buttons["960x540"].next_buttons = [self.buttons["BACK"], None, self.buttons["1024x576"], None]
+        self.buttons["BACK"].next_buttons = [self.buttons["2560x1440"], None, self.buttons["960x540"], None]
+        keys = list(self.buttons.keys())
+        for i in range(1, len(keys) - 1):
+            self.buttons[keys[i]].next_buttons = [self.buttons[keys[i - 1]], None, self.buttons[keys[i + 1]], None]
+
     def handle_events(self):
-        
         if self.mouse_mode:
             for value in self.buttons.values():
                 value.move_cursor(self.cursor)
@@ -270,11 +281,11 @@ class SettingsMenu(Menu):
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
-                self.mouse_mode=False
+                self.mouse_mode = False
                 self.handle_nav(event)
             elif event.type == pygame.MOUSEMOTION:
-                self.mouse_mode = True 
-                
+                self.mouse_mode = True
+
         if self.cursor.button.check_input(self.mouse_mode):
             for key, i in zip(self.buttons.keys(), range(0, 7)):
                 if self.cursor.button is self.buttons[key]:
@@ -322,7 +333,6 @@ class GameOver(TransparentMenu):
         }
 
     def handle_events(self):
-        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)

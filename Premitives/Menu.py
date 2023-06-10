@@ -67,9 +67,7 @@ class Menu:
         def draw(self, surface):
             pygame.draw.rect(surface, self.color, self.rect, width=5)
 
-    def __init__(
-        self, game, child_menus: list = None, previous_menu=None, bg: Background = None
-    ):
+    def __init__(self, game, child_menus: list = None, previous_menu=None, bg: Background = None):
         self.game = game
         self.background = bg
         self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 0)
@@ -79,18 +77,18 @@ class Menu:
         self.cursor = None
         self.mouse_mode = True
 
-    def set_state(self, new_state, last_mode: str = None) :
+    def set_state(self, new_state, last_mode: str = None):
         self.game.set_state(new_state, last_mode)
 
     def set_pending_state(self, next_state):
         self.game.pending_state = next_state
 
-    def switch_input(self,event:pygame.event):
+    def switch_input(self, event: pygame.event):
         if event.type == pygame.MOUSEMOTION:
             self.mouse_mode = True
         elif event.type == pygame.KEYDOWN:
-                self.mouse_mode = False
-    
+            self.mouse_mode = False
+
     def draw(self, fill_color: tuple = None, current_time: float = 0, dt: float = 1 / 60):
         if fill_color:
             self.main_surface.fill(fill_color)
@@ -107,7 +105,7 @@ class Menu:
         for button in self.buttons.values():
             button.resize((gp.WIDTH, gp.HEIGHT), self.game.main_font)
 
-    def handle_nav(self,event : pygame.event):
+    def handle_nav(self, event: pygame.event):
         if event.type == pygame.KEYDOWN:
             self.mouse_mode = False
             if event.key == pygame.K_DOWN:
@@ -124,11 +122,9 @@ class Menu:
 
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
-        self.transparent_surf = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 150,(0,0,0))
+        self.transparent_surf = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 150, (0, 0, 0))
         self.text_render = self.game.main_font.render(self.text, True, gp.WHITE)
-        self.title_pos = self.text_render.get_rect(
-            center=pygame.Rect(0, 0, gp.WIDTH, gp.HEIGHT).center
-        )
+        self.title_pos = self.text_render.get_rect(center=pygame.Rect(0, 0, gp.WIDTH, gp.HEIGHT).center)
         self.transparent_surf.fill(color)
 
     def __init__(self, game, text: str = "Place Holder"):

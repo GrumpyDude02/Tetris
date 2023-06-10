@@ -16,14 +16,11 @@ class Tetris(GameMode):
         # shuffling
         random.shuffle(self.shapes_list)
         self.next_shapes = [shape for shape in self.shapes_list]
-        self.current_piece = Tetrominos(
-            gp.SPAWN_LOCATION, self.next_shapes.pop(0), gp.cell_size
-        )
+        self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.next_shapes.pop(0), gp.cell_size)
         random.shuffle(self.shapes_list)
         self.next_shapes.append(self.shapes_list[self.index])
         self.preview_tetrominos = [
-            Tetrominos(pos, shape, gp.cell_size * 0.80)
-            for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
+            Tetrominos(pos, shape, gp.cell_size * 0.80) for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
         self.index += 1
 
@@ -51,7 +48,7 @@ class Tetris(GameMode):
                     GameMode.timer.pause_timer()
                 if event.key == pygame.K_c:
                     self.swap_pieces()
-        self.curr_drop_score=self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
+        self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
 
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
@@ -70,11 +67,11 @@ class Tetris(GameMode):
         return Tetrominos(gp.SPAWN_LOCATION, shape, gp.cell_size)
 
     def update(self):
-        cleared=0
-        wasSet=False
+        cleared = 0
+        wasSet = False
         if self.current_piece.isSet:
-            wasSet=True
-            cleared=functions.check_line(self.placed_blocks,gp.playable_num)
+            wasSet = True
+            cleared = functions.check_line(self.placed_blocks, gp.playable_num)
             self.tetrominos.append(self.current_piece)
             self.current_piece = self.update_queue()
             self.set_shapes()
@@ -83,13 +80,10 @@ class Tetris(GameMode):
             self.current_piece = self.update_queue()
             self.set_shapes()
             self.switch_available = False
-        if self.cleared_lines > (self.level+1) * 10:
+        if self.cleared_lines > (self.level + 1) * 10:
             self.level += 1
-        self.update_HUD(wasSet,cleared,gp.line_number_score)
+        self.update_HUD(wasSet, cleared, gp.line_number_score)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
-        
-        
-        
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
@@ -119,9 +113,7 @@ class Tetris(GameMode):
             # ----------debug section-------------
             # print(pygame.mouse.get_pos())
             # ------------------------------------
-            pygame.display.set_caption(
-                "Tetris FPS:" + str(round(self.game.clock.get_fps()))
-            )
+            pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.handle_events()
             self.update()
             self.draw()
