@@ -1,7 +1,7 @@
 from Premitives.Game import GameMode, preview_tetrominos_pos
 from Tetrominos import Tetrominos
 from GameStates import GameStates
-import game_parameters as gp
+import Globals as gp
 import Tools.functions as functions
 import pygame, random
 
@@ -12,7 +12,7 @@ class Tetris(GameMode):
     def __init__(self, game) -> None:
         super().__init__(game)
         self.index = 0
-        self.shapes_list = list(gp.shapes.keys())
+        self.shapes_list = list(gp.SHAPES.keys())
         # shuffling
         random.shuffle(self.shapes_list)
         self.next_shapes = [shape for shape in self.shapes_list]
@@ -71,7 +71,7 @@ class Tetris(GameMode):
         wasSet = False
         if self.current_piece.isSet:
             wasSet = True
-            cleared = functions.check_line(self.placed_blocks, gp.playable_num)
+            cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS)
             self.tetrominos.append(self.current_piece)
             self.current_piece = self.update_queue()
             self.set_shapes()
@@ -82,7 +82,7 @@ class Tetris(GameMode):
             self.switch_available = False
         if self.cleared_lines > (self.level + 1) * 10:
             self.level += 1
-        self.update_HUD(wasSet, cleared, gp.line_number_score)
+        self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
 
     def draw(self):

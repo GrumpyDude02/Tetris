@@ -1,5 +1,5 @@
 import random, pygame
-import game_parameters as gp
+import Globals as gp
 from block import block
 
 

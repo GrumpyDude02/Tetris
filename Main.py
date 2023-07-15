@@ -1,11 +1,60 @@
-import game_parameters as gp
+import Globals as gp
 from GamePlay import Tetris
 import GameMenus
 from GameStates import GameStates
-import sys, pygame
+import sys, pygame, json
 
 
 class Main:
+    class Settings:
+        def __init__(self):
+            try:
+                with open("Settings.txt") as f:
+                    data = json.load(f)
+                    self.load_data(data)
+            except FileNotFoundError:
+                self.load_defaults()
+
+        # def InitGrid(self):
+        #     for i in range(0, gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT):
+        #         for j in range(gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET):
+        #             if j == 0 or j == gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET - 1:
+        #                 gp.GRID.append(
+        #                     pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
+        #                 )
+        #             elif i == 0 or i == gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT - 1:
+        #                 gp.GRID.append(
+        #                     pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
+        #                 )
+
+        def load_data(self, data):
+            self.selected_res = data["SelectedResolution"]
+            self.width = self.selected_res[0]
+            self.height = self.selected_res[1]
+
+            self.cell_size = data["CellSize"]
+            self.font_scale = data["FontScale"]
+            self.board_width = data["BoardWidth"]
+            self.board_height = data["BoardHeight"]
+
+            # self.InitGrid()
+
+        def set_resolution(self, new_resolution):
+            self.selected_res = new_resolution
+            self.width = self.selected_res[0]
+            self.height = self.selected_res[1]
+
+            self.cell_size = round(gp.BASE_CELL_SIZE * (self.height / gp.BASE_RESOLUTION[1]))
+            self.font_scale = round(gp.BASE_FONT_SIZE * (self.height / gp.BASE_RESOLUTION[1]))
+            self.board_width = 12 * self.cell_size
+            self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
+
+        def load_defaults(self):
+            self.selected_res = gp.BASE_RESOLUTION
+            self.width = gp.BASE_RESOLUTION[0]
+            self.height = gp.BASE_RESOLUTION[1]
+            self.cell_size = gp.BASE_CELL_SIZE
+
     def __init__(self, sc_size: tuple, full_screen: bool = False, vsync_active: bool = False) -> None:
         window_style = pygame.FULLSCREEN if full_screen else 0
         pygame.init()
@@ -18,7 +67,7 @@ class Main:
             channels=2,
             buffer=512,
         )
-        self.main_font = pygame.font.SysFont("arialblack", gp.base_font_scale)
+        self.main_font = pygame.font.SysFont("arialblack", gp.BASE_FONT_SIZE)
         self.clock = pygame.time.Clock()
         self.state = GameStates.initilized
         self.game_screens = []
@@ -45,16 +94,14 @@ class Main:
 
     def resize(self, selected_res):
         scale = gp.change_display_val(selected_res)
-        self.main_font = pygame.font.SysFont(
-            "arialblack", int(gp.base_font_scale * scale[1])
-        )  # pygame.font.Font("Assets/kimberley bl.otf",int(gp.base_font_scale*scale[1]))
+        self.main_font = pygame.font.SysFont("arialblack", int(gp.BASE_FONT_SIZE * scale))
         bit_depth = pygame.display.mode_ok((gp.WIDTH, gp.HEIGHT), False, 32)
         self.screen = pygame.display.set_mode((gp.WIDTH, gp.HEIGHT), depth=bit_depth)
         self.MainMenu.resize()
         self.Pause.resize()
         self.Settings.resize()
-        for key, item in self.GameModes.items():
-            item.resize()
+        for value in self.GameModes.values():
+            value.resize()
 
     def loop(self):
         while self.state != GameStates.quitting:
@@ -84,5 +131,5 @@ class Main:
         sys.exit()
 
 
-new_game = Main((gp.WIDTH, gp.HEIGHT), False, False)
-new_game.start_game()
+if __name__ == "__main__":
+    Main((gp.WIDTH, gp.HEIGHT), False, False).start_game()

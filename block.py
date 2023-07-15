@@ -1,6 +1,6 @@
 import pygame
 from pygame.math import Vector2 as v
-import game_parameters as gp
+import Globals as gp
 
 
 class block:
@@ -19,7 +19,7 @@ class block:
         self.map_pos += direction
 
     def draw(self, window: pygame.Surface) -> None:
-        self.sc_pos = v((self.map_pos[0] + 1) * self.width, (self.map_pos[1] - gp.y_border_offset - 1) * self.width)
+        self.sc_pos = v((self.map_pos[0] + 1) * self.width, (self.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * self.width)
         pygame.draw.rect(
             window,
             self.color,
@@ -30,7 +30,7 @@ class block:
         return bool(placed_blocks[int(pos.y)][int(pos.x)])
 
     def in_bounds(self, pos):
-        return (0 <= pos.x < gp.playable_num) and pos.y < gp.boardy_cell_number
+        return (0 <= pos.x < gp.PLAYABLE_AREA_CELLS) and pos.y < gp.BOARD_Y_CELL_NUMBER
 
     def collide(self, pos: pygame.Vector2, placed_blocks: list[list]) -> bool:
         if self.in_bounds(pos) and not self.overlap(pos, placed_blocks):

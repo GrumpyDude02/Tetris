@@ -1,5 +1,5 @@
 import pygame, random, Tools.functions as functions
-import game_parameters as gp
+import Globals as gp
 from GameStates import GameStates
 from Tetrominos import Tetrominos
 from Tools.Buttons import Buttons
@@ -16,7 +16,7 @@ class Background:
     def generate_tetromino(self) -> Tetrominos:
         t = Tetrominos(
             [random.randrange(2, (gp.WIDTH // gp.cell_size) - 4, 4), 0],
-            random.choice(list(gp.shapes.keys())),
+            random.choice(list(gp.SHAPES.keys())),
             gp.cell_size,
         )
         t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))

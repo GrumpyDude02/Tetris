@@ -18,6 +18,7 @@ class Buttons:
         hover_color: tuple = (0, 0, 0),
         sc_size: list = (1, 1),
         Next: list = None,
+        UserData=None,
     ) -> None:
         self.pos = pos
         self.size = size
@@ -31,6 +32,7 @@ class Buttons:
         self.resize(sc_size, gui_font)
         self.clicked = False
         self.next_buttons = Next
+        self.UserData = UserData
 
     def draw(self, screen):
         if self.lrect:

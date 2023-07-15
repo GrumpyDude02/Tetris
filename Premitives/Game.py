@@ -1,7 +1,7 @@
 import pygame, Tools.functions as functions
 from GameStates import GameStates
 from Tools.Timer import Timer
-import game_parameters as gp
+import Globals as gp
 from Tetrominos import Tetrominos
 from copy import deepcopy
 
@@ -57,7 +57,7 @@ class GameMode:
         self.held_piece = None
         self.last_spin_kick = ""
         self.state = GameMode.initialized
-        self.placed_blocks = [[None for i in range(gp.playable_num)] for j in range(gp.boardy_cell_number)]
+        self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
 
     def reset_game(self) -> None:
         functions.reset_board(self.placed_blocks, self.tetrominos)
@@ -128,7 +128,7 @@ class GameMode:
             elif self.curr_drop_score[0] is False:
                 self.score += 1
             elif self.curr_drop_score[0] is None and self.curr_drop_score[2] != 0:
-                if all([self.current_piece.collide(direction, self.placed_blocks) for direction in gp.moves.values()]):
+                if all([self.current_piece.collide(direction, self.placed_blocks) for direction in gp.MOVES.values()]):
                     self.last_spin_kick = f"{self.current_piece.shape}-SPIN\n"
                 else:
                     self.last_spin_kick = ""

@@ -1,5 +1,5 @@
 import pygame, random, Tools.functions as functions
-import game_parameters as gp
+import Globals as gp
 from GameStates import GameStates
 from Tetrominos import Tetrominos
 from Tools.Buttons import Buttons
@@ -191,80 +191,19 @@ class PauseScreen(TransparentMenu):
 class SettingsMenu(Menu):
     def __init__(self, game, backdround: Background = None):
         super().__init__(game, bg=backdround)
-        self.buttons = {
-            "960x540": Buttons(
-                "960x540",
-                (0.16, 0.1),
-                (0.42, 0.15),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "1024x576": Buttons(
-                "1024x576",
-                (0.16, 0.1),
-                (0.42, 0.25),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "1280x720": Buttons(
-                "1280x720",
-                (0.16, 0.1),
-                (0.42, 0.35),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "1366x768": Buttons(
-                "1366x768",
-                (0.16, 0.1),
-                (0.42, 0.45),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "1600x900": Buttons(
-                "1600x900",
-                (0.16, 0.1),
-                (0.42, 0.55),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "1920x1080": Buttons(
-                "1920x1080",
-                (0.16, 0.1),
-                (0.42, 0.65),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "2560x1440": Buttons(
-                "2560x1440",
-                (0.16, 0.1),
-                (0.42, 0.75),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-            "BACK": Buttons(
-                "BACK",
-                (0.16, 0.1),
-                (0.42, 0.85),
-                self.game.main_font,
-                5,
-                hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
-            ),
-        }
+
+        self.buttons = {}
+        y_pos = 0.05
+        for resolution in gp.RESOLUTIONS:
+            key = "x".join([str(resolution[0]), str(resolution[1])])
+            self.buttons[key] = Buttons(
+                key, (0.16, 0.1), (0.42, y_pos), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(gp.WIDTH, gp.HEIGHT)
+            )
+            y_pos += 0.12
+        self.buttons["BACK"] = Buttons(
+            "BACK", (0.16, 0.1), (0.42, 0.88), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(gp.WIDTH, gp.HEIGHT)
+        )
+
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
         self.buttons["960x540"].next_buttons = [self.buttons["BACK"], None, self.buttons["1024x576"], None]
         self.buttons["BACK"].next_buttons = [self.buttons["2560x1440"], None, self.buttons["960x540"], None]
@@ -283,13 +222,15 @@ class SettingsMenu(Menu):
             elif event.type == pygame.KEYDOWN:
                 self.mouse_mode = False
                 self.handle_nav(event)
+                if event.key == pygame.K_ESCAPE:
+                    self.set_state(GameStates.main_menu)
             elif event.type == pygame.MOUSEMOTION:
                 self.mouse_mode = True
 
         if self.cursor.button.check_input(self.mouse_mode):
             for key, i in zip(self.buttons.keys(), range(0, 7)):
                 if self.cursor.button is self.buttons[key]:
-                    gp.selected_res = gp.Resolutions[i]
+                    gp.selected_res = gp.RESOLUTIONS[i]
                     self.set_state(GameStates.changing_res)
                     self.set_pending_state(GameStates.in_settings)
                     break
