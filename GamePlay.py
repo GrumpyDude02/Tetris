@@ -110,9 +110,6 @@ class Tetris(GameMode):
             self.dt = min(GameMode.timer.delta_time(), 0.066)
             self.destroy = []
             self.current_time = GameMode.timer.current_time() * 1000
-            # ----------debug section-------------
-            # print(pygame.mouse.get_pos())
-            # ------------------------------------
             pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.handle_events()
             self.update()
