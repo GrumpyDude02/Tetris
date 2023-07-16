@@ -16,7 +16,7 @@ class Main:
                 self.load_defaults()
 
         def InitGrid(self):
-            self.grid=[]
+            self.grid = []
             for i in range(0, gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT):
                 for j in range(gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET):
                     if j == 0 or j == gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET - 1:
@@ -59,22 +59,26 @@ class Main:
             self.board_width = 12 * self.cell_size
             self.InitGrid()
             self.save_settings()
-                
+
         def save_settings(self):
-            with open("Settings.txt","w") as f:
-                data = {"SelectedResolution": self.selected_res,
+            with open("Settings.txt", "w") as f:
+                data = {
+                    "SelectedResolution": self.selected_res,
                     "CellSize": self.cell_size,
                     "FontSize": self.font_size,
-                    "BoardWidth":self.board_width,
-                    "BoardHeight": self.board_height}
-                json.dump(data,f,indent=4)
+                    "BoardWidth": self.board_width,
+                    "BoardHeight": self.board_height,
+                }
+                json.dump(data, f, indent=4)
 
     def __init__(self, sc_size: tuple, full_screen: bool = False, vsync_active: bool = False) -> None:
         window_style = pygame.FULLSCREEN if full_screen else 0
         pygame.init()
         self.settings = Main.Settings()
-        bit_depth = pygame.display.mode_ok((self.settings.width,self.settings.height), window_style, 32)
-        self.screen = pygame.display.set_mode((self.settings.width,self.settings.height), window_style, bit_depth, vsync=vsync_active)
+        bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), window_style, 32)
+        self.screen = pygame.display.set_mode(
+            (self.settings.width, self.settings.height), window_style, bit_depth, vsync=vsync_active
+        )
         pygame.display.set_caption("Tetris")
         pygame.mixer.pre_init(
             frequency=44100,
@@ -82,7 +86,7 @@ class Main:
             channels=2,
             buffer=512,
         )
-        self.main_font = pygame.font.SysFont("arialblack", self.settings.font_size)
+        self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         self.clock = pygame.time.Clock()
         self.state = GameStates.initilized
         self.game_screens = []
@@ -108,7 +112,7 @@ class Main:
         self.loop()
 
     def resize(self):
-        self.main_font = pygame.font.SysFont("arialblack", self.settings.font_size)
+        self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), False, 32)
         self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), depth=bit_depth)
         self.MainMenu.resize()

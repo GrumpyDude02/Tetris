@@ -1,10 +1,10 @@
 {
     "SelectedResolution": [
-        1280,
-        720
+        1600,
+        900
     ],
-    "CellSize": 29,
-    "FontSize": 29,
-    "BoardWidth": 348,
-    "BoardHeight": 696
+    "CellSize": 37,
+    "FontSize": 37,
+    "BoardWidth": 444,
+    "BoardHeight": 888
 }

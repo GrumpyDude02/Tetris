@@ -20,7 +20,8 @@ class Tetris(GameMode):
         random.shuffle(self.shapes_list)
         self.next_shapes.append(self.shapes_list[self.index])
         self.preview_tetrominos = [
-            Tetrominos(pos, shape, self.settings.cell_size * 0.80) for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
+            Tetrominos(pos, shape, self.settings.cell_size * 0.80)
+            for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
         self.index += 1
 
@@ -40,6 +41,7 @@ class Tetris(GameMode):
                 self.set_state(GameStates.quitting)
             if event.type == pygame.ACTIVEEVENT:
                 if event.state == 2:
+                    self.game.last_played = GameStates.Tetris
                     self.state = GameMode.paused
                     self.set_state(GameStates.paused)
             if event.type == pygame.KEYDOWN:
