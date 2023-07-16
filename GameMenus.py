@@ -17,7 +17,7 @@ class MainMenu(Menu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
             "SETTINGS": Buttons(
                 "SETTINGS",
@@ -26,7 +26,7 @@ class MainMenu(Menu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
             "EXIT": Buttons(
                 "EXIT",
@@ -35,7 +35,7 @@ class MainMenu(Menu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["PLAY"])
@@ -109,7 +109,7 @@ class PauseScreen(TransparentMenu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
             "RESUME": Buttons(
                 "RESUME",
@@ -118,7 +118,7 @@ class PauseScreen(TransparentMenu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
             "RESET": Buttons(
                 "RESET",
@@ -127,7 +127,7 @@ class PauseScreen(TransparentMenu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
@@ -197,11 +197,11 @@ class SettingsMenu(Menu):
         for resolution in gp.RESOLUTIONS:
             key = "x".join([str(resolution[0]), str(resolution[1])])
             self.buttons[key] = Buttons(
-                key, (0.16, 0.1), (0.42, y_pos), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(gp.WIDTH, gp.HEIGHT)
+                key, (0.16, 0.1), (0.42, y_pos), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(self.settings.width, self.settings.height)
             )
             y_pos += 0.12
         self.buttons["BACK"] = Buttons(
-            "BACK", (0.16, 0.1), (0.42, 0.88), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(gp.WIDTH, gp.HEIGHT)
+            "BACK", (0.16, 0.1), (0.42, 0.88), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(self.settings.width, self.settings.height)
         )
 
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
@@ -230,7 +230,7 @@ class SettingsMenu(Menu):
         if self.cursor.button.check_input(self.mouse_mode):
             for key, i in zip(self.buttons.keys(), range(0, 7)):
                 if self.cursor.button is self.buttons[key]:
-                    gp.selected_res = gp.RESOLUTIONS[i]
+                    self.settings.set_resolution(gp.RESOLUTIONS[i])
                     self.set_state(GameStates.changing_res)
                     self.set_pending_state(GameStates.in_settings)
                     break
@@ -260,7 +260,7 @@ class GameOver(TransparentMenu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
             "RESET": Buttons(
                 "RESET",
@@ -269,7 +269,7 @@ class GameOver(TransparentMenu):
                 game.main_font,
                 5,
                 hover_color=gp.BLUE,
-                sc_size=(gp.WIDTH, gp.HEIGHT),
+                sc_size=(self.settings.width, self.settings.height),
             ),
         }
 

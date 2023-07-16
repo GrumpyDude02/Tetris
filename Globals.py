@@ -78,13 +78,7 @@ cell_size = BASE_CELL_SIZE
 board_width = 12 * BASE_CELL_SIZE
 board_height = (BOARD_Y_CELL_NUMBER - BOARD_SHIFT) * BASE_CELL_SIZE
 
-grid = []
-for i in range(0, BOARD_Y_CELL_NUMBER - BOARD_SHIFT):
-    for j in range(PLAYABLE_AREA_CELLS + X_BORDER_OFFSET):
-        if j == 0 or j == PLAYABLE_AREA_CELLS + X_BORDER_OFFSET - 1:
-            grid.append(pygame.Rect(j * cell_size, i * cell_size, cell_size - 1, cell_size - 1))
-        elif i == 0 or i == BOARD_Y_CELL_NUMBER - BOARD_SHIFT - 1:
-            grid.append(pygame.Rect(j * cell_size, i * cell_size, cell_size - 1, cell_size - 1))
+
 # -------------------------------------------------------------------------------------------------------------
 
 

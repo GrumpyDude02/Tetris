@@ -34,20 +34,21 @@ class GameMode:
     timer = Timer()
 
     def init_surfaces(self) -> None:
-        self.board_surface = functions.generate_surf((gp.board_width, gp.board_height))
-        self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT))
-        self.shadow_surf = functions.generate_surf((12 * gp.cell_size, gp.HEIGHT), 80, (0, 0, 0))
-        self.preview_surface = functions.generate_surf((5 * gp.cell_size, gp.HEIGHT), 0, (0, 0, 0))
-        self.clearance_type_surf = functions.generate_surf((int(0.20 * gp.WIDTH), int(0.3 * gp.HEIGHT)), color_key=(0, 0, 0))
+        self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
+        self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
+        self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
+        self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), 0, (0, 0, 0))
+        self.clearance_type_surf = functions.generate_surf((int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0))
         self.clearance_type_surf.set_alpha(255)
 
     def __init__(self, game, shape: str = None) -> None:
         if shape:
             self.shape = shape
-            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, gp.cell_size)
-            self.preview_tetrominos = [Tetrominos(pos, self.shape, gp.cell_size / 2) for pos in preview_tetrominos_pos]
-        self.init_surfaces()
+            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+            self.preview_tetrominos = [Tetrominos(pos, self.shape, self.settings.cell_size / 2) for pos in preview_tetrominos_pos]
         self.game = game
+        self.settings = self.game.settings
+        self.init_surfaces()
         self.score = self.level = self.cleared_lines = self.combo = self.current_time = self.dt = 0
         self.clearance_type = ""
         self.destroy = []
@@ -102,7 +103,7 @@ class GameMode:
         for tetrmino in self.tetrominos:
             tetrmino.resize()
         for preview_piece in self.preview_tetrominos:
-            preview_piece.resize(gp.cell_size * 0.80)
+            preview_piece.resize(self.settings.cell_size * 0.80)
 
     def draw(self) -> None:
         self.shadow_surf.fill(gp.BLACK)
@@ -111,13 +112,13 @@ class GameMode:
             for block in line:
                 block.draw(self.board_surface)
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
-        functions.draw_grid(self.board_surface, gp.grid, (96, 96, 96))
+        functions.draw_grid(self.board_surface, self.game.settings.grid, (96, 96, 96))
         self.board_surface.blit(self.shadow_surf, (0, 0))
         self.main_surface.blit(
             self.board_surface,
             (
-                ((gp.WIDTH - 12 * gp.cell_size) // 2),
-                (gp.HEIGHT - 24 * gp.cell_size) // 2,
+                ((self.settings.width - 12 * self.settings.cell_size) // 2),
+                (self.settings.height - 24 * self.settings.cell_size) // 2,
             ),
         )
 
@@ -179,63 +180,63 @@ class GameMode:
         self.main_surface.blit(
             HOLD,
             (
-                int(elements_coor["hold_text"][0] * gp.WIDTH),
-                int(elements_coor["hold_text"][1] * gp.HEIGHT),
+                int(elements_coor["hold_text"][0] * self.settings.width),
+                int(elements_coor["hold_text"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
             NEXT,
             (
-                int(elements_coor["next_text"][0] * gp.WIDTH),
-                int(elements_coor["next_text"][1] * gp.HEIGHT),
+                int(elements_coor["next_text"][0] * self.settings.width),
+                int(elements_coor["next_text"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
             self.render_timer(),
             (
-                int(elements_coor["time"][0] * gp.WIDTH),
-                int(elements_coor["time"][1] * gp.HEIGHT),
+                int(elements_coor["time"][0] * self.settings.width),
+                int(elements_coor["time"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
             LEVEL,
             (
-                int(elements_coor["level_text"][0] * gp.WIDTH),
-                int(elements_coor["level_text"][1] * gp.HEIGHT),
+                int(elements_coor["level_text"][0] * self.settings.width),
+                int(elements_coor["level_text"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
             LINES,
             (
-                int(elements_coor["line_text"][0] * gp.WIDTH),
-                int(elements_coor["line_text"][1] * gp.HEIGHT),
+                int(elements_coor["line_text"][0] * self.settings.width),
+                int(elements_coor["line_text"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
             self.preview_surface,
             (
-                int(elements_coor["preview_surface"][0] * gp.WIDTH),
-                int(elements_coor["preview_surface"][1] * gp.HEIGHT),
+                int(elements_coor["preview_surface"][0] * self.settings.width),
+                int(elements_coor["preview_surface"][1] * self.settings.height),
             ),
         )
         self.main_surface.blit(
-            SCORE, (int(elements_coor["score"][0] * gp.WIDTH), int(elements_coor["score"][1] * gp.HEIGHT))
+            SCORE, (int(elements_coor["score"][0] * self.settings.width), int(elements_coor["score"][1] * self.settings.height))
         )
         self.main_surface.blit(
             self.clearance_type_surf,
-            (int(elements_coor["clearance_type"][0] * gp.WIDTH), int(elements_coor["clearance_type"][1] * gp.HEIGHT)),
+            (int(elements_coor["clearance_type"][0] * self.settings.width), int(elements_coor["clearance_type"][1] * self.settings.height)),
         )
 
     def draw_board(self) -> None:
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
 
-        functions.draw_grid(self.board_surface, gp.grid, (96, 96, 96))
+        functions.draw_grid(self.board_surface, self.game.settings.grid, (96, 96, 96))
 
         self.board_surface.blit(self.shadow_surf, (0, 0))
         self.main_surface.blit(
             self.board_surface,
             (
-                int(elements_coor["board"][0] * gp.WIDTH),
-                int(elements_coor["board"][1] * gp.HEIGHT),
+                int(elements_coor["board"][0] * self.settings.width),
+                int(elements_coor["board"][1] * self.settings.height),
             ),
         )

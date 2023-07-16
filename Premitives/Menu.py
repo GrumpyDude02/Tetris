@@ -9,15 +9,16 @@ direction = {"up": 0, "right": 1, "down": 2, "left": 3}
 
 
 class Background:
-    def __init__(self) -> None:
+    def __init__(self, settings) -> None:
         self.objects = []
         self.destroy = []
+        self.settings = settings
 
     def generate_tetromino(self) -> Tetrominos:
         t = Tetrominos(
-            [random.randrange(2, (gp.WIDTH // gp.cell_size) - 4, 4), 0],
+            [random.randrange(2, (self.settings.width // self.settings.cell_size) - 4, 4), 0],
             random.choice(list(gp.SHAPES.keys())),
-            gp.cell_size,
+            self.settings.cell_size,
         )
         t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))
         return t
@@ -31,7 +32,7 @@ class Background:
         for tetromino in self.objects:
             tetromino.smooth_fall(4, dt)
             tetromino.draw(surface)
-            if tetromino.pivot.y > gp.HEIGHT // gp.cell_size + 5:
+            if tetromino.pivot.y > self.settings.height // self.settings.cell_size + 5:
                 self.destroy.append(tetromino)
 
     def destroy_tetrominos(self):
@@ -69,8 +70,9 @@ class Menu:
 
     def __init__(self, game, child_menus: list = None, previous_menu=None, bg: Background = None):
         self.game = game
+        self.settings = game.settings
         self.background = bg
-        self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 0)
+        self.main_surface = functions.generate_surf((self.settings.width, self.settings.height), 0)
         self.child_menus = child_menus
         self.previous_menu = previous_menu
         self.buttons = None
@@ -101,9 +103,9 @@ class Menu:
         self.game.screen.blit(self.main_surface, (0, 0))
 
     def resize(self):
-        self.main_surface = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 0)
+        self.main_surface = functions.generate_surf((self.settings.width, self.settings.height), 0)
         for button in self.buttons.values():
-            button.resize((gp.WIDTH, gp.HEIGHT), self.game.main_font)
+            button.resize((self.settings.width, self.settings.height), self.game.main_font)
 
     def handle_nav(self, event: pygame.event):
         if event.type == pygame.KEYDOWN:
@@ -122,9 +124,9 @@ class Menu:
 
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
-        self.transparent_surf = functions.generate_surf((gp.WIDTH, gp.HEIGHT), 150, (0, 0, 0))
+        self.transparent_surf = functions.generate_surf((self.settings.width, self.settings.height), 150, (0, 0, 0))
         self.text_render = self.game.main_font.render(self.text, True, gp.WHITE)
-        self.title_pos = self.text_render.get_rect(center=pygame.Rect(0, 0, gp.WIDTH, gp.HEIGHT).center)
+        self.title_pos = self.text_render.get_rect(center=pygame.Rect(0, 0, self.settings.width, self.settings.height).center)
         self.transparent_surf.fill(color)
 
     def __init__(self, game, text: str = "Place Holder"):

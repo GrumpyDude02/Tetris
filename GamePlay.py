@@ -16,11 +16,11 @@ class Tetris(GameMode):
         # shuffling
         random.shuffle(self.shapes_list)
         self.next_shapes = [shape for shape in self.shapes_list]
-        self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.next_shapes.pop(0), gp.cell_size)
+        self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.next_shapes.pop(0), self.settings.cell_size)
         random.shuffle(self.shapes_list)
         self.next_shapes.append(self.shapes_list[self.index])
         self.preview_tetrominos = [
-            Tetrominos(pos, shape, gp.cell_size * 0.80) for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
+            Tetrominos(pos, shape, self.settings.cell_size * 0.80) for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
         self.index += 1
 
@@ -64,7 +64,7 @@ class Tetris(GameMode):
         if self.index == 0:
             random.shuffle(self.shapes_list)
         shape = self.next_shapes.pop(0)
-        return Tetrominos(gp.SPAWN_LOCATION, shape, gp.cell_size)
+        return Tetrominos(gp.SPAWN_LOCATION, shape, self.settings.cell_size)
 
     def update(self):
         cleared = 0

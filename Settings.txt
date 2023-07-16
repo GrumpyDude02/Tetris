@@ -1,0 +1,10 @@
+{
+    "SelectedResolution": [
+        1280,
+        720
+    ],
+    "CellSize": 29,
+    "FontSize": 29,
+    "BoardWidth": 348,
+    "BoardHeight": 696
+}
