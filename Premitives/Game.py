@@ -95,13 +95,10 @@ class GameMode:
 
     def resize(self) -> None:
         self.init_surfaces()
-        for line in self.placed_blocks:
-            for block in line:
-                if block is not None:
-                    block.resize()
-        self.current_piece.resize()
+        self.current_piece.resize(self.settings.cell_size)
+        self.current_piece.set_pos(gp.SPAWN_LOCATION)
         for tetrmino in self.tetrominos:
-            tetrmino.resize()
+            tetrmino.resize(self.settings.cell_size)
         for preview_piece in self.preview_tetrominos:
             preview_piece.resize(self.settings.cell_size * 0.80)
 

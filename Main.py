@@ -102,7 +102,7 @@ class Main:
         self.GameModes = {GameStates.Tetris: Tetris(self)}
         self.MainMenu = GameMenus.MainMenu(self, backdround=self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self)
-        self.Settings = GameMenus.SettingsMenu(self, backdround=self.shared_bg)
+        self.SettingsMenu = GameMenus.SettingsMenu(self, backdround=self.shared_bg)
         self.GameOver = GameMenus.GameOver(self)
         self.set_state(GameStates.main_menu)
         self.loop()
@@ -113,7 +113,8 @@ class Main:
         self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), depth=bit_depth)
         self.MainMenu.resize()
         self.Pause.resize()
-        self.Settings.resize()
+        self.SettingsMenu.resize()
+        self.GameOver.resize()
         for value in self.GameModes.values():
             value.resize()
 
@@ -133,7 +134,7 @@ class Main:
                 self.Pause.loop(self.GameModes[self.last_played].main_surface)
 
             elif self.state == GameStates.in_settings:
-                self.Settings.loop()
+                self.SettingsMenu.loop()
 
             elif self.state == GameStates.resetting:
                 self.GameModes[self.last_played].reset_game()

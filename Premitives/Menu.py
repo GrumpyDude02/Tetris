@@ -38,6 +38,10 @@ class Background:
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
             self.objects.remove(tetromino)
+    
+    def resize(self):
+        for object in self.objects:
+            object.resize(self.settings.cell_size)
 
 
 class Menu:
@@ -104,8 +108,13 @@ class Menu:
 
     def resize(self):
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height), 0)
+        if self.background is not None:
+            self.background.resize()
         for button in self.buttons.values():
             button.resize((self.settings.width, self.settings.height), self.game.main_font)
+        if self.cursor is not None:
+            self.cursor.set_attr()
+
 
     def handle_nav(self, event: pygame.event):
         if event.type == pygame.KEYDOWN:
