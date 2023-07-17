@@ -4,6 +4,9 @@ import enum
 class GameStates(enum.Enum):
     initilized = "initilized"
     main_menu = "main_menu"
+    selection_menu = "selection_menu"
+    practice = "practice"
+    custom = "custom"
     Tetris = "Tetris"
     paused = "paused"
     game_over = "game_over"

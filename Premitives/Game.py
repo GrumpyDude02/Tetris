@@ -38,14 +38,18 @@ class GameMode:
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
         self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), 0, (0, 0, 0))
-        self.clearance_type_surf = functions.generate_surf((int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0))
+        self.clearance_type_surf = functions.generate_surf(
+            (int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0)
+        )
         self.clearance_type_surf.set_alpha(255)
 
     def __init__(self, game, shape: str = None) -> None:
         if shape:
             self.shape = shape
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
-            self.preview_tetrominos = [Tetrominos(pos, self.shape, self.settings.cell_size / 2) for pos in preview_tetrominos_pos]
+            self.preview_tetrominos = [
+                Tetrominos(pos, self.shape, self.settings.cell_size / 2) for pos in preview_tetrominos_pos
+            ]
         self.game = game
         self.settings = self.game.settings
         self.init_surfaces()
@@ -217,11 +221,15 @@ class GameMode:
             ),
         )
         self.main_surface.blit(
-            SCORE, (int(elements_coor["score"][0] * self.settings.width), int(elements_coor["score"][1] * self.settings.height))
+            SCORE,
+            (int(elements_coor["score"][0] * self.settings.width), int(elements_coor["score"][1] * self.settings.height)),
         )
         self.main_surface.blit(
             self.clearance_type_surf,
-            (int(elements_coor["clearance_type"][0] * self.settings.width), int(elements_coor["clearance_type"][1] * self.settings.height)),
+            (
+                int(elements_coor["clearance_type"][0] * self.settings.width),
+                int(elements_coor["clearance_type"][1] * self.settings.height),
+            ),
         )
 
     def draw_board(self) -> None:

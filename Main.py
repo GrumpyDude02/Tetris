@@ -151,4 +151,4 @@ class Main:
 
 
 if __name__ == "__main__":
-    Main( False, False).start_game()
+    Main(False, False).start_game()
