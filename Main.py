@@ -71,7 +71,7 @@ class Main:
                 }
                 json.dump(data, f, indent=4)
 
-    def __init__(self, sc_size: tuple, full_screen: bool = False, vsync_active: bool = False) -> None:
+    def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
         window_style = pygame.FULLSCREEN if full_screen else 0
         pygame.init()
         self.settings = Main.Settings()
@@ -151,4 +151,4 @@ class Main:
 
 
 if __name__ == "__main__":
-    Main((gp.WIDTH, gp.HEIGHT), False, False).start_game()
+    Main( False, False).start_game()

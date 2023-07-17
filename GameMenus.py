@@ -2,7 +2,7 @@ import pygame, random, Tools.functions as functions
 import Globals as gp
 from GameStates import GameStates
 from Tetrominos import Tetrominos
-from Tools.Buttons import Buttons
+from Tools.Buttons import TextButtons, DefaultTemplate
 from Premitives.Menu import Menu, Background, TransparentMenu, direction
 
 
@@ -10,31 +10,28 @@ class MainMenu(Menu):
     def __init__(self, game, backdround: Background = None):
         super().__init__(game, bg=backdround)
         self.buttons = {
-            "PLAY": Buttons(
+            "PLAY": TextButtons(
                 "PLAY",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.42, 0.35),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
-            "SETTINGS": Buttons(
+            "SETTINGS": TextButtons(
                 "SETTINGS",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.42, 0.50),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
-            "EXIT": Buttons(
+            "EXIT": TextButtons(
                 "EXIT",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.42, 0.65),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
@@ -102,31 +99,28 @@ class PauseScreen(TransparentMenu):
         self.create_blurred_surface()
         # 0.52 0.60 0.32 0.60
         self.buttons = {
-            "EXIT": Buttons(
+            "EXIT": TextButtons(
                 "EXIT",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.52, 0.60),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
-            "RESUME": Buttons(
+            "RESUME": TextButtons(
                 "RESUME",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.32, 0.60),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
-            "RESET": Buttons(
+            "RESET": TextButtons(
                 "RESET",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.42, 0.75),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
@@ -196,12 +190,12 @@ class SettingsMenu(Menu):
         y_pos = 0.05
         for resolution in gp.RESOLUTIONS:
             key = "x".join([str(resolution[0]), str(resolution[1])])
-            self.buttons[key] = Buttons(
-                key, (0.16, 0.1), (0.42, y_pos), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(self.settings.width, self.settings.height)
+            self.buttons[key] = TextButtons(
+                key,DefaultTemplate, self.game.main_font,(0.16, 0.1), (0.42, y_pos),  sc_size=(self.settings.width, self.settings.height)
             )
             y_pos += 0.12
-        self.buttons["BACK"] = Buttons(
-            "BACK", (0.16, 0.1), (0.42, 0.88), self.game.main_font, 5, hover_color=gp.BLUE, sc_size=(self.settings.width, self.settings.height)
+        self.buttons["BACK"] = TextButtons(
+            "BACK",DefaultTemplate, self.game.main_font,(0.16, 0.1), (0.42, 0.88),  sc_size=(self.settings.width, self.settings.height)
         )
 
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
@@ -253,22 +247,20 @@ class GameOver(TransparentMenu):
         super().__init__(game, "GAME OVER")
         self.create_blurred_surface()
         self.buttons = {
-            "EXIT": Buttons(
+            "EXIT": TextButtons(
                 "EXIT",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.52, 0.60),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
-            "RESET": Buttons(
+            "RESET": TextButtons(
                 "RESET",
+                DefaultTemplate,
+                self.game.main_font,
                 (0.16, 0.1),
                 (0.32, 0.60),
-                game.main_font,
-                5,
-                hover_color=gp.BLUE,
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
