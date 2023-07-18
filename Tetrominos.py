@@ -25,6 +25,7 @@ class Tetrominos:
         self.center = self.blocks[0]
         self.acc = 0
         self.keys_held = [False, False]
+        self.collision_direction = [None, None]
         self.HUpdate = 0
         self.VUpdate = 0
         self.key_held_time = 0
@@ -34,6 +35,7 @@ class Tetrominos:
         elif self.shape == "I":
             self.offset_list = gp.OFFSETS_I
 
+    # (True -> hard-dropped | False -> going down, cell numbers to bottom, rotation_index)
     def handle_events(self, current_time, events: list[pygame.Event], placed_blocks: list[list], dt: float) -> tuple:
         global down_pressed
         down_pressed = False
@@ -41,7 +43,7 @@ class Tetrominos:
         if keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY:
             down_pressed = True
             self.VUpdate = current_time
-            return (False, self.move(gp.MOVES["down"], current_time, placed_blocks), None)
+            return (False, self.move("down", current_time, placed_blocks), None)
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -55,11 +57,11 @@ class Tetrominos:
                 elif event.key == pygame.K_LEFT:
                     self.keys_held[0] = True
                     self.key_held_time = 0
-                    self.move(gp.MOVES["left"], current_time, placed_blocks)
+                    self.move("left", current_time, placed_blocks)
                 elif event.key == pygame.K_RIGHT:
                     self.keys_held[1] = True
                     self.key_held_time = 0
-                    self.move(gp.MOVES["right"], current_time, placed_blocks)
+                    self.move("right", current_time, placed_blocks)
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     self.keys_held[0] = False
@@ -72,13 +74,13 @@ class Tetrominos:
             if self.key_held_time > 250:
                 if keys[pygame.K_RIGHT] and current_time - self.HUpdate > gp.MOVE_DELAY:
                     self.HUpdate = current_time
-                    self.move(gp.MOVES["right"], current_time, placed_blocks)
+                    self.move("right", current_time, placed_blocks)
         elif self.keys_held[0]:
             self.key_held_time += dt * 1000
             if self.key_held_time > 250:
                 if keys[pygame.K_LEFT] and current_time - self.HUpdate > gp.MOVE_DELAY:
                     self.HUpdate = current_time
-                    self.move(gp.MOVES["left"], current_time, placed_blocks)
+                    self.move("left", current_time, placed_blocks)
         return None
 
     def update(self, level, dt, current_time, placed_blocks):
@@ -90,7 +92,7 @@ class Tetrominos:
             return
         if self.acc > 1:
             self.acc = 0
-            self.move(gp.MOVES["down"], current_time, placed_blocks)
+            self.move("down", current_time, placed_blocks)
 
     def smooth_fall(self, level, dt, placed_blocks: list[list[block]] = None):
         movement = v(0, gp.LEVEL_SPEED[level - 1] * dt * gp.GAME_SPEED)
@@ -106,16 +108,20 @@ class Tetrominos:
 
     def move(self, direction: pygame.Vector2, current_time, placed_blocks: list[list]) -> int:
         global shared_lock_timer, down_pressed
-        if not self.collide(direction, placed_blocks):
+        self.collision_direction = [direction, True]
+        direction_vec = gp.MOVES[direction]
+
+        if not self.collide(direction_vec, placed_blocks):
+            self.collision_direction = [direction, False]
             shared_lock_timer = current_time
             for block in self.blocks:
-                block.move(direction)
-            self.pivot += direction
-            if direction == gp.MOVES["down"]:
+                block.move(direction_vec)
+            self.pivot += direction_vec
+            if direction_vec == gp.MOVES["down"]:
                 return 1
         # elif direction==moves['left'] or direction==moves['right']:
         #     successful_move=False
-        elif direction == gp.MOVES["down"]:
+        elif direction_vec == gp.MOVES["down"]:
             if down_pressed or current_time - shared_lock_timer > lock_delay:
                 self.set_blocks(placed_blocks)
         return 0

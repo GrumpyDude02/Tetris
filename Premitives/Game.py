@@ -60,6 +60,7 @@ class GameMode:
         self.switch_available = False
         self.do_fade = True
         self.curr_drop_score = None
+        self.blit_offset = [0, 0]
         self.held_piece = None
         self.last_spin_kick = ""
         self.state = GameMode.initialized
@@ -108,26 +109,32 @@ class GameMode:
             preview_piece.resize(self.settings.cell_size * 0.80)
 
     def draw(self) -> None:
+        self.main_surface.fill(gp.BLACK)
         self.shadow_surf.fill(gp.BLACK)
         self.board_surface.fill(gp.BLACK)
+        if self.held_piece:
+            self.held_piece.draw(self.main_surface)
         for line in self.placed_blocks:
             for block in line:
-                block.draw(self.board_surface)
-        self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
-        functions.draw_grid(self.board_surface, self.game.settings.grid, (96, 96, 96))
-        self.board_surface.blit(self.shadow_surf, (0, 0))
-        self.main_surface.blit(
-            self.board_surface,
-            (
-                ((self.settings.width - 12 * self.settings.cell_size) // 2),
-                (self.settings.height - 24 * self.settings.cell_size) // 2,
-            ),
-        )
+                if block is not None:
+                    block.draw(self.board_surface)
+        self.draw_board()
+        self.draw_HUD()
+        self.game.screen.blit(self.main_surface, (0, 0))
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
+        if self.current_piece.collision_direction[1] == True:
+            if self.current_piece.collision_direction[0] == "right":
+                self.blit_offset[0] = 0.25 * self.settings.cell_size
+                self.current_piece.collision_direction = [None, None]
+            elif self.current_piece.collision_direction[0] == "left":
+                self.blit_offset[0] = -0.25 * self.settings.cell_size
+                self.current_piece.collision_direction = [None, None]
+
         if self.curr_drop_score is not None:
             if self.curr_drop_score[0] is True:
                 self.score += self.curr_drop_score[1] * 2
+                self.blit_offset[1] = 0.25 * self.settings.cell_size
             elif self.curr_drop_score[0] is False:
                 self.score += 1
             elif self.curr_drop_score[0] is None and self.curr_drop_score[2] != 0:
@@ -158,6 +165,13 @@ class GameMode:
         elif isSet:
             self.combo = 0
         self.cleared_lines += cleared_lines
+        if self.blit_offset[0] > 0:
+            self.blit_offset[0] = self.blit_offset[0] - self.dt * 2.5 * self.settings.cell_size
+        if self.blit_offset[0] < 0:
+            self.blit_offset[0] = self.blit_offset[0] + self.dt * 2.5 * self.settings.cell_size
+
+        if self.blit_offset[1] > 0:
+            self.blit_offset[1] -= self.dt * 2.5 * self.settings.cell_size
 
     def draw_HUD(self, target_lines: str = "\u221E") -> None:
         a = self.clearance_type_surf.get_alpha()
@@ -242,35 +256,30 @@ class GameMode:
         self.main_surface.blit(
             self.board_surface,
             (
-                int(elements_coor["board"][0] * self.settings.width),
-                int(elements_coor["board"][1] * self.settings.height),
+                int(elements_coor["board"][0] * self.settings.width) + self.blit_offset[0],
+                int(elements_coor["board"][1] * self.settings.height) + self.blit_offset[1],
             ),
         )
-    
+
     def handle_events(self):
-        raise Exception ("Not yet implemented")
-    
+        raise Exception("Not yet implemented")
+
     def fade(self, direction, condition):
         last_tick = 0
         current_time = pygame.time.get_ticks()
         while condition(self.game.alpha) and self.do_fade:
             if current_time - last_tick > 10:
                 if direction == "in":
-                    self.game.alpha -= 10
+                    self.game.alpha -= 20
                 elif direction == "out":
-                    self.game.alpha += 10
+                    self.game.alpha += 20
                 last_tick = current_time
                 self.game.transition_surface.set_alpha(self.game.alpha)
             current_time = pygame.time.get_ticks()
             pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.draw()
-            self.game.screen.blit(self.game.transition_surface,(0,0))
-            pygame.display.flip()  
-        
-              
+            self.game.screen.blit(self.game.transition_surface, (0, 0))
+            pygame.display.flip()
+
     def update(self):
         raise Exception("Not yet implemented")
-    
-    def draw(self):
-        raise Exception("Not yet implemented")
-

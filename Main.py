@@ -2,7 +2,10 @@ import Globals as gp
 from GamePlay import Tetris
 import GameMenus
 from GameStates import GameStates
-import sys, pygame, json
+import sys, pygame, json, os
+
+
+os.environ["SDL_VIDEO_CENTERED"] = "1"
 
 
 class Main:
@@ -36,6 +39,7 @@ class Main:
             self.font_size = data["FontSize"]
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
+            self.fullscreen = data["FullScreen"]
             self.InitGrid()
 
         def set_resolution(self, new_resolution):
@@ -68,16 +72,17 @@ class Main:
                     "FontSize": self.font_size,
                     "BoardWidth": self.board_width,
                     "BoardHeight": self.board_height,
+                    "FullScreen": False,
                 }
                 json.dump(data, f, indent=4)
 
     def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
-        window_style = pygame.FULLSCREEN if full_screen else 0
-        pygame.init()
         self.settings = Main.Settings()
-        bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), window_style, 32)
+        self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
+        pygame.init()
+        bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
         self.screen = pygame.display.set_mode(
-            (self.settings.width, self.settings.height), window_style, bit_depth, vsync=vsync_active
+            (self.settings.width, self.settings.height), self.window_style, bit_depth, vsync=vsync_active
         )
         pygame.display.set_caption("Tetris")
         pygame.mixer.pre_init(
@@ -93,7 +98,7 @@ class Main:
         self.last_played = None
         self.pending_state = None
         self.shared_bg = GameMenus.Background(self.settings)
-        self.transition_surface = pygame.Surface((self.settings.width,self.settings.height),pygame.HWACCEL)
+        self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)
         self.transition_surface.fill(gp.BLACK)
         self.alpha = 255
         self.transition_surface.set_alpha(self.alpha)
@@ -116,9 +121,12 @@ class Main:
         self.loop()
 
     def resize(self):
+        self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
-        bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), False, 32)
-        self.screen = pygame.display.set_mode((self.settings.width, self.settings.height), depth=bit_depth)
+        bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
+        self.screen = pygame.display.set_mode(
+            (self.settings.width, self.settings.height), self.window_style | pygame.SCALED, depth=bit_depth
+        )
         self.MainMenu.resize()
         self.Pause.resize()
         self.SettingsMenu.resize()

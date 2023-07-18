@@ -44,6 +44,10 @@ def mod(m, n) -> int:
     return (m % n + n) % n
 
 
+def clamp(minimum, maximum, value):
+    return max(minimum, min(value, maximum))
+
+
 def exclude(dictionary, exception: str) -> str:
     temp = [key for key in dictionary.keys() if key != exception]
     return random.choice(temp)
