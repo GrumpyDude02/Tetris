@@ -54,6 +54,7 @@ class GameMode:
         self.destroy = []
         self.tetrominos = []
         self.switch_available = False
+        self.do_fade = True
         self.curr_drop_score = None
         self.held_piece = None
         self.last_spin_kick = ""
@@ -237,3 +238,31 @@ class GameMode:
                 int(elements_coor["board"][1] * self.settings.height),
             ),
         )
+    
+    def handle_events(self):
+        raise Exception ("Not yet implemented")
+    
+    def fade(self, direction, condition):
+        last_tick = 0
+        current_time = pygame.time.get_ticks()
+        while condition(self.game.alpha) and self.do_fade:
+            if current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                last_tick = current_time
+                self.game.transition_surface.set_alpha(self.game.alpha)
+            current_time = pygame.time.get_ticks()
+            pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
+            self.draw()
+            self.game.screen.blit(self.game.transition_surface,(0,0))
+            pygame.display.flip()  
+        
+              
+    def update(self):
+        raise Exception("Not yet implemented")
+    
+    def draw(self):
+        raise Exception("Not yet implemented")
+

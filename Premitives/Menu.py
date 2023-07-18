@@ -22,18 +22,33 @@ class Background:
         )
         t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))
         return t
-
-    def draw_and_update(self, surface, current_time, dt):
-        self.destroy = []
+    
+    def draw(self,surface):
         surface.fill(gp.BLACK)
+        for tetromino in self.objects:
+            tetromino.draw(surface)
+      
+    def update(self,current_time,dt):
+        self.destroy = []
         if current_time - Menu.last_spawn_time > random.randrange(1200, 6000, 500):
             Menu.last_spawn_time = current_time
             self.objects.append(self.generate_tetromino())
-        for tetromino in self.objects:
-            tetromino.smooth_fall(4, dt)
-            tetromino.draw(surface)
-            if tetromino.pivot.y > self.settings.height // self.settings.cell_size + 5:
-                self.destroy.append(tetromino)
+        for object in self.objects:
+            object.smooth_fall(1,dt)
+            if object.pivot.y > self.settings.height // self.settings.cell_size + 5:
+                self.destroy.append(object)
+
+    # def draw_and_update(self, surface, current_time, dt):
+    #     self.destroy = []
+    #     surface.fill(gp.BLACK)
+    #     if current_time - Menu.last_spawn_time > random.randrange(1200, 6000, 500):
+    #         Menu.last_spawn_time = current_time
+    #         self.objects.append(self.generate_tetromino())
+    #     for tetromino in self.objects:
+    #         tetromino.smooth_fall(4, dt)
+    #         tetromino.draw(surface)
+    #         if tetromino.pivot.y > self.settings.height // self.settings.cell_size + 5:
+    #             self.destroy.append(tetromino)
 
     def destroy_tetrominos(self):
         for tetromino in self.destroy:
@@ -42,6 +57,7 @@ class Background:
     def resize(self):
         for object in self.objects:
             object.resize(self.settings.cell_size)
+
 
 
 class Menu:
@@ -79,6 +95,7 @@ class Menu:
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height), 0)
         self.child_menus = child_menus
         self.previous_menu = previous_menu
+        self.do_fade = True
         self.buttons = None
         self.cursor = None
         self.mouse_mode = True
@@ -95,17 +112,27 @@ class Menu:
         elif event.type == pygame.KEYDOWN:
             self.mouse_mode = False
 
-    def draw(self, fill_color: tuple = None, current_time: float = 0, dt: float = 1 / 60):
+    def draw(self, fill_color: tuple = None):
         if fill_color:
             self.main_surface.fill(fill_color)
         if self.background is not None:
-            self.background.draw_and_update(self.main_surface, current_time, dt)
+            self.background.draw(self.main_surface)
         for key in self.buttons.keys():
             self.buttons[key].draw(self.main_surface)
         if self.cursor is not None:
             self.cursor.draw(self.main_surface)
         self.game.screen.blit(self.main_surface, (0, 0))
 
+    def update(self):
+        dt = 1/self.game.clock.tick(gp.FPS)
+        if self.background is not None:
+            current_time = pygame.time.get_ticks()
+            self.background.update(current_time,dt)
+    
+    def clean(self):
+        if self.background is not None:
+            self.background.destroy_tetrominos()
+    
     def resize(self):
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height), 0)
         if self.background is not None:
@@ -114,7 +141,6 @@ class Menu:
             button.resize((self.settings.width, self.settings.height), self.game.main_font)
         if self.cursor is not None:
             self.cursor.set_attr()
-
 
     def handle_nav(self, event: pygame.event):
         if event.type == pygame.KEYDOWN:
@@ -130,10 +156,32 @@ class Menu:
         if event.type == pygame.MOUSEMOTION:
             self.mouse_mode = True
 
+    def handle_events(self):
+        raise Exception("Not yet implemented")
 
+    def fade(self,direction, condition):
+        last_tick = 0
+        current_time = pygame.time.get_ticks()
+        while condition(self.game.alpha) and self.do_fade:
+            if current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                self.game.transition_surface.set_alpha(self.game.alpha)
+                last_tick = current_time
+            current_time = pygame.time.get_ticks()
+            self.handle_events()
+            self.update()
+            self.draw()
+            self.game.screen.blit(self.game.transition_surface,(0,0))
+            pygame.display.flip()
+            self.clean()
+            
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
         self.transparent_surf = functions.generate_surf((self.settings.width, self.settings.height), 150, (0, 0, 0))
+        self.back_surface = None
         self.text_render = self.game.main_font.render(self.text, True, gp.WHITE)
         self.title_pos = self.text_render.get_rect(center=pygame.Rect(0, 0, self.settings.width, self.settings.height).center)
         self.transparent_surf.fill(color)
@@ -147,8 +195,8 @@ class TransparentMenu(Menu):
         super().resize()
         self.create_blurred_surface()
 
-    def draw(self, blurred_surface):
-        self.main_surface.blit(blurred_surface, (0, 0))
+    def draw(self):
+        self.main_surface.blit(self.back_surface, (0, 0))
         self.main_surface.blit(self.transparent_surf, (0, 0))
         self.main_surface.blit(self.text_render, self.title_pos)
         super().draw()

@@ -69,8 +69,15 @@ class Tetris(GameMode):
         return Tetrominos(gp.SPAWN_LOCATION, shape, self.settings.cell_size)
 
     def update(self):
+        self.destroy = []
         cleared = 0
         wasSet = False
+        
+        self.dt = min(GameMode.timer.delta_time(), 0.066)
+        self.current_time = GameMode.timer.current_time() * 1000
+        GameMode.timer.update_timer()
+        
+        self.game.clock.tick(gp.FPS) / 1000
         if self.current_piece.isSet:
             wasSet = True
             cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS)
@@ -86,7 +93,10 @@ class Tetris(GameMode):
             self.level += 1
         self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
+        self.destroy_tetrominos()
 
+        
+        
     def draw(self):
         self.main_surface.fill(gp.BLACK)
         self.shadow_surf.fill(gp.BLACK)
@@ -100,44 +110,19 @@ class Tetris(GameMode):
 
         self.draw_board()
         self.draw_HUD()
-
         self.game.screen.blit(self.main_surface, (0, 0))
         
-    def fade(self, condition, direction):
-        last_tick = 0
-        while condition(self.game.alpha):
-            if self.current_time - last_tick > 10:
-                if direction == "in":
-                    self.game.alpha -= 10
-                elif direction == "out":
-                    self.game.alpha += 10
-                self.game.transition_surface.set_alpha(self.game.alpha)
-                last_tick = self.current_time
-            if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
-                self.set_state(GameStates.game_over, GameStates.Tetris)
-            self.destroy = []
-            self.current_time = GameMode.timer.current_time() * 1000
-            pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
-            #self.handle_events()
-            self.draw()
-            self.game.clock.tick(gp.FPS) / 1000
-            self.game.screen.blit(self.game.transition_surface,(0,0))
-            pygame.display.flip()
 
     def loop(self):
-        self.fade(lambda a: a > 0,"in")
+        #self.fade("in",lambda a: a > 0)
         GameMode.timer.start_timer()
         while self.game.state == GameStates.Tetris:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
-                self.set_state(GameStates.game_over, GameStates.Tetris)
-            GameMode.timer.update_timer()
-            self.dt = min(GameMode.timer.delta_time(), 0.066)
-            self.destroy = []
-            self.current_time = GameMode.timer.current_time() * 1000
+                self.set_state(GameStates.game_over, GameStates.Tetris)  
             pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.handle_events()
             self.update()
             self.draw()
-            self.game.clock.tick(gp.FPS) / 1000
             pygame.display.flip()
-            self.destroy_tetrominos()
+        #self.fade("out",lambda alpha: alpha < 255)
+
