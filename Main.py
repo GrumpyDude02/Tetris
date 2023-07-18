@@ -61,6 +61,7 @@ class Main:
             self.font_size = gp.BASE_FONT_SIZE
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
+            self.fullscreen = False
             self.InitGrid()
             self.save_settings()
 
