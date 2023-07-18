@@ -14,7 +14,7 @@ class ButtonTemplate:
     secondary_color: tuple = None
 
 
-DefaultTemplate = ButtonTemplate((255, 255, 255), (0, 0, 0), (0, 50, 200), (255, 255, 255), 8, 4, 8, None)
+DefaultTemplate = ButtonTemplate((255, 255, 255), (0, 0, 0), (0, 50, 200), (255, 255, 255), -1, 4, -1, None)
 
 
 class Buttons:
