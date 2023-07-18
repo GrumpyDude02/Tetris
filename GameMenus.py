@@ -99,11 +99,21 @@ class SettingsMenu(Menu):
         for resolution in gp.RESOLUTIONS:
             key = "x".join([str(resolution[0]), str(resolution[1])])
             self.buttons[key] = TextButtons(
-                key,DefaultTemplate, self.game.main_font,(0.16, 0.1), (0.42, y_pos),  sc_size=(self.settings.width, self.settings.height)
+                key,
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.42, y_pos),
+                sc_size=(self.settings.width, self.settings.height),
             )
             y_pos += 0.12
         self.buttons["BACK"] = TextButtons(
-            "BACK",DefaultTemplate, self.game.main_font,(0.16, 0.1), (0.42, 0.88),  sc_size=(self.settings.width, self.settings.height)
+            "BACK",
+            DefaultTemplate,
+            self.game.main_font,
+            (0.16, 0.1),
+            (0.42, 0.88),
+            sc_size=(self.settings.width, self.settings.height),
         )
 
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
