@@ -93,6 +93,10 @@ class Main:
         self.last_played = None
         self.pending_state = None
         self.shared_bg = GameMenus.Background(self.settings)
+        self.transition_surface = pygame.Surface((self.settings.width,self.settings.height),pygame.HWACCEL)
+        self.transition_surface.fill(gp.BLACK)
+        self.alpha = 255
+        self.transition_surface.set_alpha(self.alpha)
 
     def set_state(self, new_state, last_mode: str = None):
         if last_mode:

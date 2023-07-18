@@ -78,11 +78,31 @@ class MainMenu(Menu):
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["EXIT"]:
                 self.set_state(GameStates.quitting)
+                
+    def fade(self, condition, direction):
+        dt = 1 / gp.FPS
+        last_tick = 0
+        current_time = pygame.time.get_ticks()
+        while condition(self.game.alpha):
+            if current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                self.game.transition_surface.set_alpha(self.game.alpha)
+                last_tick = current_time
+            current_time = pygame.time.get_ticks()
+            self.handle_events()
+            self.draw(current_time=current_time, dt=dt)
+            self.game.screen.blit(self.game.transition_surface, (0, 0))
+            dt = self.game.clock.tick(gp.FPS) / 1000
+            pygame.display.flip()
 
     def loop(self):
         dt = 1 / gp.FPS
         Menu.last_spawn_time = -10000
         self.tetrominos = []
+        self.fade(lambda a: a > 0,"in")
         while self.game.state == GameStates.main_menu:
             current_time = pygame.time.get_ticks()
             self.handle_events()
@@ -91,8 +111,8 @@ class MainMenu(Menu):
             pygame.display.flip()
             if self.background is not None:
                 self.background.destroy_tetrominos()
-
-
+        self.fade(lambda a: a < 255,"out")
+       
 class PauseScreen(TransparentMenu):
     def __init__(self, game):
         super().__init__(game, "PAUSED")
@@ -143,6 +163,7 @@ class PauseScreen(TransparentMenu):
             self.buttons["EXIT"],
             self.buttons["EXIT"],
         ]
+        self.do_fade = True
 
     def resize(self):
         super().resize()
@@ -152,11 +173,13 @@ class PauseScreen(TransparentMenu):
         if self.mouse_mode:
             for item in self.buttons.values():
                 item.move_cursor(self.cursor)
-
+        self.do_fade = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
+                if event.key== pygame.K_ESCAPE:
+                    self.set_state(self.game.last_played)
                 self.mouse_mode = False
                 self.handle_nav(event)
             elif event.type == pygame.MOUSEMOTION:
@@ -166,13 +189,32 @@ class PauseScreen(TransparentMenu):
         if b.check_input(self.mouse_mode):
             if b is self.buttons["RESUME"]:
                 self.set_state(self.game.last_played)
+                self.do_fade = False
             elif b is self.buttons["RESET"]:
                 self.set_state(GameStates.resetting)
                 self.set_pending_state(self.game.last_played)
             elif b is self.buttons["EXIT"]:
                 self.set_pending_state(GameStates.main_menu)
                 self.set_state(GameStates.resetting)
-
+    
+    def fade(self, condition, direction,blurred_surface):
+        last_tick = 0
+        current_time = pygame.time.get_ticks()
+        while condition(self.game.alpha) and self.do_fade == True:
+            if current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                self.game.transition_surface.set_alpha(self.game.alpha)
+                last_tick = current_time
+            current_time = pygame.time.get_ticks()
+            self.handle_events()
+            self.draw(blurred_surface)
+            self.game.screen.blit(self.game.transition_surface, (0, 0))
+            pygame.time.Clock().tick(gp.FPS)
+            pygame.display.flip()
+                        
     def loop(self, surface):
         blurred_surface = pygame.transform.gaussian_blur(surface, 4, False)
         while self.game.state == GameStates.paused:
@@ -180,6 +222,8 @@ class PauseScreen(TransparentMenu):
             self.draw(blurred_surface)
             pygame.time.Clock().tick(gp.FPS)
             pygame.display.flip()
+        self.fade(lambda a: a < 255,"out",blurred_surface)
+
 
 
 class SettingsMenu(Menu):
@@ -231,15 +275,37 @@ class SettingsMenu(Menu):
             if self.cursor.button is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
 
+    def fade(self, condition, direction):
+        dt = 1 / gp.FPS
+        last_tick = 0
+        current_time = pygame.time.get_ticks()
+        while condition(self.game.alpha):
+            if current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                self.game.transition_surface.set_alpha(self.game.alpha)
+                last_tick = current_time
+            current_time = pygame.time.get_ticks()
+            self.handle_events()
+            self.draw(current_time=current_time, dt=dt)
+            self.game.screen.blit(self.game.transition_surface, (0, 0))
+            dt = self.game.clock.tick(gp.FPS) / 1000
+            pygame.display.flip()
+
     def loop(self):
         dt = 1 / gp.FPS
         MainMenu.last_spawn_time = 0
+        self.fade(lambda a : a>0,"in")
         while self.game.state == GameStates.in_settings:
             time = pygame.time.get_ticks()
             self.handle_events()
             self.draw(current_time=time, dt=dt)
             dt = self.game.clock.tick(gp.FPS) / 1000
             pygame.display.flip()
+        self.fade(lambda a : a<255,"out")
+
 
 
 class GameOver(TransparentMenu):

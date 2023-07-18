@@ -102,8 +102,30 @@ class Tetris(GameMode):
         self.draw_HUD()
 
         self.game.screen.blit(self.main_surface, (0, 0))
+        
+    def fade(self, condition, direction):
+        last_tick = 0
+        while condition(self.game.alpha):
+            if self.current_time - last_tick > 10:
+                if direction == "in":
+                    self.game.alpha -= 10
+                elif direction == "out":
+                    self.game.alpha += 10
+                self.game.transition_surface.set_alpha(self.game.alpha)
+                last_tick = self.current_time
+            if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
+                self.set_state(GameStates.game_over, GameStates.Tetris)
+            self.destroy = []
+            self.current_time = GameMode.timer.current_time() * 1000
+            pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
+            #self.handle_events()
+            self.draw()
+            self.game.clock.tick(gp.FPS) / 1000
+            self.game.screen.blit(self.game.transition_surface,(0,0))
+            pygame.display.flip()
 
     def loop(self):
+        self.fade(lambda a: a > 0,"in")
         GameMode.timer.start_timer()
         while self.game.state == GameStates.Tetris:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
