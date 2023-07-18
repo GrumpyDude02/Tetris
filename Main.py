@@ -83,7 +83,7 @@ class Main:
         pygame.init()
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
         self.screen = pygame.display.set_mode(
-            (self.settings.width, self.settings.height), self.window_style, bit_depth, vsync=vsync_active
+            (self.settings.width, self.settings.height), self.window_style | pygame.HWSURFACE, bit_depth, vsync=vsync_active
         )
         pygame.display.set_caption("Tetris")
         pygame.mixer.pre_init(
@@ -126,7 +126,7 @@ class Main:
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
         self.screen = pygame.display.set_mode(
-            (self.settings.width, self.settings.height), self.window_style | pygame.SCALED, depth=bit_depth
+            (self.settings.width, self.settings.height), self.window_style | pygame.HWSURFACE, depth=bit_depth
         )
         self.MainMenu.resize()
         self.Pause.resize()

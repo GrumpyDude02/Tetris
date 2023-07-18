@@ -76,7 +76,7 @@ class Tetris(GameMode):
         self.current_time = GameMode.timer.current_time() * 1000
         GameMode.timer.update_timer()
 
-        self.game.clock.tick(gp.FPS) / 1000
+        self.game.clock.tick(gp.FPS)
         if self.current_piece.isSet:
             wasSet = True
             cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS)
