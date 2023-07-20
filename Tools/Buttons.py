@@ -11,10 +11,15 @@ class ButtonTemplate:
     border_radius: int
     outline_size: int
     outline_radius: int
+    slider_bar_color: tuple
+    slider_bar_width: int
+    slider_bar_radius: int
     secondary_color: tuple = None
 
 
-DefaultTemplate = ButtonTemplate((255, 255, 255), (0, 0, 0), (0, 50, 200), (255, 255, 255), -1, 4, -1, None)
+DefaultTemplate = ButtonTemplate(
+    (255, 255, 255), (0, 0, 0), (0, 50, 200), (255, 255, 255), -1, 4, -1, (96, 96, 96), 5, -1, None
+)
 
 
 class Buttons:
@@ -33,19 +38,18 @@ class Buttons:
         self.set_size(sc_size)
 
     def set_size(self, sc_size):
-        self.outline_rect = (
-            pygame.Rect(
-                self.pos[0] * sc_size[0] - self.template.outline_size,
-                self.pos[1] * sc_size[1] - self.template.outline_size,
-                self.size[0] * sc_size[0] + self.template.outline_size * 2,
-                self.size[1] * sc_size[1] + self.template.outline_size * 2,
-            )
-            if self.template.outline_size
-            else None
-        )
-
         self.rectangle = pygame.Rect(
             self.pos[0] * sc_size[0], self.pos[1] * sc_size[1], self.size[0] * sc_size[0], self.size[1] * sc_size[1]
+        )
+        self.outline_rect = (
+            pygame.Rect(
+                self.rectangle.left - self.template.outline_size,
+                self.rectangle.top - self.template.outline_size,
+                self.rectangle.width + self.template.outline_size * 2,
+                self.rectangle.height + self.template.outline_size * 2,
+            )
+            if self.template.outline_size > 0
+            else None
         )
 
     def move_cursor(self, cursor):

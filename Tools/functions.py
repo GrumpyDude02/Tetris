@@ -80,3 +80,9 @@ def generate_surf(surf_size: tuple, transparency_amount: int = 0, color_key: tup
 def draw_grid(window: pygame.Surface, grid, color) -> None:
     for rect in grid:
         pygame.draw.rect(window, color, rect)
+
+
+def map_values(value: float, input_range: tuple[float], output_range: tuple[float]):
+    return ((value - input_range[0]) / (input_range[1] - input_range[0])) * (
+        output_range[1] - output_range[0]
+    ) + output_range[0]
