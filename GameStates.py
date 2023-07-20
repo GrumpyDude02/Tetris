@@ -7,6 +7,7 @@ class GameStates(enum.Enum):
     selection_menu = "selection_menu"
     practice = "practice"
     custom = "custom"
+    custom_classic = "custom_classic"
     Tetris = "Tetris"
     paused = "paused"
     game_over = "game_over"

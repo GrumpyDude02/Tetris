@@ -248,9 +248,11 @@ class GameMode:
         )
 
     def draw_board(self) -> None:
+        for block in self.current_piece.blocks:
+            print(block.map_pos)
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
 
-        functions.draw_grid(self.board_surface, self.game.settings.grid, (96, 96, 96))
+        functions.draw_borders(self.board_surface, self.game.settings.grid, (96, 96, 96))
 
         self.board_surface.blit(self.shadow_surf, (0, 0))
         self.main_surface.blit(

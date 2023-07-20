@@ -77,7 +77,7 @@ def generate_surf(surf_size: tuple, transparency_amount: int = 0, color_key: tup
     return surface
 
 
-def draw_grid(window: pygame.Surface, grid, color) -> None:
+def draw_borders(window: pygame.Surface, grid, color) -> None:
     for rect in grid:
         pygame.draw.rect(window, color, rect)
 

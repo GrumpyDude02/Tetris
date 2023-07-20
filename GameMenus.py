@@ -1,17 +1,18 @@
-import pygame, random, Tools.functions as functions
+import pygame, Tools.functions as functions
 import Globals as gp
 from GameStates import GameStates
 from Tetrominos import Tetrominos
 from Tools.Buttons import TextButtons, DefaultTemplate
 from Premitives.Menu import Menu, Background, TransparentMenu, direction
+from Tools.Slider import Slider
 
 
 class MainMenu(Menu):
     def __init__(self, game, backdround: Background = None):
         super().__init__(game, bg=backdround)
         self.buttons = {
-            "PLAY": TextButtons(
-                "PLAY",
+            "CLASSIC": TextButtons(
+                "CLASSIC",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
@@ -35,16 +36,16 @@ class MainMenu(Menu):
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
-        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["PLAY"])
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["CLASSIC"])
 
-        self.buttons["PLAY"].next_buttons = [
+        self.buttons["CLASSIC"].next_buttons = [
             self.buttons["EXIT"],
             None,
             self.buttons["SETTINGS"],
             None,
         ]
         self.buttons["SETTINGS"].next_buttons = [
-            self.buttons["PLAY"],
+            self.buttons["CLASSIC"],
             None,
             self.buttons["EXIT"],
             None,
@@ -52,7 +53,7 @@ class MainMenu(Menu):
         self.buttons["EXIT"].next_buttons = [
             self.buttons["SETTINGS"],
             None,
-            self.buttons["PLAY"],
+            self.buttons["CLASSIC"],
             None,
         ]
 
@@ -72,24 +73,24 @@ class MainMenu(Menu):
 
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
-            if b is self.buttons["PLAY"]:
-                self.set_state(GameStates.Tetris)
+            if b is self.buttons["CLASSIC"]:
+                self.set_state(GameStates.custom_classic)
             elif b is self.buttons["SETTINGS"]:
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["EXIT"]:
                 self.set_state(GameStates.quitting)
 
     def loop(self):
-        self.fade("in",lambda alpha: alpha > 0)
-        while (self.game.state == GameStates.main_menu):
+        self.fade("in", lambda alpha: alpha > 0)
+        while self.game.state == GameStates.main_menu:
             self.handle_events()
             self.update()
             self.draw()
             pygame.display.flip()
             self.background.destroy_tetrominos()
-        self.fade("out",lambda alpha: alpha < 255)
+        self.fade("out", lambda alpha: alpha < 255)
 
-            
+
 class SettingsMenu(Menu):
     def __init__(self, game, backdround: Background = None):
         super().__init__(game, bg=backdround)
@@ -150,19 +151,87 @@ class SettingsMenu(Menu):
                 self.set_state(GameStates.main_menu)
 
     def loop(self):
-        self.fade("in",lambda alpha: alpha > 0)
-        while (self.game.state == GameStates.in_settings):
+        self.fade("in", lambda alpha: alpha > 0)
+        while self.game.state == GameStates.in_settings:
             self.handle_events()
             self.update()
             self.draw()
             pygame.display.flip()
             self.background.destroy_tetrominos()
-        self.fade("out",lambda alpha: alpha < 255)
+        self.fade("out", lambda alpha: alpha < 255)
 
 
+class ClassicSettings(Menu):
+    def __init__(self, game, backdround: Background = None):
+        super().__init__(game, bg=backdround)
+        self.buttons = {
+            "CONFIRM": TextButtons(
+                "CONFIRM",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.30, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+            "BACK": TextButtons(
+                "BACK",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.50, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+        }
+        level_range = (0, 15)
+        self.sliders = {
+            "Level": Slider(
+                DefaultTemplate,
+                "Level",
+                self.game.main_font,
+                (0.41, 0.5),
+                (0.16, 0.05),
+                level_range,
+                (self.settings.width, self.settings.height),
+                True,
+            )
+        }
+        self.buttons["CONFIRM"].next_buttons = [None, self.buttons["BACK"], None, self.buttons["BACK"]]
+        self.buttons["BACK"].next_buttons = [None, self.buttons["CONFIRM"], None, self.buttons["CONFIRM"]]
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["CONFIRM"])
+
+    def handle_events(self):
+        if self.mouse_mode:
+            for value in self.buttons.values():
+                value.move_cursor(self.cursor)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.set_state(GameStates.quitting)
+            elif event.type == pygame.KEYDOWN:
+                self.mouse_mode = False
+                self.handle_nav(event)
+            elif event.type == pygame.MOUSEMOTION:
+                self.mouse_mode = True
+
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["CONFIRM"]:
+                self.set_state(GameStates.Tetris)
+            elif b is self.buttons["BACK"]:
+                self.set_state(GameStates.main_menu)
+
+    def loop(self):
+        self.fade("in", lambda alpha: alpha > 0)
+        while self.game.state == GameStates.custom_classic:
+            self.handle_events()
+            self.update()
+            self.draw()
+            pygame.display.flip()
+            self.background.destroy_tetrominos()
+        self.fade("out", lambda alpha: alpha < 255)
+        return self.sliders["Level"].output
 
 
-       
 class PauseScreen(TransparentMenu):
     def __init__(self, game):
         super().__init__(game, "PAUSED")
@@ -228,7 +297,7 @@ class PauseScreen(TransparentMenu):
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
             elif event.type == pygame.KEYDOWN:
-                if event.key== pygame.K_ESCAPE:
+                if event.key == pygame.K_ESCAPE:
                     self.set_state(self.game.last_played)
                 self.mouse_mode = False
                 self.handle_nav(event)
@@ -245,17 +314,16 @@ class PauseScreen(TransparentMenu):
             elif b is self.buttons["EXIT"]:
                 self.set_pending_state(GameStates.main_menu)
                 self.set_state(GameStates.resetting)
-                        
+
     def loop(self, surface):
         self.back_surface = pygame.transform.gaussian_blur(surface, 4, False)
-        self.fade("in",lambda alpha: alpha > 0)
+        self.fade("in", lambda alpha: alpha > 0)
         while self.game.state == GameStates.paused:
             self.handle_events()
             self.draw()
             pygame.time.Clock().tick(gp.FPS)
             pygame.display.flip()
-        self.fade("out",lambda alpha: alpha < 255)
-
+        self.fade("out", lambda alpha: alpha < 255)
 
 
 class GameOver(TransparentMenu):
@@ -294,10 +362,10 @@ class GameOver(TransparentMenu):
 
     def loop(self, surface):
         self.back_surface = pygame.transform.gaussian_blur(surface, 4, False)
-        self.fade("in",lambda alpha: alpha > 0)
+        self.fade("in", lambda alpha: alpha > 0)
         while self.game.state == GameStates.game_over:
             self.handle_events()
             self.draw()
             pygame.time.Clock().tick(gp.FPS)
             pygame.display.flip()
-        self.fade("out",lambda alpha: alpha < 255)
+        self.fade("out", lambda alpha: alpha < 255)

@@ -23,7 +23,8 @@ class Tetris(GameMode):
             Tetrominos(pos, shape, self.settings.cell_size * 0.80)
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
-        self.index += 1
+        self.increment_level = True
+        self.completed_sets = 0
 
     def reset_game(self):
         super().reset_game()
@@ -75,7 +76,6 @@ class Tetris(GameMode):
         self.dt = min(GameMode.timer.delta_time(), 0.066)
         self.current_time = GameMode.timer.current_time() * 1000
         GameMode.timer.update_timer()
-
         self.game.clock.tick(gp.FPS)
         if self.current_piece.isSet:
             wasSet = True
@@ -88,8 +88,9 @@ class Tetris(GameMode):
             self.current_piece = self.update_queue()
             self.set_shapes()
             self.switch_available = False
-        if self.cleared_lines > (self.level + 1) * 10:
+        if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
+            self.completed_sets += 1
         self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
         self.destroy_tetrominos()
@@ -107,6 +108,10 @@ class Tetris(GameMode):
         self.draw_board()
         self.draw_HUD()
         self.game.screen.blit(self.main_surface, (0, 0))
+
+    def set_attr(self, level):
+        self.level = level
+        self.completed_sets = level
 
     def loop(self):
         # self.fade("in",lambda a: a > 0)

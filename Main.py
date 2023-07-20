@@ -18,7 +18,7 @@ class Main:
             except FileNotFoundError:
                 self.load_defaults()
 
-        def InitGrid(self):
+        def InitBorders(self):
             self.grid = []
             for i in range(0, gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT):
                 for j in range(gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET):
@@ -40,7 +40,7 @@ class Main:
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
             self.fullscreen = data["FullScreen"]
-            self.InitGrid()
+            self.InitBorders()
 
         def set_resolution(self, new_resolution):
             self.selected_res = new_resolution
@@ -50,7 +50,7 @@ class Main:
             self.font_size = round(gp.BASE_FONT_SIZE * (self.height / gp.BASE_RESOLUTION[1]))
             self.board_width = 12 * self.cell_size
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
-            self.InitGrid()
+            self.InitBorders()
             self.save_settings()
 
         def load_defaults(self):
@@ -62,7 +62,7 @@ class Main:
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
             self.fullscreen = False
-            self.InitGrid()
+            self.InitBorders()
             self.save_settings()
 
         def save_settings(self):
@@ -117,6 +117,7 @@ class Main:
         self.MainMenu = GameMenus.MainMenu(self, backdround=self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self)
         self.SettingsMenu = GameMenus.SettingsMenu(self, backdround=self.shared_bg)
+        self.ClassicSettings = GameMenus.ClassicSettings(self, self.shared_bg)
         self.GameOver = GameMenus.GameOver(self)
         self.set_state(GameStates.main_menu)
         self.loop()
@@ -131,6 +132,7 @@ class Main:
         self.MainMenu.resize()
         self.Pause.resize()
         self.SettingsMenu.resize()
+        self.ClassicSettings.resize()
         self.GameOver.resize()
         for value in self.GameModes.values():
             value.resize()
@@ -142,6 +144,9 @@ class Main:
 
             elif self.state == GameStates.main_menu:
                 self.MainMenu.loop()
+
+            elif self.state == GameStates.custom_classic:
+                self.GameModes[GameStates.Tetris].set_attr(self.ClassicSettings.loop())
 
             elif self.state == GameStates.changing_res:
                 self.resize()
@@ -159,6 +164,9 @@ class Main:
 
             elif self.state == GameStates.game_over:
                 self.GameOver.loop(self.GameModes[self.last_played].main_surface)
+            else:
+                print("Failed to enter", self.state)
+                break
         self.settings.save_settings()
         sys.exit()
 
