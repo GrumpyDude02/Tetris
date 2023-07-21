@@ -61,17 +61,19 @@ class Carousel:
         self.text_rect = self.rendered_text.get_rect(center=self.bounding_rect.center)
 
     def draw(self, surface: pygame.Surface):
-        pygame.draw.rect(surface, (255, 0, 0), self.bounding_rect)
         self.arrow1.draw(surface)
         self.arrow2.draw(surface)
         surface.blit(self.rendered_text, self.text_rect)
 
-    def update(self):
+    def check_input(self) -> tuple[bool, str]:
         if self.arrow2.check_input():
             self.current_index += 1
             self.current_index %= self.len
             self.update_text()
-        elif self.arrow1.check_input():
+            return (True, self.list[self.current_index])
+        if self.arrow1.check_input():
             self.current_index -= 1
             self.current_index %= self.len
             self.update_text()
+            return (True, self.list[self.current_index])
+        return (False, None)

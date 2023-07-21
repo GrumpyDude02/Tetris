@@ -1,6 +1,7 @@
 import Globals as gp
 from GamePlay import Tetris
 import GameMenus
+from Editor import Editor
 from GameStates import GameStates
 import sys, pygame, json, os
 
@@ -79,6 +80,7 @@ class Main:
 
     def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
+        self.editor = Editor(self.settings, (0.745, 0.04))
         self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
         pygame.init()
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
@@ -95,7 +97,6 @@ class Main:
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         self.clock = pygame.time.Clock()
         self.state = GameStates.initilized
-        self.game_screens = []
         self.last_played = None
         self.pending_state = None
         self.shared_bg = GameMenus.Background(self.settings)
@@ -114,11 +115,12 @@ class Main:
 
     def start_game(self):
         self.GameModes = {GameStates.Tetris: Tetris(self)}
-        self.MainMenu = GameMenus.MainMenu(self, backdround=self.shared_bg)
-        self.Pause = GameMenus.PauseScreen(self)
-        self.SettingsMenu = GameMenus.SettingsMenu(self, backdround=self.shared_bg)
-        self.ClassicSettings = GameMenus.ClassicSettings(self, self.shared_bg)
-        self.GameOver = GameMenus.GameOver(self)
+        self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
+        self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
+        self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
+        self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.custom_classic, self.shared_bg)
+        self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
+        self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice)
         self.set_state(GameStates.main_menu)
         self.loop()
 
@@ -147,6 +149,9 @@ class Main:
 
             elif self.state == GameStates.custom_classic:
                 self.GameModes[GameStates.Tetris].set_attr(self.ClassicSettings.loop())
+
+            elif self.state == GameStates.practice:
+                self.PracticeMenu.loop()
 
             elif self.state == GameStates.changing_res:
                 self.resize()

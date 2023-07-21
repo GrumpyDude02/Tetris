@@ -75,18 +75,19 @@ class Menu:
         def draw(self, surface):
             pygame.draw.rect(surface, self.color, self.rect, width=5)
 
-    def __init__(self, game, child_menus: list = None, previous_menu=None, bg: Background = None):
+    def __init__(self, game, state, child_menus: list = None, previous_menu=None, bg: Background = None):
         self.game = game
         self.settings = game.settings
         self.background = bg
         self.child_menus = child_menus
         self.previous_menu = previous_menu
         self.do_fade = True
-        self.buttons = None
-        self.sliders = None
-        self.courasels = None
+        self.buttons = {}
+        self.sliders = {}
+        self.carousels = {}
         self.cursor = None
         self.mouse_mode = True
+        self.state = state
 
     def set_state(self, new_state, last_mode: str = None):
         self.game.set_state(new_state, last_mode)
@@ -106,17 +107,15 @@ class Menu:
 
         if self.background is not None:
             self.background.draw(self.game.screen)
-        if self.buttons is not None:
-            for key in self.buttons.keys():
-                self.buttons[key].draw(self.game.screen)
 
-        if self.sliders is not None:
-            for slider in self.sliders.values():
-                slider.draw(self.game.screen)
+        for button in self.buttons.values():
+            button.draw(self.game.screen)
 
-        if self.courasels is not None:
-            for courasel in self.courasels.values:
-                courasel.draw(self.main_surface)
+        for slider in self.sliders.values():
+            slider.draw(self.game.screen)
+
+        for carousel in self.carousels.values():
+            carousel.draw(self.game.screen)
 
         if self.cursor is not None:
             self.cursor.draw(self.game.screen)
@@ -126,9 +125,8 @@ class Menu:
         if self.background is not None:
             current_time = pygame.time.get_ticks()
             self.background.update(current_time, dt)
-        if self.sliders is not None:
-            for slider in self.sliders.values():
-                slider.update()
+        for slider in self.sliders.values():
+            slider.update()
 
     def clean(self):
         if self.background is not None:
@@ -182,6 +180,16 @@ class Menu:
             pygame.display.flip()
             self.clean()
 
+    def loop(self):
+        self.fade("in", lambda alpha: alpha > 0)
+        while self.game.state == self.state:
+            self.handle_events()
+            self.update()
+            self.draw()
+            pygame.display.flip()
+            self.background.destroy_tetrominos()
+        self.fade("out", lambda alpha: alpha < 255)
+
 
 class TransparentMenu(Menu):
     def create_blurred_surface(self, color: tuple = gp.BLUE):
@@ -193,8 +201,8 @@ class TransparentMenu(Menu):
         )
         self.transparent_surf.fill(color)
 
-    def __init__(self, game, text: str = "Place Holder"):
-        super().__init__(game)
+    def __init__(self, game, state, text: str = "Place Holder"):
+        super().__init__(game, state)
         self.text = text
         self.create_blurred_surface()
 
@@ -207,3 +215,13 @@ class TransparentMenu(Menu):
         self.game.screen.blit(self.transparent_surf, (0, 0))
         self.game.screen.blit(self.text_render, self.title_pos)
         super().draw()
+
+    def loop(self, surface):
+        self.back_surface = pygame.transform.gaussian_blur(surface, 4, False)
+        self.fade("in", lambda alpha: alpha > 0)
+        while self.game.state == self.state:
+            self.handle_events()
+            self.draw()
+            pygame.time.Clock().tick(gp.FPS)
+            pygame.display.flip()
+        self.fade("out", lambda alpha: alpha < 255)

@@ -24,23 +24,13 @@ class Settings:
         self.width = 600
         self.height = 600
         self.cell_size = cell_size
-        self.grid = []
-        for i in range(0, gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT):
-            for j in range(gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET):
-                if j == 0 or j == gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET - 1:
-                    self.grid.append(
-                        pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
-                    )
-                elif i == 0 or i == gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT - 1:
-                    self.grid.append(
-                        pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
-                    )
 
 
 settings = Settings(WINDOW_WIDTH, WINDOW_HEIGHT, CELL_SIZE)
-editor = Editor(None, settings)  # Pass game as None since it's not required in the constructor
+editor = Editor(None, settings, (0, 0))  # Pass game as None since it's not required in the constructor
 
 # Main game loop
+editor.select_preset("test")
 running = True
 while running:
     for event in pygame.event.get():
@@ -58,4 +48,5 @@ while running:
     pygame.display.flip()  # Update the display
 
 # Quit Pygame
+editor.save_preset(str(input()))
 pygame.quit()
