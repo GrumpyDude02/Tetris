@@ -91,7 +91,7 @@ class MainMenu(Menu):
             if b is self.buttons["CLASSIC"]:
                 self.set_state(GameStates.custom_classic)
             elif b is self.buttons["PRACTICE"]:
-                self.set_state(GameStates.practice)
+                self.set_state(GameStates.practice_settings)
             elif b is self.buttons["SETTINGS"]:
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["EXIT"]:
@@ -291,12 +291,21 @@ class PracticeMenu(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
-                self.set_state(GameStates.Tetris)
+                self.set_state(GameStates.practice_game)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
         t = self.carousels["PresetSelector"].check_input()
         if t[0]:
             self.game.editor.select_preset(t[1])
+
+    def loop(self) -> int:
+        super().loop()
+        return [
+            self.sliders["Level"].output,
+            self.game.editor.placed_blocks_reference,
+            self.game.editor.drawn_blocks_reference,
+            "I",
+        ]
 
 
 class PauseScreen(TransparentMenu):

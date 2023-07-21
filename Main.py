@@ -1,6 +1,7 @@
 import Globals as gp
-from GamePlay import Tetris
+import GamePlay
 import GameMenus
+from Premitives.Game import Game
 from Editor import Editor
 from GameStates import GameStates
 import sys, pygame, json, os
@@ -114,13 +115,13 @@ class Main:
         self.pending_state = next_state
 
     def start_game(self):
-        self.GameModes = {GameStates.Tetris: Tetris(self)}
+        self.Games = {GameStates.Tetris: GamePlay.Classic(self), GameStates.practice_game: Game(self, None)}
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
         self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
         self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.custom_classic, self.shared_bg)
         self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
-        self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice)
+        self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice_settings)
         self.set_state(GameStates.main_menu)
         self.loop()
 
@@ -136,21 +137,24 @@ class Main:
         self.SettingsMenu.resize()
         self.ClassicSettings.resize()
         self.GameOver.resize()
-        for value in self.GameModes.values():
+        for value in self.Games.values():
             value.resize()
 
     def loop(self):
         while self.state != GameStates.quitting:
-            if self.state in list(self.GameModes.keys()):
-                self.GameModes[self.state].loop()
+            if self.state in list(self.Games.keys()):
+                self.Games[self.state].loop()
 
             elif self.state == GameStates.main_menu:
                 self.MainMenu.loop()
 
             elif self.state == GameStates.custom_classic:
-                self.GameModes[GameStates.Tetris].set_attr(self.ClassicSettings.loop())
+                self.Games[GameStates.Tetris].set_attributes(self.ClassicSettings.loop())
 
-            elif self.state == GameStates.practice:
+            elif self.state == GameStates.practice_settings:
+                self.Games[GameStates.practice_game].set_attributes(self.PracticeMenu.loop())
+
+            elif self.state == GameStates.practice_settings:
                 self.PracticeMenu.loop()
 
             elif self.state == GameStates.changing_res:
@@ -158,17 +162,17 @@ class Main:
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.paused:
-                self.Pause.loop(self.GameModes[self.last_played].main_surface)
+                self.Pause.loop(self.Games[self.last_played].main_surface)
 
             elif self.state == GameStates.in_settings:
                 self.SettingsMenu.loop()
 
             elif self.state == GameStates.resetting:
-                self.GameModes[self.last_played].reset_game()
+                self.Games[self.last_played].reset_game()
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.game_over:
-                self.GameOver.loop(self.GameModes[self.last_played].main_surface)
+                self.GameOver.loop(self.Games[self.last_played].main_surface)
             else:
                 print("Failed to enter", self.state)
                 break

@@ -25,13 +25,12 @@ preview_tetrominos_pos = [[preview_pos.x, preview_pos.y + i] for i in range(0, 2
 HOLD_POS = (10, 16)
 
 
-class GameMode:
+class Game:
+    start_time = 0
+    last_time = 0
     resumed = "resumed"
     paused = "paused"
     initialized = "initialized"
-    start_time = 0
-    last_time = 0
-    timer = Timer()
 
     def init_surfaces(self) -> None:
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
@@ -43,7 +42,7 @@ class GameMode:
         )
         self.clearance_type_surf.set_alpha(255)
 
-    def __init__(self, game, shape: str = None) -> None:
+    def __init__(self, game, state, shape: str = None) -> None:
         if shape:
             self.shape = shape
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
@@ -57,18 +56,36 @@ class GameMode:
         self.clearance_type = ""
         self.destroy = []
         self.tetrominos = []
+        self.blocks_to_draw = []
         self.switch_available = False
         self.do_fade = True
         self.curr_drop_score = None
         self.blit_offset = [0, 0]
         self.held_piece = None
         self.last_spin_kick = ""
-        self.state = GameMode.initialized
-        self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
+        self.increment_level = True
+        self.completed_sets = 0
+        self.placed_blocks = None
+        self.timer = Timer()
+        self.mode_state = state
+
+    def set_attributes(self, data):
+        self.level = data[0]
+        self.placed_blocks = deepcopy(data[1])
+        for row in self.placed_blocks:
+            for block in row:
+                if block is not None:
+                    block.width = self.settings.cell_size
+                    self.blocks_to_draw.append(block)
+        self.shape = data[3]
+        self.preview_tetrominos = [
+            Tetrominos(pos, self.shape, self.settings.cell_size * 0.8) for pos in preview_tetrominos_pos
+        ]
+        self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
 
     def reset_game(self) -> None:
         functions.reset_board(self.placed_blocks, self.tetrominos)
-        GameMode.timer.reset()
+        self.timer.reset()
         self.level = self.cleared_lines = self.score = 0
         self.held_piece = None
         self.last_spin_kick = ""
@@ -91,7 +108,7 @@ class GameMode:
             self.switch_available = False
 
     def render_timer(self) -> pygame.Surface:
-        int_timer = int(GameMode.timer.time)
+        int_timer = round(self.timer.time)
         time = self.game.main_font.render(
             f"TIME : {(int_timer//1000)//60:02d}:{(int_timer//1000)%60:02d}:{(int_timer//10)%100:02d}",
             True,
@@ -107,20 +124,6 @@ class GameMode:
             tetrmino.resize(self.settings.cell_size)
         for preview_piece in self.preview_tetrominos:
             preview_piece.resize(self.settings.cell_size * 0.80)
-
-    def draw(self) -> None:
-        self.main_surface.fill(gp.BLACK)
-        self.shadow_surf.fill(gp.BLACK)
-        self.board_surface.fill(gp.BLACK)
-        if self.held_piece:
-            self.held_piece.draw(self.main_surface)
-        for line in self.placed_blocks:
-            for block in line:
-                if block is not None:
-                    block.draw(self.board_surface)
-        self.draw_board()
-        self.draw_HUD()
-        self.game.screen.blit(self.main_surface, (0, 0))
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
@@ -173,12 +176,28 @@ class GameMode:
         if self.blit_offset[1] > 0:
             self.blit_offset[1] -= self.dt * 2.5 * self.settings.cell_size
 
+    def draw(self):
+        self.main_surface.fill(gp.BLACK)
+        self.shadow_surf.fill(gp.BLACK)
+        self.board_surface.fill(gp.BLACK)
+        if self.held_piece:
+            self.held_piece.draw(self.main_surface)
+        for block in self.blocks_to_draw:
+            block.draw(self.board_surface)
+        for tetromino in self.tetrominos:
+            tetromino.draw(self.board_surface, None, self.placed_blocks)
+            if tetromino.destroy:
+                self.destroy.append(tetromino)
+        self.draw_board()
+        self.draw_HUD()
+        self.game.screen.blit(self.main_surface, (0, 0))
+
     def draw_HUD(self, target_lines: str = "\u221E") -> None:
         a = self.clearance_type_surf.get_alpha()
-        curr_time = GameMode.timer.current_time() * 1000
-        if a > 0 and curr_time - GameMode.last_time > 25:
+        curr_time = self.timer.current_time() * 1000
+        if a > 0 and curr_time - Game.last_time > 25:
             self.clearance_type_surf.set_alpha(a - 5)
-            GameMode.last_time = curr_time
+            Game.last_time = curr_time
 
         self.preview_surface.fill(gp.BLACK)
         self.clearance_type_surf.fill(gp.BLACK)
@@ -261,9 +280,6 @@ class GameMode:
             ),
         )
 
-    def handle_events(self):
-        raise Exception("Not yet implemented")
-
     def fade(self, direction, condition):
         last_tick = 0
         current_time = pygame.time.get_ticks()
@@ -282,4 +298,57 @@ class GameMode:
             pygame.display.flip()
 
     def update(self):
-        raise Exception("Not yet implemented")
+        self.destroy = []
+        cleared = 0
+        wasSet = False
+        self.dt = min(self.timer.delta_time(), 0.066)
+        self.current_time = self.timer.current_time() * 1000
+        self.timer.update_timer()
+        self.game.clock.tick(gp.FPS)
+        if self.current_piece.isSet:
+            wasSet = True
+            cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            self.tetrominos.append(self.current_piece)
+            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+            self.switch_available = True
+        elif self.current_piece.isHeld:
+            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+            self.switch_available = False
+        if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
+            self.level += 1
+            self.completed_sets += 1
+        self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
+        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
+        for tetromino in self.destroy:
+            self.destroy.remove(tetromino)
+
+    def handle_events(self):
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.set_state(GameStates.quitting)
+            if event.type == pygame.ACTIVEEVENT:
+                if event.state == 2:
+                    self.game.last_played = self.mode_state
+                    self.state = Game.paused
+                    self.set_state(GameStates.paused)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.set_state(GameStates.paused, self.mode_state)
+                    self.timer.pause_timer()
+                if event.key == pygame.K_c:
+                    self.swap_pieces()
+        self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
+
+    def loop(self):
+        # self.fade("in",lambda a: a > 0)
+        self.timer.start_timer()
+        while self.game.state == GameStates.practice_game:
+            if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
+                self.set_state(GameStates.game_over, GameStates.Tetris)
+            pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
+            self.handle_events()
+            self.update()
+            self.draw()
+            pygame.display.flip()
+        # self.fade("out",lambda alpha: alpha < 255)

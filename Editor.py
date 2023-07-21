@@ -49,13 +49,12 @@ class Editor:
                     row = []
                     for value in line:
                         if value is not None:
-                            row.append(deserilize_block(value, self.cell_size))
+                            block = deserilize_block(value, self.cell_size)
+                            row.append(block)
+                            self.loaded_presets[name][1].append(block)
                         else:
                             row.append(None)
                     self.loaded_presets[name][0].append(row)
-
-                for value in data[1]:
-                    self.loaded_presets[name][1].append(deserilize_block(value, self.cell_size))
             return 0
         except FileNotFoundError:
             return -1

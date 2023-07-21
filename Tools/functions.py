@@ -13,13 +13,16 @@ def shift_blocks_down(placed_blocks_ar: list[list[block]], playable_field, clear
                 placed_blocks_ar[row][col] = None
 
 
-def check_line(placed_blocks_ar: list[list[block]], playable_field: int) -> int:
+def check_line(placed_blocks_ar: list[list[block]], playable_field: int, blocks_to_draw: list = None) -> int:
     cleared_lines = 0
     for row, lines in enumerate(placed_blocks_ar):
         if all(item for item in lines):
             cleared_lines += 1
             for item in lines:
-                item.tetromino.blocks.remove(item)
+                if item.tetromino is not None:
+                    item.tetromino.blocks.remove(item)
+                elif blocks_to_draw is not None:
+                    blocks_to_draw.remove(item)
                 placed_blocks_ar[row][int(item.map_pos[0])] = None
             shift_blocks_down(placed_blocks_ar, playable_field, row)
     return cleared_lines

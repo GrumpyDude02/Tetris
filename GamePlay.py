@@ -1,4 +1,4 @@
-from Premitives.Game import GameMode, preview_tetrominos_pos
+from Premitives.Game import Game, preview_tetrominos_pos
 from Tetrominos import Tetrominos
 from GameStates import GameStates
 import Globals as gp
@@ -6,13 +6,17 @@ import Tools.functions as functions
 import pygame, random
 
 
-class Tetris(GameMode):
+class Classic(Game):
     switch_available = True
 
     def __init__(self, game) -> None:
-        super().__init__(game)
-        self.index = 0
+        super().__init__(game, GameStates.Tetris)
+        self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
         self.shapes_list = list(gp.SHAPES.keys())
+        self.init_queue()
+
+    def init_queue(self):
+        self.index = 0
         # shuffling
         random.shuffle(self.shapes_list)
         self.next_shapes = [shape for shape in self.shapes_list]
@@ -23,39 +27,11 @@ class Tetris(GameMode):
             Tetrominos(pos, shape, self.settings.cell_size * 0.80)
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
-        self.increment_level = True
-        self.completed_sets = 0
 
     def reset_game(self):
         super().reset_game()
-        random.shuffle(self.shapes_list)
-        self.next_shapes = [shape for shape in self.shapes_list]
-        random.shuffle(self.shapes_list)
-        self.current_piece = self.update_queue()
-        self.state = GameMode.initialized
+        self.init_queue()
         self.destroy = []
-
-    def handle_events(self):
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                self.set_state(GameStates.quitting)
-            if event.type == pygame.ACTIVEEVENT:
-                if event.state == 2:
-                    self.game.last_played = GameStates.Tetris
-                    self.state = GameMode.paused
-                    self.set_state(GameStates.paused)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.set_state(GameStates.paused, GameStates.Tetris)
-                    GameMode.timer.pause_timer()
-                if event.key == pygame.K_c:
-                    self.swap_pieces()
-        self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
-
-    def destroy_tetrominos(self):
-        for tetromino in self.destroy:
-            self.destroy.remove(tetromino)
 
     def set_shapes(self):
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
@@ -73,9 +49,9 @@ class Tetris(GameMode):
         self.destroy = []
         cleared = 0
         wasSet = False
-        self.dt = min(GameMode.timer.delta_time(), 0.066)
-        self.current_time = GameMode.timer.current_time() * 1000
-        GameMode.timer.update_timer()
+        self.dt = min(self.timer.delta_time(), 0.066)
+        self.current_time = self.timer.current_time() * 1000
+        self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
         if self.current_piece.isSet:
             wasSet = True
@@ -93,7 +69,8 @@ class Tetris(GameMode):
             self.completed_sets += 1
         self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
-        self.destroy_tetrominos()
+        for tetromino in self.destroy:
+            self.destroy.remove(tetromino)
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
@@ -109,13 +86,31 @@ class Tetris(GameMode):
         self.draw_HUD()
         self.game.screen.blit(self.main_surface, (0, 0))
 
-    def set_attr(self, level):
+    def set_attributes(self, level):
         self.level = level
         self.completed_sets = level
 
+    def handle_events(self):
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.set_state(GameStates.quitting)
+            if event.type == pygame.ACTIVEEVENT:
+                if event.state == 2:
+                    self.game.last_played = self.mode_state
+                    self.state = Game.paused
+                    self.set_state(GameStates.paused)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.set_state(GameStates.paused, self.mode_state)
+                    self.timer.pause_timer()
+                if event.key == pygame.K_c:
+                    self.swap_pieces()
+        self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
+
     def loop(self):
         # self.fade("in",lambda a: a > 0)
-        GameMode.timer.start_timer()
+        self.timer.start_timer()
         while self.game.state == GameStates.Tetris:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
                 self.set_state(GameStates.game_over, GameStates.Tetris)
@@ -124,4 +119,9 @@ class Tetris(GameMode):
             self.update()
             self.draw()
             pygame.display.flip()
+
         # self.fade("out",lambda alpha: alpha < 255)
+
+
+class PracticeGame(Game):
+    pass

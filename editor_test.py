@@ -27,10 +27,10 @@ class Settings:
 
 
 settings = Settings(WINDOW_WIDTH, WINDOW_HEIGHT, CELL_SIZE)
-editor = Editor(None, settings, (0, 0))  # Pass game as None since it's not required in the constructor
+editor = Editor(settings, (0, 0))  # Pass game as None since it's not required in the constructor
 
 # Main game loop
-editor.select_preset("test")
+editor.select_preset("Custom")
 running = True
 while running:
     for event in pygame.event.get():
@@ -48,5 +48,5 @@ while running:
     pygame.display.flip()  # Update the display
 
 # Quit Pygame
-editor.save_preset(str(input()))
 pygame.quit()
+editor.save_preset(str(input("enter the name of the preset")))
