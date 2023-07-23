@@ -28,6 +28,14 @@ class MainMenu(Menu):
                 (0.42, 0.40),
                 sc_size=(self.settings.width, self.settings.height),
             ),
+            "CUSTOM": TextButtons(
+                "CUSTOM",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.42, 0.85),
+                sc_size=(self.settings.width, self.settings.height),
+            ),
             "SETTINGS": TextButtons(
                 "SETTINGS",
                 DefaultTemplate,
@@ -89,13 +97,15 @@ class MainMenu(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CLASSIC"]:
-                self.set_state(GameStates.custom_classic)
+                self.set_state(GameStates.classic_settings)
             elif b is self.buttons["PRACTICE"]:
                 self.set_state(GameStates.practice_settings)
             elif b is self.buttons["SETTINGS"]:
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["EXIT"]:
                 self.set_state(GameStates.quitting)
+            elif b is self.buttons["CUSTOM"]:
+                self.set_state(GameStates.custom_settings)
 
 
 class SettingsMenu(Menu):
@@ -218,7 +228,7 @@ class ClassicSettings(Menu):
 
     def loop(self) -> int:
         super().loop()
-        return self.sliders["Level"].output
+        return {"Level": self.sliders["Level"].output}
 
 
 class PracticeMenu(Menu):
@@ -300,12 +310,83 @@ class PracticeMenu(Menu):
 
     def loop(self) -> int:
         super().loop()
-        return [
-            self.sliders["Level"].output,
-            self.game.editor.placed_blocks_reference,
-            self.game.editor.drawn_blocks_reference,
-            "I",
-        ]
+        return {
+            "Level": self.sliders["Level"].output,
+            "Grid": self.game.editor.placed_blocks_reference,
+            "Shape": self.carousels["PresetSelector"].list[self.carousels["PresetSelector"].current_index].split("-")[0],
+        }
+
+
+class CustomSettings(Menu):
+    def __init__(self, game, state):
+        super().__init__(game, state, bg=game.shared_bg)
+        self.sliders = {
+            "Level": Slider(
+                DefaultTemplate,
+                "Level",
+                self.game.main_font,
+                (0.31, 0.30),
+                (0.16, 0.05),
+                (0, 15),
+                (self.settings.width, self.settings.height),
+                True,
+            )
+        }
+        self.buttons = {
+            "CONFIRM": TextButtons(
+                "CONFIRM",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.30, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+            "BACK": TextButtons(
+                "BACK",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.50, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+        }
+        self.buttons["CONFIRM"].next_buttons = [None, self.buttons["BACK"], None, self.buttons["BACK"]]
+        self.buttons["BACK"].next_buttons = [None, self.buttons["CONFIRM"], None, self.buttons["CONFIRM"]]
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["CONFIRM"])
+
+    def draw(self):
+        super().draw()
+        self.game.editor.draw(self.game.screen)
+
+    def update(self):
+        super().update()
+        self.game.editor.update()
+
+    def handle_events(self):
+        if self.mouse_mode:
+            for value in self.buttons.values():
+                value.move_cursor(self.cursor)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.set_state(GameStates.quitting)
+            elif event.type == pygame.KEYDOWN:
+                self.mouse_mode = False
+                self.handle_nav(event)
+            elif event.type == pygame.MOUSEMOTION:
+                self.mouse_mode = True
+
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["CONFIRM"]:
+                self.set_state(GameStates.custom_game)
+            elif b is self.buttons["BACK"]:
+                self.set_state(GameStates.main_menu)
+
+    def loop(self) -> int:
+        self.game.editor.select_preset("Custom")
+        super().loop()
+        return {"Shape": "All", "Level": self.sliders["Level"].output, "Grid": self.game.editor.placed_blocks_reference}
 
 
 class PauseScreen(TransparentMenu):

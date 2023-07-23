@@ -105,6 +105,7 @@ class Main:
         self.transition_surface.fill(gp.BLACK)
         self.alpha = 255
         self.transition_surface.set_alpha(self.alpha)
+        self.data = ()
 
     def set_state(self, new_state, last_mode: str = None):
         if last_mode:
@@ -115,11 +116,16 @@ class Main:
         self.pending_state = next_state
 
     def start_game(self):
-        self.Games = {GameStates.Tetris: GamePlay.Classic(self), GameStates.practice_game: Game(self, None)}
+        self.Games = {
+            GameStates.Tetris: GamePlay.Classic(self),
+            GameStates.practice_game: GamePlay.PracticeGame(self),
+            GameStates.custom_game: GamePlay.CustomGame(self),
+        }
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
         self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
-        self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.custom_classic, self.shared_bg)
+        self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.classic_settings, self.shared_bg)
+        self.CustomSettings = GameMenus.CustomSettings(self, GameStates.custom_settings)
         self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
         self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice_settings)
         self.set_state(GameStates.main_menu)
@@ -143,19 +149,21 @@ class Main:
     def loop(self):
         while self.state != GameStates.quitting:
             if self.state in list(self.Games.keys()):
+                print(self.state)
+                self.Games[self.state].set_attributes(self.data)
                 self.Games[self.state].loop()
 
             elif self.state == GameStates.main_menu:
                 self.MainMenu.loop()
 
-            elif self.state == GameStates.custom_classic:
-                self.Games[GameStates.Tetris].set_attributes(self.ClassicSettings.loop())
+            elif self.state == GameStates.classic_settings:
+                self.data = self.ClassicSettings.loop()
 
             elif self.state == GameStates.practice_settings:
-                self.Games[GameStates.practice_game].set_attributes(self.PracticeMenu.loop())
+                self.data = self.PracticeMenu.loop()
 
-            elif self.state == GameStates.practice_settings:
-                self.PracticeMenu.loop()
+            elif self.state == GameStates.custom_settings:
+                self.data = self.CustomSettings.loop()
 
             elif self.state == GameStates.changing_res:
                 self.resize()
