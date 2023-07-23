@@ -86,7 +86,7 @@ class Editor:
                 place_blocks[int(block_pos[1])][int(block_pos[0])] = block(
                     pygame.math.Vector2(((block_pos[0]), (block_pos[1]))),
                     self.cell_size,
-                    (0, 0, 255),
+                    (180, 180, 180),
                     None,
                 )
                 drawn_blocks.append(place_blocks[int(block_pos[1])][int(block_pos[0])])

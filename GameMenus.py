@@ -246,7 +246,7 @@ class PracticeMenu(Menu):
                 (self.settings.width, self.settings.height),
             ),
         }
-        carousel_list = ["J-spin", "L-spin", "T-spin", "S-spin", "Z-spin"]
+        carousel_list = ["I-spin", "J-spin", "L-spin", "T-spin", "S-spin", "Z-spin"]
         self.carousels = {
             "PresetSelector": Carousel(
                 carousel_list,
