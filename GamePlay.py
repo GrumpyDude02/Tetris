@@ -21,6 +21,7 @@ class Classic(Game):
     def set_attributes(self, data):
         self.level = data["Level"]
         self.completed_sets = self.level
+        self.increment_level = not data["LockSpeed"]
 
 
 class PracticeGame(Game):
@@ -47,6 +48,8 @@ class CustomGame(Game):
 
         self.blocks_to_draw = []
         self.level = data["Level"]
+        self.completed_sets = self.level
+        self.increment_level = not data["LockSpeed"]
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
             self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]

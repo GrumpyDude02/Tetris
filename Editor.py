@@ -18,16 +18,19 @@ def deserilize_block(block_dict: dict, block_width):
 class Editor:
     def __init__(self, settings, board_posistion, size: float = 0.8) -> None:
         self.settings = settings
-        self.board_width = self.settings.board_width * size
-        self.board_height = self.settings.board_height * size
-        self.cell_size = self.settings.cell_size * size
+        self.size = size
         self.position = board_posistion
-        self.board_surface = functions.generate_surf((self.board_width, self.board_height))
+        self.resize()
         self.loaded_presets = {
             "Custom": [[[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)], []]
         }
         self.placed_blocks_reference = None
         self.drawn_blocks_reference = None
+
+    def resize(self):
+        self.board_width = self.settings.board_width * self.size
+        self.board_height = self.settings.board_height * self.size
+        self.cell_size = self.settings.cell_size * self.size
         self.grid = []
         for i in range(0, gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT):
             for j in range(gp.PLAYABLE_AREA_CELLS + gp.X_BORDER_OFFSET):
@@ -39,6 +42,7 @@ class Editor:
                     self.grid.append(
                         pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
                     )
+        self.board_surface = functions.generate_surf((self.board_width, self.board_height))
 
     def load_presets(self, name) -> int:
         try:
@@ -93,6 +97,14 @@ class Editor:
     def save_preset(self, preset_name):
         with open(f"Assets/Presets/{preset_name}.txt", "w") as file:
             json.dump(self.loaded_presets["Custom"], file, default=seriliaze_block)
+
+    def erase(self):
+        self.loaded_presets["Custom"] = [
+            [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)],
+            [],
+        ]
+        self.placed_blocks_reference = self.loaded_presets["Custom"][0]
+        self.drawn_blocks_reference = self.loaded_presets["Custom"][1]
 
     def draw(self, surface):
         self.board_surface.fill((0, 0, 0))

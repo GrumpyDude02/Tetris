@@ -17,6 +17,7 @@ class Carousel:
         sc_size: tuple = (1, 1),
         button: TextButtons = None,
         configuration: str = "horizontal",
+        text: str = None,
     ) -> None:
         self.list = table
         self.len = len(self.list)
@@ -26,6 +27,7 @@ class Carousel:
         self.button = button
         self.configuration = configuration
         self.template = template
+        self.title_text = text
         self.size = size
         self.InitArrows(sc_size[0], sc_size[1], font)
 
@@ -53,8 +55,19 @@ class Carousel:
                     self.bounding_rect.top + self.bounding_rect.height * Carousel.ARROW_Y_POS,
                 ),
             )
+            if self.title_text is not None:
+                self.rendered_title = self.font.render(self.title_text, True, self.template.text_color)
+                self.title_rect = self.rendered_title.get_rect(
+                    centery=self.bounding_rect.centery, right=self.bounding_rect.left - 40
+                )
+            else:
+                self.rendered_title = None
+                self.title_rect = None
         else:
             raise Exception("Not Implemented or Invalid configuration")
+
+    def resize(self, sc_size, font):
+        self.InitArrows(sc_size[0], sc_size[1], font)
 
     def update_text(self):
         self.rendered_text = self.font.render(self.list[self.current_index], True, self.template.text_color)
@@ -63,6 +76,8 @@ class Carousel:
     def draw(self, surface: pygame.Surface):
         self.arrow1.draw(surface)
         self.arrow2.draw(surface)
+        if self.rendered_title:
+            surface.blit(self.rendered_title, self.title_rect)
         surface.blit(self.rendered_text, self.text_rect)
 
     def check_input(self) -> tuple[bool, str]:

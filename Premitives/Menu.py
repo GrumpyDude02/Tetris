@@ -135,12 +135,13 @@ class Menu:
     def resize(self):
         if self.background is not None:
             self.background.resize()
-        if self.buttons is not None:
-            for button in self.buttons.values():
-                button.resize((self.settings.width, self.settings.height), self.game.main_font)
-        if self.sliders is not None:
-            for slider in self.sliders.values():
-                slider.resize((self.settings.width, self.settings.height), self.game.main_font)
+        for button in self.buttons.values():
+            button.resize((self.settings.width, self.settings.height), self.game.main_font)
+        for slider in self.sliders.values():
+            slider.resize((self.settings.width, self.settings.height), self.game.main_font)
+        for carousel in self.carousels.values():
+            carousel.resize((self.settings.width, self.settings.height), self.game.main_font)
+
         if self.cursor is not None:
             self.cursor.set_attr()
 
@@ -159,7 +160,18 @@ class Menu:
             self.mouse_mode = True
 
     def handle_events(self):
-        raise Exception("Not yet implemented")
+        if self.mouse_mode and self.cursor is not None:
+            for value in self.buttons.values():
+                value.move_cursor(self.cursor)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.set_state(GameStates.quitting)
+            elif event.type == pygame.KEYDOWN:
+                self.mouse_mode = False
+                self.handle_nav(event)
+            elif event.type == pygame.MOUSEMOTION:
+                self.mouse_mode = True
 
     def fade(self, direction, condition):
         last_tick = 0

@@ -122,7 +122,7 @@ class Tetrominos:
         # elif direction==moves['left'] or direction==moves['right']:
         #     successful_move=False
         elif direction_vec == gp.MOVES["down"]:
-            if down_pressed or current_time - shared_lock_timer > lock_delay:
+            if current_time - shared_lock_timer > lock_delay:
                 self.set_blocks(placed_blocks)
         return 0
 

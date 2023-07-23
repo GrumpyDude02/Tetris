@@ -66,26 +66,26 @@ class Game:
         self.settings = self.game.settings
         self.init_surfaces()
         self.score = self.level = self.cleared_lines = self.combo = self.current_time = self.dt = 0
+        self.timer = Timer()
+        self.mode_state = state
+        self.shapes_list = list(gp.SHAPES.keys())
+        self.last_spin_kick = ""
         self.clearance_type = ""
+        self.blit_offset = [0, 0]
         self.destroy = []
         self.tetrominos = []
         self.blocks_to_draw = []
         self.switch_available = False
         self.do_fade = True
-        self.curr_drop_score = None
-        self.blit_offset = [0, 0]
-        self.held_piece = None
-        self.last_spin_kick = ""
         self.increment_level = True
+
         self.completed_sets = 0
-        self.placed_blocks = None
-        self.timer = Timer()
-        self.mode_state = state
-        self.shapes_list = list(gp.SHAPES.keys())
+        self.preview_tetrominos = self.current_piece = self.curr_drop_score = self.placed_blocks = self.held_piece = None
 
     def set_attributes(self, data):
         self.blocks_to_draw = []
         self.level = data["Level"]
+        self.completed_sets = self.level
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
             print("condition is none")
@@ -100,6 +100,7 @@ class Game:
             Tetrominos(pos, self.shape, self.settings.cell_size * 0.8) for pos in preview_tetrominos_pos
         ]
         self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+        self.increment_level = not data["LockSpeed"]
 
     def reset_game(self) -> None:
         functions.reset_board(self.placed_blocks, self.tetrominos)
@@ -141,12 +142,14 @@ class Game:
 
     def resize(self) -> None:
         self.init_surfaces()
-        self.current_piece.resize(self.settings.cell_size)
-        self.current_piece.set_pos(gp.SPAWN_LOCATION)
+        if self.current_piece is not None:
+            self.current_piece.resize(self.settings.cell_size)
+            self.current_piece.set_pos(gp.SPAWN_LOCATION)
         for tetrmino in self.tetrominos:
             tetrmino.resize(self.settings.cell_size)
-        for preview_piece in self.preview_tetrominos:
-            preview_piece.resize(self.settings.cell_size * 0.80)
+        if self.preview_tetrominos is not None:
+            for preview_piece in self.preview_tetrominos:
+                preview_piece.resize(self.settings.cell_size * 0.80)
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
@@ -403,7 +406,7 @@ class Game:
         self.timer.start_timer()
         while self.game.state == self.mode_state:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
-                self.set_state(GameStates.game_over, GameStates.Tetris)
+                self.set_state(GameStates.game_over, self.mode_state)
             pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.handle_events()
             self.update()

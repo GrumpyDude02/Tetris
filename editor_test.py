@@ -49,4 +49,4 @@ while running:
 
 # Quit Pygame
 pygame.quit()
-editor.save_preset(str(input("enter the name of the preset")))
+editor.save_preset(str(input("enter the name of the preset: ")))

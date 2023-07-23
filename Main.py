@@ -138,10 +138,13 @@ class Main:
         self.screen = pygame.display.set_mode(
             (self.settings.width, self.settings.height), self.window_style | pygame.HWSURFACE, depth=bit_depth
         )
+        self.editor.resize()
         self.MainMenu.resize()
         self.Pause.resize()
         self.SettingsMenu.resize()
         self.ClassicSettings.resize()
+        self.PracticeMenu.resize()
+        self.CustomSettings.resize()
         self.GameOver.resize()
         for value in self.Games.values():
             value.resize()
@@ -149,8 +152,6 @@ class Main:
     def loop(self):
         while self.state != GameStates.quitting:
             if self.state in list(self.Games.keys()):
-                print(self.state)
-                self.Games[self.state].set_attributes(self.data)
                 self.Games[self.state].loop()
 
             elif self.state == GameStates.main_menu:
@@ -158,12 +159,15 @@ class Main:
 
             elif self.state == GameStates.classic_settings:
                 self.data = self.ClassicSettings.loop()
+                self.Games[GameStates.Tetris].set_attributes(self.data)
 
             elif self.state == GameStates.practice_settings:
                 self.data = self.PracticeMenu.loop()
+                self.Games[GameStates.practice_game].set_attributes(self.data)
 
             elif self.state == GameStates.custom_settings:
                 self.data = self.CustomSettings.loop()
+                self.Games[GameStates.custom_game].set_attributes(self.data)
 
             elif self.state == GameStates.changing_res:
                 self.resize()
@@ -177,6 +181,7 @@ class Main:
 
             elif self.state == GameStates.resetting:
                 self.Games[self.last_played].reset_game()
+                self.Games[self.last_played].set_attributes(self.data)
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.game_over:
