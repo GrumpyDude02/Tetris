@@ -13,6 +13,7 @@ class Classic(Game):
         self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
         self.update = self.update_classic
         self.init_queue()
+        self.set_shapes()
 
     def reset_game(self):
         super().reset_game()

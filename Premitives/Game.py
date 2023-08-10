@@ -48,7 +48,7 @@ class Game:
         self.clearance_type_surf.set_alpha(255)
 
     def init_queue(self):
-        self.index = 0
+        self.index = 1
         # shuffling
         random.shuffle(self.shapes_list)
         self.next_shapes = [shape for shape in self.shapes_list]
@@ -129,15 +129,21 @@ class Game:
             self.current_piece.state = Tetrominos.is_held
             self.held_piece = deepcopy(self.current_piece)
             self.held_piece.set_pos(HOLD_POS)
-            self.held_piece.state = Tetrominos.falling
+            self.held_piece.reset_color()
+
         elif self.switch_available:
             temp = self.current_piece
             self.current_piece = self.held_piece
-            self.current_piece.set_pos(gp.SPAWN_LOCATION)
             self.held_piece = temp
+
+            self.current_piece.set_pos(gp.SPAWN_LOCATION)
+            self.current_piece.state = Tetrominos.falling
+
             self.held_piece.set_pos(HOLD_POS)
+            self.held_piece.state = Tetrominos.is_held
+            self.held_piece.reset_color()
+
             self.switch_available = False
-        self.current_piece.increment_score = True
 
     def render_timer(self) -> pygame.Surface:
         int_timer = round(self.timer.time)
@@ -391,13 +397,12 @@ class Game:
             self.tetrominos.append(self.current_piece)
             self.current_piece = self.update_queue()
             self.set_shapes()
-
             self.switch_available = True
+
         elif self.current_piece.state == Tetrominos.is_held:
             self.current_piece = self.update_queue()
             self.set_shapes()
 
-            self.switch_available = False
         if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
             self.completed_sets += 1

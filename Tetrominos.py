@@ -43,7 +43,7 @@ class Tetrominos:
         self.key_held_time = 0
         self.offset_list = None
         self.animate = False
-        self.increment_score = True
+        self.max_row = gp.SPAWN_LOCATION[1]
         if self.shape != "I" and self.shape != "O":
             self.offset_list = gp.OFFSETS_JLZST
         elif self.shape == "I":
@@ -94,7 +94,7 @@ class Tetrominos:
                 if keys[pygame.K_LEFT] and current_time - self.HUpdate > gp.MOVE_DELAY:
                     self.HUpdate = current_time
                     self.move("left", current_time, placed_blocks)
-        elif keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY and self.state != Tetrominos.locking:
+        if keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY and self.state != Tetrominos.locking:
             down_pressed = True
             self.VUpdate = current_time
             return (False, self.move("down", current_time, placed_blocks), None)
@@ -107,7 +107,6 @@ class Tetrominos:
             self.set_color(self.color)
             if current_time - lock_start_time > lock_delay:
                 self.state = Tetrominos.is_set
-                self.set_color(self.color)
 
         elif self.state == Tetrominos.hard_dropped:
             self.set_color()
@@ -116,8 +115,7 @@ class Tetrominos:
 
         if self.state == Tetrominos.is_set:
             self.animate = False
-            self.color = gp.SHAPES[self.shape][1]
-            self.set_color(self.color)
+            self.reset_color()
             self.set_blocks(placed_blocks)
 
     def update(self, level, dt, current_time, placed_blocks):
@@ -157,19 +155,20 @@ class Tetrominos:
 
             if self.state == Tetrominos.locking:
                 self.state = Tetrominos.falling
-                self.color = gp.SHAPES[self.shape][1]
-                self.set_color(self.color)
+                self.reset_color()
 
             for block in self.blocks:
                 block.move(direction_vec)
             self.pivot += direction_vec
-
-            if direction_vec == gp.MOVES["down"] and self.increment_score:
+            a = min(self.blocks, key=lambda x: x.map_pos[1]).map_pos[1]
+            if direction_vec == gp.MOVES["down"] and a > self.max_row:
+                self.max_row = a
                 return 1
 
-        elif direction_vec == gp.MOVES["down"] and not down_pressed:
+        elif direction_vec == gp.MOVES["down"] and not down_pressed and self.state is not Tetrominos.hard_dropped:
             lock_start_time = current_time
             self.state = Tetrominos.locking
+            self.max_row = self.blocks[0].map_pos[1]
         return 0
 
     def hard_drop(self, placed_blocks: list[list]) -> int:
@@ -271,7 +270,9 @@ class Tetrominos:
                 for block in self.blocks:
                     block.move(offset)
                 self.center = self.blocks[0]
-                self.state = Tetrominos.falling
+                if self.state is Tetrominos.locking:
+                    self.reset_color()
+                    self.state = Tetrominos.falling
                 lock_start_time = current_time
                 return i
         self.blocks = old_blocks
@@ -283,6 +284,7 @@ class Tetrominos:
             block.map_pos -= self.pivot
             block.map_pos += new_pos
         self.pivot = new_pos
+        self.max_row = new_pos[1]
 
     def set_blocks(self, placed_blocks):
         self.state = Tetrominos.is_set
@@ -300,6 +302,10 @@ class Tetrominos:
     def set_color(self, color: tuple = (255, 255, 255)):
         for block in self.blocks:
             block.color = color
+
+    def reset_color(self):
+        self.color = gp.SHAPES[self.shape][1]
+        self.set_color(self.color)
 
     def start_animation(self, start_time):
         global animation_start
