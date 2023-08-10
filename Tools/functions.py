@@ -13,19 +13,13 @@ def shift_blocks_down(placed_blocks_ar: list[list[block]], playable_field, clear
                 placed_blocks_ar[row][col] = None
 
 
-def check_line(placed_blocks_ar: list[list[block]], playable_field: int, blocks_to_draw: list = None) -> int:
-    cleared_lines = 0
+def check_line(placed_blocks_ar: list[list[block]], playable_field: int, blocks_to_draw: list = None) -> list:
+    row_indexes = []
     for row, lines in enumerate(placed_blocks_ar):
         if all(item for item in lines):
-            cleared_lines += 1
-            for item in lines:
-                if item.tetromino is not None:
-                    item.tetromino.blocks.remove(item)
-                elif blocks_to_draw is not None:
-                    blocks_to_draw.remove(item)
-                placed_blocks_ar[row][int(item.map_pos[0])] = None
-            shift_blocks_down(placed_blocks_ar, playable_field, row)
-    return cleared_lines
+            # placed_blocks_ar[row][int(item.map_pos[0])] = None
+            row_indexes.append(row)
+    return row_indexes
 
 
 def game_over(placed_blocks_ar, spawn_column) -> bool:
