@@ -17,6 +17,7 @@ class Classic(Game):
     def reset_game(self):
         super().reset_game()
         self.init_queue()
+        self.set_shapes()
 
     def set_attributes(self, data):
         self.level = data["Level"]

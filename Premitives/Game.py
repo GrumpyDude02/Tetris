@@ -31,8 +31,13 @@ class Game:
     resumed = "resumed"
     paused = "paused"
     initialized = "initialized"
+    animation_start_time = 0
+    col_index_left = 4
+    col_index_right = 5
+    clear_animation_time = 75
 
     def init_surfaces(self) -> None:
+        self.animate_line_clear = False
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
@@ -88,7 +93,6 @@ class Game:
         self.completed_sets = self.level
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
-            print("condition is none")
             self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
         for row in self.placed_blocks:
             for block in row:
@@ -106,6 +110,9 @@ class Game:
         functions.reset_board(self.placed_blocks, self.tetrominos)
         self.timer.reset()
         self.level = self.cleared_lines = self.score = 0
+        Game.col_index_left = 4
+        Game.col_index_right = 5
+        self.animate_line_clear = False
         self.held_piece = None
         self.last_spin_kick = ""
         self.destroy = []
@@ -119,10 +126,10 @@ class Game:
 
     def swap_pieces(self) -> None:
         if self.held_piece is None:
-            self.current_piece.isHeld = True
+            self.current_piece.state = Tetrominos.is_held
             self.held_piece = deepcopy(self.current_piece)
             self.held_piece.set_pos(HOLD_POS)
-            self.held_piece.isHeld = False
+            self.held_piece.state = Tetrominos.falling
         elif self.switch_available:
             temp = self.current_piece
             self.current_piece = self.held_piece
@@ -130,6 +137,7 @@ class Game:
             self.held_piece = temp
             self.held_piece.set_pos(HOLD_POS)
             self.switch_available = False
+        self.current_piece.increment_score = True
 
     def render_timer(self) -> pygame.Surface:
         int_timer = round(self.timer.time)
@@ -165,7 +173,7 @@ class Game:
                 self.score += self.curr_drop_score[1] * 2
                 self.blit_offset[1] = 0.25 * self.settings.cell_size
             elif self.curr_drop_score[0] is False:
-                self.score += 1
+                self.score += self.curr_drop_score[1]
             elif self.curr_drop_score[0] is None and self.curr_drop_score[2] != 0:
                 if all([self.current_piece.collide(direction, self.placed_blocks) for direction in gp.MOVES.values()]):
                     self.last_spin_kick = f"{self.current_piece.shape}-SPIN\n"
@@ -194,13 +202,6 @@ class Game:
         elif isSet:
             self.combo = 0
         self.cleared_lines += cleared_lines
-        if self.blit_offset[0] > 0:
-            self.blit_offset[0] = self.blit_offset[0] - self.dt * 2.5 * self.settings.cell_size
-        if self.blit_offset[0] < 0:
-            self.blit_offset[0] = self.blit_offset[0] + self.dt * 2.5 * self.settings.cell_size
-
-        if self.blit_offset[1] > 0:
-            self.blit_offset[1] -= self.dt * 2.5 * self.settings.cell_size
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
@@ -291,6 +292,15 @@ class Game:
                 int(elements_coor["clearance_type"][1] * self.settings.height),
             ),
         )
+        if self.blit_offset[0] > 0:
+            self.blit_offset[0] = self.blit_offset[0] - self.dt * 2.5 * self.settings.cell_size
+        if self.blit_offset[0] < 0:
+            self.blit_offset[0] = self.blit_offset[0] + self.dt * 2.5 * self.settings.cell_size
+
+        if self.blit_offset[1] > 0:
+            self.blit_offset[1] -= self.dt * 2.5 * self.settings.cell_size
+        if self.blit_offset[1] < 0:
+            self.blit_offset[1] += self.dt * 2.5 * self.settings.cell_size
 
     def draw_board(self) -> None:
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
@@ -323,54 +333,109 @@ class Game:
             self.game.screen.blit(self.game.transition_surface, (0, 0))
             pygame.display.flip()
 
+    def start_clear_animation(self):
+        Game.animation_start_time = self.current_time
+        self.animate_line_clear = True
+
+    def clear_lines(self):
+        if not self.animate_line_clear:
+            return
+        if self.current_time - Game.animation_start_time < Game.clear_animation_time:
+            return
+        for i in self.cleared_rows:
+            if self.placed_blocks[i][Game.col_index_left].tetromino is not None:
+                self.placed_blocks[i][Game.col_index_left].tetromino.blocks.remove(
+                    self.placed_blocks[i][Game.col_index_left]
+                )
+            elif self.blocks_to_draw is not None:
+                self.blocks_to_draw.remove(self.placed_blocks[i][Game.col_index_left])
+
+            if self.placed_blocks[i][Game.col_index_right].tetromino is not None:
+                self.placed_blocks[i][Game.col_index_right].tetromino.blocks.remove(
+                    self.placed_blocks[i][Game.col_index_right]
+                )
+            elif self.blocks_to_draw is not None:
+                self.blocks_to_draw.remove(self.placed_blocks[i][Game.col_index_right])
+            self.placed_blocks[i][Game.col_index_left] = None
+            self.placed_blocks[i][Game.col_index_right] = None
+        lines = len(self.cleared_rows)
+        self.blit_offset[0] += random.uniform(-lines * 2.5, lines * 2.5)
+        self.blit_offset[1] += random.uniform(-lines, lines * 2)
+        Game.animation_start_time = self.current_time
+        Game.col_index_left -= 1
+        Game.col_index_right += 1
+        if Game.col_index_right == gp.PLAYABLE_AREA_CELLS:
+            Game.col_index_right = 5
+            Game.col_index_left = 4
+            self.animate_line_clear = False
+            for i in self.cleared_rows:
+                functions.shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
+            return
+
     def update_classic(self):
         self.destroy = []
-        cleared = 0
+        cleared_rows_num = 0
         wasSet = False
         self.dt = min(self.timer.delta_time(), 0.066)
         self.current_time = self.timer.current_time() * 1000
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
-        if self.current_piece.isSet:
+        if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
-            cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            self.cleared_rows = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            cleared_rows_num = len(self.cleared_rows)
+
+            if cleared_rows_num > 0:
+                self.start_clear_animation()
+
             self.tetrominos.append(self.current_piece)
             self.current_piece = self.update_queue()
             self.set_shapes()
+
             self.switch_available = True
-        elif self.current_piece.isHeld:
+        elif self.current_piece.state == Tetrominos.is_held:
             self.current_piece = self.update_queue()
             self.set_shapes()
+
             self.switch_available = False
         if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
             self.completed_sets += 1
-        self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
+
+        self.clear_lines()
+        self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
 
     def update_practice(self):
         self.destroy = []
-        cleared = 0
+        cleared_rows_num = 0
         wasSet = False
         self.dt = min(self.timer.delta_time(), 0.066)
         self.current_time = self.timer.current_time() * 1000
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
-        if self.current_piece.isSet:
+        if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
-            cleared = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+
+            self.cleared_rows = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            cleared_rows_num = len(self.cleared_rows)
+            if cleared_rows_num > 0:
+                self.start_clear_animation()
+
             self.tetrominos.append(self.current_piece)
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = True
-        elif self.current_piece.isHeld:
+
+        elif self.current_piece.state == Tetrominos.is_held:
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = False
         if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
             self.completed_sets += 1
-        self.update_HUD(wasSet, cleared, gp.LINE_NUMBER_SCORE)
+        self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
+        self.clear_lines()
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
@@ -391,7 +456,8 @@ class Game:
                     self.timer.pause_timer()
                 if event.key == pygame.K_c:
                     self.swap_pieces()
-        self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
+        if not self.animate_line_clear:
+            self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
 
     def update_queue(self) -> Tetrominos:
         self.next_shapes.append(self.shapes_list[self.index])
