@@ -28,6 +28,8 @@ HOLD_POS = (10, 16)
 class Game:
     start_time = 0
     last_time = 0
+    drop_effect_last_tick = 0
+    drop_effect_time = 10
     resumed = "resumed"
     paused = "paused"
     initialized = "initialized"
@@ -39,6 +41,9 @@ class Game:
     def init_surfaces(self) -> None:
         self.animate_line_clear = False
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
+        self.drop_effect_surface = functions.generate_surf(
+            (self.settings.board_width, self.settings.board_height), 255, (0, 0, 0)
+        )
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
         self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), 0, (0, 0, 0))
@@ -83,7 +88,7 @@ class Game:
         self.switch_available = False
         self.do_fade = True
         self.increment_level = True
-
+        self.drop_effect = None
         self.completed_sets = 0
         self.preview_tetrominos = self.current_piece = self.curr_drop_score = self.placed_blocks = self.held_piece = None
 
@@ -178,6 +183,20 @@ class Game:
             if self.curr_drop_score[0] is True:
                 self.score += self.curr_drop_score[1] * 2
                 self.blit_offset[1] = 0.4 * self.settings.cell_size
+
+                min_x = min(self.current_piece.blocks, key=lambda x: x.map_pos[0]).map_pos[0]
+                min_y = min(self.current_piece.blocks, key=lambda x: x.map_pos[1]).map_pos[1]
+                max_x = max(self.current_piece.blocks, key=lambda x: x.map_pos[0]).map_pos[0]
+                max_y = max(self.current_piece.blocks, key=lambda x: x.map_pos[1]).map_pos[1]
+
+                self.drop_effect = pygame.Rect(
+                    (min_x + 1) * self.settings.cell_size,
+                    (min_y - 3 - self.curr_drop_score[1]) * self.settings.cell_size,
+                    (max_x - min_x + 1) * self.settings.cell_size,
+                    (max_y - (min_y - 1 - self.curr_drop_score[1])) * self.settings.cell_size,
+                )
+                self.drop_effect_surface.set_alpha(180)
+
             elif self.curr_drop_score[0] is False:
                 self.score += self.curr_drop_score[1]
             elif self.curr_drop_score[0] is None and self.curr_drop_score[2] != 0:
@@ -211,29 +230,19 @@ class Game:
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
-        self.shadow_surf.fill(gp.BLACK)
-        self.board_surface.fill(gp.BLACK)
-        if self.held_piece:
-            self.held_piece.draw(self.main_surface)
-        for block in self.blocks_to_draw:
-            block.draw(self.board_surface)
-        for tetromino in self.tetrominos:
-            tetromino.draw(self.board_surface, None, self.placed_blocks)
-            if tetromino.destroy:
-                self.destroy.append(tetromino)
         self.draw_board()
         self.draw_HUD()
         self.game.screen.blit(self.main_surface, (0, 0))
 
     def draw_HUD(self, target_lines: str = "\u221E") -> None:
+        self.preview_surface.fill(gp.BLACK)
+        self.clearance_type_surf.fill(gp.BLACK)
         a = self.clearance_type_surf.get_alpha()
         curr_time = self.timer.current_time() * 1000
         if a > 0 and curr_time - Game.last_time > 25:
             self.clearance_type_surf.set_alpha(a - 5)
             Game.last_time = curr_time
 
-        self.preview_surface.fill(gp.BLACK)
-        self.clearance_type_surf.fill(gp.BLACK)
         LINES = self.game.main_font.render(f"LINES : {self.cleared_lines} / {target_lines}", True, gp.WHITE)
         LEVEL = self.game.main_font.render(f"LEVEL : {self.level}", True, gp.WHITE)
         HOLD = self.game.main_font.render("HOLD : ", True, gp.WHITE)
@@ -241,10 +250,10 @@ class Game:
         SCORE = self.game.main_font.render(f"SCORE : {self.score}", True, gp.WHITE)
         line_clear_type = self.game.main_font.render(self.clearance_type, True, gp.WHITE)
         self.clearance_type_surf.blit(line_clear_type, (0, 0))
-
+        if self.held_piece:
+            self.held_piece.draw(self.main_surface)
         for preview in self.preview_tetrominos:
             preview.draw(self.preview_surface, None, self.placed_blocks)
-        self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
         self.main_surface.blit(
             HOLD,
             (
@@ -309,11 +318,31 @@ class Game:
             self.blit_offset[1] += self.dt * 5 * self.settings.cell_size
 
     def draw_board(self) -> None:
-        self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
+        self.board_surface.fill(gp.BLACK)
+        self.shadow_surf.fill(gp.BLACK)
+        self.drop_effect_surface.fill(gp.BLACK)
 
+        b = self.drop_effect_surface.get_alpha()
+        curr_time = self.timer.current_time() * 1000
+        if b > 0 and curr_time - Game.drop_effect_last_tick > Game.drop_effect_time and self.drop_effect:
+            self.drop_effect.inflate_ip(-450 * self.dt, -500 * self.dt)
+            self.drop_effect_surface.set_alpha(b - 5)
+            Game.drop_effect_last_tick = curr_time
+            pygame.draw.rect(self.drop_effect_surface, (255, 255, 255), self.drop_effect)
+
+        self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
         functions.draw_borders(self.board_surface, self.game.settings.grid, (96, 96, 96))
 
+        for block in self.blocks_to_draw:
+            block.draw(self.board_surface)
+        for tetromino in self.tetrominos:
+            tetromino.draw(self.board_surface, None, self.placed_blocks)
+            if tetromino.destroy:
+                self.destroy.append(tetromino)
+
         self.board_surface.blit(self.shadow_surf, (0, 0))
+        self.board_surface.blit(self.drop_effect_surface, (0, 0))
+
         self.main_surface.blit(
             self.board_surface,
             (
@@ -378,15 +407,18 @@ class Game:
                 functions.shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
             return
 
-    # TODO: reafactor
+    # TODO: refactor
     def update_classic(self):
         self.destroy = []
         cleared_rows_num = 0
         wasSet = False
-        self.dt = min(self.timer.delta_time(), 0.066)
+
         self.current_time = self.timer.current_time() * 1000
+        self.timer.update_dt()
+        self.dt = min(self.timer.delta_time(), 0.066)
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
+
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
             self.cleared_rows = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
@@ -419,10 +451,13 @@ class Game:
         self.destroy = []
         cleared_rows_num = 0
         wasSet = False
+
+        self.timer.update_dt()
         self.dt = min(self.timer.delta_time(), 0.066)
         self.current_time = self.timer.current_time() * 1000
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
+
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
 
