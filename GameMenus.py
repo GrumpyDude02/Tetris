@@ -10,14 +10,22 @@ from Tools.Carousel import Carousel
 
 class MainMenu(Menu):
     def __init__(self, game, state, backdround: Background = None):
-        super().__init__(game, state, bg=backdround)
+        super().__init__(game, state, bg=game.shared_bg)
         self.buttons = {
             "CLASSIC": TextButtons(
                 "CLASSIC",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, 0.15),
+                (0.42, 0.05),
+                sc_size=(self.settings.width, self.settings.height),
+            ),
+            "DIG": TextButtons(
+                "DIG",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.42, 0.20),
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "PRACTICE": TextButtons(
@@ -25,7 +33,7 @@ class MainMenu(Menu):
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, 0.30),
+                (0.42, 0.35),
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "CUSTOM": TextButtons(
@@ -33,7 +41,7 @@ class MainMenu(Menu):
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, 0.45),
+                (0.42, 0.50),
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "SETTINGS": TextButtons(
@@ -41,7 +49,7 @@ class MainMenu(Menu):
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, 0.60),
+                (0.42, 0.65),
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "EXIT": TextButtons(
@@ -49,7 +57,7 @@ class MainMenu(Menu):
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, 0.75),
+                (0.42, 0.80),
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
@@ -58,11 +66,17 @@ class MainMenu(Menu):
         self.buttons["CLASSIC"].next_buttons = [
             self.buttons["EXIT"],
             None,
+            self.buttons["DIG"],
+            None,
+        ]
+        self.buttons["DIG"].next_buttons = [
+            self.buttons["CLASSIC"],
+            None,
             self.buttons["PRACTICE"],
             None,
         ]
         self.buttons["PRACTICE"].next_buttons = [
-            self.buttons["CLASSIC"],
+            self.buttons["DIG"],
             None,
             self.buttons["CUSTOM"],
             None,
@@ -92,6 +106,8 @@ class MainMenu(Menu):
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CLASSIC"]:
                 self.set_state(GameStates.classic_settings)
+            elif b is self.buttons["DIG"]:
+                self.set_state(GameStates.dig_settings)
             elif b is self.buttons["PRACTICE"]:
                 self.set_state(GameStates.practice_settings)
             elif b is self.buttons["SETTINGS"]:
@@ -211,6 +227,85 @@ class ClassicSettings(Menu):
         super().loop()
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
         return {"Level": self.sliders["Level"].output, "LockSpeed": lock}
+
+
+class DigSettings(Menu):
+    def __init__(self, game, state):
+        super().__init__(game, state, bg=game.shared_bg)
+        self.buttons = {
+            "CONFIRM": TextButtons(
+                "CONFIRM",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.30, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+            "BACK": TextButtons(
+                "BACK",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.50, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+        }
+        self.sliders = {
+            "Level": Slider(
+                DefaultTemplate,
+                "Level",
+                self.game.main_font,
+                (0.45, 0.35),
+                (0.16, 0.05),
+                (0, 15),
+                (self.settings.width, self.settings.height),
+                True,
+            )
+        }
+        self.carousels = {
+            "LockSpeed": Carousel(
+                ["True", "False"],
+                DefaultTemplate,
+                (0.44, 0.45),
+                self.game.main_font,
+                (0.2, 0.1),
+                (self.settings.width, self.settings.height),
+                text="Lock Speed",
+            ),
+            "ShapeSelector": Carousel(
+                ["I", "J", "L", "S", "T", "Z", "All"],
+                DefaultTemplate,
+                (0.44, 0.60),
+                self.game.main_font,
+                (0.2, 0.1),
+                (self.settings.width, self.settings.height),
+                text="Shape",
+            ),
+        }
+        self.buttons["CONFIRM"].next_buttons = [None, self.buttons["BACK"], None, self.buttons["BACK"]]
+        self.buttons["BACK"].next_buttons = [None, self.buttons["CONFIRM"], None, self.buttons["CONFIRM"]]
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["CONFIRM"])
+
+    def handle_events(self):
+        Menu.handle_events(self)
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["CONFIRM"]:
+                self.set_state(GameStates.dig_mode)
+            elif b is self.buttons["BACK"]:
+                self.set_state(GameStates.main_menu)
+
+        self.carousels["LockSpeed"].check_input()
+        self.carousels["ShapeSelector"].check_input()
+
+    def loop(self) -> int:
+        super().loop()
+        lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
+        return {
+            "Shape": self.carousels["ShapeSelector"].list[self.carousels["ShapeSelector"].current_index],
+            "Level": self.sliders["Level"].output,
+            "LockSpeed": lock,
+        }
 
 
 class PracticeMenu(Menu):
@@ -445,7 +540,6 @@ class PauseScreen(TransparentMenu):
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
-        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
         self.buttons["EXIT"].next_buttons = [
             self.buttons["RESET"],
             self.buttons["RESET"],
@@ -464,24 +558,11 @@ class PauseScreen(TransparentMenu):
             self.buttons["EXIT"],
             self.buttons["EXIT"],
         ]
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
         self.do_fade = True
 
     def handle_events(self):
-        self.do_fade = True
-        if self.mouse_mode:
-            for item in self.buttons.values():
-                item.move_cursor(self.cursor)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.set_state(GameStates.quitting)
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.set_state(self.game.last_played)
-                self.mouse_mode = False
-                self.handle_nav(event)
-            elif event.type == pygame.MOUSEMOTION:
-                self.mouse_mode = True
-
+        super().handle_events()
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["RESUME"]:
@@ -516,15 +597,17 @@ class GameOver(TransparentMenu):
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESET"])
+        self.buttons["EXIT"].next_buttons = [None, self.buttons["RESET"], None, self.buttons["RESET"]]
+        self.buttons["RESET"].next_buttons = [None, self.buttons["EXIT"], None, self.buttons["EXIT"]]
 
     def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.set_state(GameStates.quitting)
-        if self.buttons["EXIT"].check_input():
-            self.set_pending_state(GameStates.main_menu)
-            self.set_state(GameStates.resetting)
-        elif self.buttons["RESET"].check_input():
-            self.set_state(GameStates.resetting)
-            self.set_pending_state(self.game.last_played)
-            print(self.game.last_played)
+        super().handle_events()
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["RESET"]:
+                self.set_state(GameStates.resetting)
+                self.set_pending_state(self.game.last_played)
+            if b is self.buttons["EXIT"]:
+                self.set_pending_state(GameStates.main_menu)
+                self.set_state(GameStates.resetting)

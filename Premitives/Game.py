@@ -54,7 +54,7 @@ class Game:
         self.next_shapes = [shape for shape in self.shapes_list]
         self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.next_shapes.pop(0), self.settings.cell_size)
         random.shuffle(self.shapes_list)
-        self.next_shapes.append(self.shapes_list[self.index])
+        self.next_shapes.append(self.shapes_list[0])
         self.preview_tetrominos = [
             Tetrominos(pos, shape, self.settings.cell_size * 0.80)
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
@@ -177,7 +177,7 @@ class Game:
         if self.curr_drop_score is not None:
             if self.curr_drop_score[0] is True:
                 self.score += self.curr_drop_score[1] * 2
-                self.blit_offset[1] = 0.25 * self.settings.cell_size
+                self.blit_offset[1] = 0.4 * self.settings.cell_size
             elif self.curr_drop_score[0] is False:
                 self.score += self.curr_drop_score[1]
             elif self.curr_drop_score[0] is None and self.curr_drop_score[2] != 0:
@@ -304,9 +304,9 @@ class Game:
             self.blit_offset[0] = self.blit_offset[0] + self.dt * 2.5 * self.settings.cell_size
 
         if self.blit_offset[1] > 0:
-            self.blit_offset[1] -= self.dt * 2.5 * self.settings.cell_size
+            self.blit_offset[1] -= self.dt * 5 * self.settings.cell_size
         if self.blit_offset[1] < 0:
-            self.blit_offset[1] += self.dt * 2.5 * self.settings.cell_size
+            self.blit_offset[1] += self.dt * 5 * self.settings.cell_size
 
     def draw_board(self) -> None:
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
@@ -378,6 +378,7 @@ class Game:
                 functions.shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
             return
 
+    # TODO: reafactor
     def update_classic(self):
         self.destroy = []
         cleared_rows_num = 0
@@ -413,7 +414,8 @@ class Game:
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
 
-    def update_practice(self):
+    # TODO: reafactor
+    def update_generic(self):
         self.destroy = []
         cleared_rows_num = 0
         wasSet = False
@@ -465,11 +467,11 @@ class Game:
             self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
 
     def update_queue(self) -> Tetrominos:
+        shape = self.next_shapes.pop(0)
         self.next_shapes.append(self.shapes_list[self.index])
         self.index = (self.index + 1) % 7
         if self.index == 0:
             random.shuffle(self.shapes_list)
-        shape = self.next_shapes.pop(0)
         return Tetrominos(gp.SPAWN_LOCATION, shape, self.settings.cell_size)
 
     def loop(self):
