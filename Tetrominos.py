@@ -64,7 +64,7 @@ class Tetrominos:
                     return (None, None, self.SRS_rotate(False, 1, placed_blocks, current_time))
                 elif event.key == pygame.K_a:
                     return (None, None, self.SRS_rotate(True, 2, placed_blocks, current_time))
-                elif event.key == pygame.K_SPACE and not down_pressed and self.state != Tetrominos.locking:
+                elif event.key == pygame.K_SPACE and not down_pressed:
                     self.start_animation(current_time)
                     return (True, self.hard_drop(placed_blocks), None)
                 elif event.key == pygame.K_LEFT:
@@ -165,7 +165,12 @@ class Tetrominos:
                 self.max_row = a
                 return 1
 
-        elif direction_vec == gp.MOVES["down"] and not down_pressed and self.state is not Tetrominos.hard_dropped:
+        elif (
+            direction_vec == gp.MOVES["down"]
+            and not down_pressed
+            and self.state is not Tetrominos.hard_dropped
+            and self.state is not Tetrominos.locking
+        ):
             lock_start_time = current_time
             self.state = Tetrominos.locking
             self.max_row = self.blocks[0].map_pos[1]
@@ -269,10 +274,10 @@ class Tetrominos:
                 self.pivot += offset
                 for block in self.blocks:
                     block.move(offset)
-                self.center = self.blocks[0]
                 if self.state is Tetrominos.locking:
                     self.reset_color()
                     self.state = Tetrominos.falling
+                self.center = self.blocks[0]
                 lock_start_time = current_time
                 return i
         self.blocks = old_blocks

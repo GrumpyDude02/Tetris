@@ -6,17 +6,20 @@ class Timer:
         self.starting_time = 0
         self.last_update_time = 0
         self.time = 0
+        self.dt = 0
         self.last_tick = 0
         self.running = False
 
     def current_time(self) -> float:
         return time.time()
 
-    def delta_time(self) -> float:
+    def update_dt(self):
         curr_time = time.time()
-        dt = curr_time - self.last_update_time
+        self.dt = curr_time - self.last_update_time
         self.last_update_time = curr_time
-        return dt
+
+    def delta_time(self) -> float:
+        return self.dt
 
     def start_timer(self) -> float:
         self.running = True

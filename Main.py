@@ -1,5 +1,5 @@
 import Globals as gp
-import GamePlay
+import GameModes
 import GameMenus
 from Premitives.Game import Game
 from Editor import Editor
@@ -117,15 +117,17 @@ class Main:
 
     def start_game(self):
         self.Games = {
-            GameStates.Tetris: GamePlay.Classic(self),
-            GameStates.practice_game: GamePlay.PracticeGame(self),
-            GameStates.custom_game: GamePlay.CustomGame(self),
+            GameStates.Tetris: GameModes.Classic(self),
+            GameStates.practice_game: GameModes.PracticeGame(self),
+            GameStates.custom_game: GameModes.CustomGame(self),
+            GameStates.dig_mode: GameModes.Dig(self),
         }
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
         self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
         self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.classic_settings, self.shared_bg)
         self.CustomSettings = GameMenus.CustomSettings(self, GameStates.custom_settings)
+        self.DigSettings = GameMenus.DigSettings(self, GameStates.dig_settings)
         self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
         self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice_settings)
         self.set_state(GameStates.main_menu)
@@ -168,6 +170,10 @@ class Main:
             elif self.state == GameStates.custom_settings:
                 self.data = self.CustomSettings.loop()
                 self.Games[GameStates.custom_game].set_attributes(self.data)
+
+            elif self.state == GameStates.dig_settings:
+                self.data = self.DigSettings.loop()
+                self.Games[GameStates.dig_mode].set_attributes(self.data)
 
             elif self.state == GameStates.changing_res:
                 self.resize()
