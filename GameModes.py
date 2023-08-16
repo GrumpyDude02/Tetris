@@ -24,7 +24,7 @@ class Classic(Game):
 
     def set_attributes(self, data):
         self.level = data["Level"]
-        self.completed_sets = self.level
+        self.completed_sets = self.level + 1
         self.increment_level = not data["LockSpeed"]
 
 
@@ -54,7 +54,7 @@ class CustomGame(Game):
 
         self.blocks_to_draw = []
         self.level = data["Level"]
-        self.completed_sets = self.level
+        self.completed_sets = self.level + 1
         self.increment_level = not data["LockSpeed"]
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
@@ -85,7 +85,7 @@ class Dig(Game):
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
 
         self.level = data["Level"]
-        self.completed_sets = self.level
+        self.completed_sets = self.level + 1
         self.increment_level = not data["LockSpeed"]
 
         self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]

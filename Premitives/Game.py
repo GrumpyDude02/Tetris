@@ -89,13 +89,13 @@ class Game:
         self.do_fade = True
         self.increment_level = True
         self.drop_effect = None
-        self.completed_sets = 0
+        self.completed_sets = 1
         self.preview_tetrominos = self.current_piece = self.curr_drop_score = self.placed_blocks = self.held_piece = None
 
     def set_attributes(self, data):
         self.blocks_to_draw = []
         self.level = data["Level"]
-        self.completed_sets = self.level
+        self.completed_sets = self.level + 1
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
             self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
@@ -115,6 +115,7 @@ class Game:
         functions.reset_board(self.placed_blocks, self.tetrominos)
         self.timer.reset()
         self.level = self.cleared_lines = self.score = 0
+        self.completed_sets = 1
         Game.col_index_left = 4
         Game.col_index_right = 5
         self.animate_line_clear = False
