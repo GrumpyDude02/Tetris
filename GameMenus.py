@@ -199,7 +199,7 @@ class ClassicSettings(Menu):
         }
         self.carousels = {
             "LockSpeed": Carousel(
-                ["True", "False"],
+                ["False", "True"],
                 DefaultTemplate,
                 (0.44, 0.45),
                 self.game.main_font,
@@ -264,7 +264,7 @@ class DigSettings(Menu):
         }
         self.carousels = {
             "LockSpeed": Carousel(
-                ["True", "False"],
+                ["False", "True"],
                 DefaultTemplate,
                 (0.44, 0.45),
                 self.game.main_font,
@@ -352,7 +352,7 @@ class PracticeMenu(Menu):
                 (self.settings.width, self.settings.height),
             ),
             "LockSpeed": Carousel(
-                ["True", "False"],
+                ["False", "True"],
                 DefaultTemplate,
                 (0.31, 0.45),
                 self.game.main_font,
@@ -448,7 +448,7 @@ class CustomSettings(Menu):
                 text="Shape",
             ),
             "LockSpeed": Carousel(
-                ["True", "False"],
+                ["False", "True"],
                 DefaultTemplate,
                 (0.31, 0.50),
                 self.game.main_font,

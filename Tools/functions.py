@@ -13,11 +13,13 @@ def shift_blocks_down(placed_blocks_ar: list[list[block]], playable_field, clear
                 placed_blocks_ar[row][col] = None
 
 
-def check_line(placed_blocks_ar: list[list[block]], playable_field: int, blocks_to_draw: list = None) -> list:
+def check_line(placed_blocks_ar: list[list[block]]) -> list:
     row_indexes = []
     for row, lines in enumerate(placed_blocks_ar):
         if all(item for item in lines):
-            # placed_blocks_ar[row][int(item.map_pos[0])] = None
+            for item in lines:
+                item.color = (255, 255, 255)
+                item.spacing = 0
             row_indexes.append(row)
     return row_indexes
 
