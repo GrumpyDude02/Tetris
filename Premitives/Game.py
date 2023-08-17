@@ -214,12 +214,16 @@ class Game:
             match cleared_lines:
                 case 1:
                     self.clearance_type = "Single\n"
+                    self.sound.play("clear")
                 case 2:
                     self.clearance_type = "Double\n"
+                    self.sound.play("clear1")
                 case 3:
                     self.clearance_type = "Triple\n"
+                    self.sound.play("clear2")
                 case 4:
                     self.clearance_type = "Tetris\n"
+                    self.sound.play("clear3")
             self.clearance_type += f"{self.last_spin_kick}"
             self.last_spin_kick = ""
 
@@ -371,7 +375,6 @@ class Game:
             pygame.display.flip()
 
     def start_clear_animation(self):
-        self.sound.play("clear")
         Game.animation_start_time = self.current_time
         self.animate_line_clear = True
 
@@ -424,7 +427,7 @@ class Game:
 
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
-            self.cleared_rows = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            self.cleared_rows = functions.check_line(self.placed_blocks)
             cleared_rows_num = len(self.cleared_rows)
 
             if cleared_rows_num > 0:
@@ -464,7 +467,7 @@ class Game:
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
 
-            self.cleared_rows = functions.check_line(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, self.blocks_to_draw)
+            self.cleared_rows = functions.check_line(self.placed_blocks)
             cleared_rows_num = len(self.cleared_rows)
             if cleared_rows_num > 0:
                 self.start_clear_animation()
@@ -481,7 +484,7 @@ class Game:
             self.completed_sets += 1
         self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
         self.clear_lines()
-        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
+        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
 

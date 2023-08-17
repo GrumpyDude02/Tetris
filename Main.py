@@ -84,19 +84,24 @@ class Main:
             pygame.mixer.init()
             try:
                 self.sounds = {
-                    "locking": pygame.mixer.Sound("./Assets/Sounds/locking.mp3"),
-                    "clear": pygame.mixer.Sound("./Assets/Sounds/clear.wav"),
                     "hit": pygame.mixer.Sound("./Assets/Sounds/hit.mp3"),
                     "harddrop": pygame.mixer.Sound("./Assets/Sounds/harddrop.mp3"),
                     "hold": pygame.mixer.Sound("./Assets/Sounds/hold.ogg"),
+                    "clear": pygame.mixer.Sound("./Assets/Sounds/erase1.wav"),
+                    "clear1": pygame.mixer.Sound("./Assets/Sounds/erase2.wav"),
+                    "clear2": pygame.mixer.Sound("./Assets/Sounds/erase3.wav"),
+                    "clear3": pygame.mixer.Sound("./Assets/Sounds/erase4.wav"),
+                    "locking": pygame.mixer.Sound("./Assets/Sounds/lock.wav"),
+                    "rotate": pygame.mixer.Sound("./Assets/Sounds/rotate.wav"),
+                    "gameover": pygame.mixer.Sound("./Assets/Sounds/topout.ogg"),
                 }
                 for value in self.sounds.values():
                     if value is not None:
                         value.set_volume(volume)
-                self.sounds["harddrop"].set_volume(volume * 0.1)
-                self.sounds["locking"].set_volume(volume * 0.1)
+                self.sounds["harddrop"].set_volume(volume * 0.2)
                 self.active_sound = True
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                print(e)
                 print("Failed to load sounds, path for sounds not found")
                 self.sounds = None
                 self.active_sound = True
@@ -174,6 +179,7 @@ class Main:
         self.ClassicSettings.resize()
         self.PracticeMenu.resize()
         self.CustomSettings.resize()
+        self.DigSettings.resize()
         self.GameOver.resize()
         for value in self.Games.values():
             value.resize()

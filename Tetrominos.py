@@ -59,10 +59,13 @@ class Tetrominos:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
+                    sounds.play("rotate")
                     return (None, None, self.SRS_rotate(True, 1, placed_blocks, current_time))
                 elif event.key == pygame.K_z:
+                    sounds.play("rotate")
                     return (None, None, self.SRS_rotate(False, 1, placed_blocks, current_time))
                 elif event.key == pygame.K_a:
+                    sounds.play("rotate")
                     return (None, None, self.SRS_rotate(True, 2, placed_blocks, current_time))
                 elif event.key == pygame.K_SPACE and not down_pressed:
                     self.start_animation(current_time)
