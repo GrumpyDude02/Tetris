@@ -74,6 +74,7 @@ class Game:
             ]
         self.game = game
         self.settings = self.game.settings
+        self.sound = self.game.sound
         self.init_surfaces()
         self.score = self.level = self.cleared_lines = self.combo = self.current_time = self.dt = 0
         self.timer = Timer()
@@ -370,6 +371,7 @@ class Game:
             pygame.display.flip()
 
     def start_clear_animation(self):
+        self.sound.play("clear")
         Game.animation_start_time = self.current_time
         self.animate_line_clear = True
 
@@ -443,7 +445,7 @@ class Game:
 
         self.clear_lines()
         self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
-        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks)
+        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
 
@@ -497,10 +499,16 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     self.set_state(GameStates.paused, self.mode_state)
                     self.timer.pause_timer()
+                    self.music_paused = True
                 if event.key == pygame.K_c:
+                    if self.switch_available or self.held_piece is None:
+                        self.sound.play("hold")
                     self.swap_pieces()
+
         if not self.animate_line_clear:
-            self.curr_drop_score = self.current_piece.handle_events(self.current_time, events, self.placed_blocks, self.dt)
+            self.curr_drop_score = self.current_piece.handle_events(
+                self.current_time, events, self.placed_blocks, self.dt, self.sound
+            )
 
     def update_queue(self) -> Tetrominos:
         shape = self.next_shapes.pop(0)
@@ -511,8 +519,7 @@ class Game:
         return Tetrominos(gp.SPAWN_LOCATION, shape, self.settings.cell_size)
 
     def loop(self):
-        # self.fade("in",lambda a: a > 0)
-        self.timer.start_timer()
+        self.music_paused = False
         while self.game.state == self.mode_state:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
                 self.set_state(GameStates.game_over, self.mode_state)
@@ -521,4 +528,3 @@ class Game:
             self.update()
             self.draw()
             pygame.display.flip()
-        # self.fade("out",lambda alpha: alpha < 255)

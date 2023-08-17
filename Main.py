@@ -79,8 +79,41 @@ class Main:
                 }
                 json.dump(data, f, indent=4)
 
+    class Sound:
+        def __init__(self, volume) -> None:
+            pygame.mixer.init()
+            try:
+                self.sounds = {
+                    "locking": pygame.mixer.Sound("./Assets/Sounds/locking.mp3"),
+                    "clear": pygame.mixer.Sound("./Assets/Sounds/clear.wav"),
+                    "hit": pygame.mixer.Sound("./Assets/Sounds/hit.mp3"),
+                    "harddrop": pygame.mixer.Sound("./Assets/Sounds/harddrop.mp3"),
+                    "hold": pygame.mixer.Sound("./Assets/Sounds/hold.ogg"),
+                }
+                for value in self.sounds.values():
+                    if value is not None:
+                        value.set_volume(volume)
+                self.sounds["harddrop"].set_volume(volume * 0.1)
+                self.sounds["locking"].set_volume(volume * 0.1)
+                self.active_sound = True
+            except FileNotFoundError:
+                print("Failed to load sounds, path for sounds not found")
+                self.sounds = None
+                self.active_sound = True
+
+            self.sound_queue = []
+
+        def play(self, sound_name):
+            if self.active_sound is True:
+                ref = self.sounds.get(sound_name)
+                if ref is None:
+                    return
+                ref.fadeout(500)
+                ref.play(fade_ms=50)
+
     def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
+        self.sound = Main.Sound(0.5)
         self.editor = Editor(self.settings, (0.745, 0.04))
         self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
         pygame.init()
@@ -89,12 +122,6 @@ class Main:
             (self.settings.width, self.settings.height), self.window_style | pygame.HWSURFACE, bit_depth, vsync=vsync_active
         )
         pygame.display.set_caption("Tetris")
-        pygame.mixer.pre_init(
-            frequency=44100,
-            size=32,
-            channels=2,
-            buffer=512,
-        )
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         self.clock = pygame.time.Clock()
         self.state = GameStates.initilized

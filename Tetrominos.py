@@ -50,7 +50,7 @@ class Tetrominos:
             self.offset_list = gp.OFFSETS_I
 
     # (True -> hard-dropped | False -> going down, cell numbers to bottom, rotation_index)
-    def handle_events(self, current_time, events: list[pygame.Event], placed_blocks: list[list], dt: float) -> tuple:
+    def handle_events(self, current_time, events: list[pygame.Event], placed_blocks: list[list], dt: float, sounds) -> tuple:
         global down_pressed, animation_start
         if self.animate:
             return
@@ -66,14 +66,17 @@ class Tetrominos:
                     return (None, None, self.SRS_rotate(True, 2, placed_blocks, current_time))
                 elif event.key == pygame.K_SPACE and not down_pressed:
                     self.start_animation(current_time)
+                    sounds.play("harddrop")
                     return (True, self.hard_drop(placed_blocks), None)
                 elif event.key == pygame.K_LEFT:
                     self.keys_held[0] = True
                     self.key_held_time = 0
+                    sounds.play("hit")
                     self.move("left", current_time, placed_blocks)
                 elif event.key == pygame.K_RIGHT:
                     self.keys_held[1] = True
                     self.key_held_time = 0
+                    sounds.play("hit")
                     self.move("right", current_time, placed_blocks)
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
@@ -87,12 +90,14 @@ class Tetrominos:
             if self.key_held_time > 250:
                 if keys[pygame.K_RIGHT] and current_time - self.HUpdate > gp.MOVE_DELAY:
                     self.HUpdate = current_time
+                    sounds.play("hit")
                     self.move("right", current_time, placed_blocks)
         elif self.keys_held[0]:
             self.key_held_time += dt * 1000
             if self.key_held_time > 250:
                 if keys[pygame.K_LEFT] and current_time - self.HUpdate > gp.MOVE_DELAY:
                     self.HUpdate = current_time
+                    sounds.play("hit")
                     self.move("left", current_time, placed_blocks)
         if keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY and self.state != Tetrominos.locking:
             down_pressed = True
@@ -100,13 +105,14 @@ class Tetrominos:
             return (False, self.move("down", current_time, placed_blocks), None)
         return None
 
-    def update_animation(self, current_time, placed_blocks):
+    def update_animation(self, current_time, placed_blocks, sound):
         global animation_start
         if self.state == Tetrominos.locking:
             self.color = (min(self.color[0] + 15, 255), min(self.color[1] + 15, 255), min(self.color[2] + 15, 255))
             self.set_color(self.color)
             if current_time - lock_start_time > lock_delay:
                 self.state = Tetrominos.is_set
+                sound.play("locking")
 
         elif self.state == Tetrominos.hard_dropped:
             self.set_color()
@@ -118,11 +124,11 @@ class Tetrominos:
             self.reset_color()
             self.set_blocks(placed_blocks)
 
-    def update(self, level, dt, current_time, placed_blocks):
+    def update(self, level, dt, current_time, placed_blocks, sound):
         global down_pressed
         if max(self.blocks, key=lambda x: x.map_pos[1]) == 25:
             self.increment_score = False
-        self.update_animation(current_time, placed_blocks)
+        self.update_animation(current_time, placed_blocks, sound)
         self.acc += gp.LEVEL_SPEED[level] * dt * gp.GAME_SPEED
         if not self.blocks:
             self.state = Tetrominos.destroy
@@ -295,6 +301,7 @@ class Tetrominos:
         self.state = Tetrominos.is_set
         for block in self.blocks:
             placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])] = block
+            block = v((block.map_pos[0] + 1) * block.width, (block.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * block.width)
 
     def set_shape(self, new_shape: str) -> None:
         block_size = self.blocks[0].width
