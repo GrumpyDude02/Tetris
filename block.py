@@ -19,11 +19,23 @@ class block:
         self.map_pos += direction
 
     def draw(self, window: pygame.Surface) -> None:
+        width = int(self.width * 0.12)
         self.sc_pos = v((self.map_pos[0] + 1) * self.width, (self.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * self.width)
         pygame.draw.rect(
             window,
-            self.color,
+            (max(self.color[0] - 40, 0), max(self.color[1] - 40, 0), max(self.color[2] - 40, 0)),
             pygame.Rect(self.sc_pos[0], self.sc_pos[1], self.width - self.spacing, self.width - self.spacing),
+            width=width,
+        )
+        pygame.draw.rect(
+            window,
+            self.color,
+            pygame.Rect(
+                self.sc_pos[0] + width,
+                self.sc_pos[1] + width,
+                self.width - self.spacing - width * 2,
+                self.width - self.spacing - width * 2,
+            ),
         )
 
     def overlap(self, pos, placed_blocks: list[list]):
