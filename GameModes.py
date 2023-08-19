@@ -39,7 +39,6 @@ class CustomGame(Game):
         super().__init__(game, GameStates.custom_game)
 
     def set_attributes(self, data):
-        print("hh")
         if data["Shape"] != "All":
             self.update = self.update_generic
             self.shape = data["Shape"]

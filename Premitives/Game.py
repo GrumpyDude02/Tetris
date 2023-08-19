@@ -197,7 +197,7 @@ class Game:
                     (max_x - min_x + 1) * self.settings.cell_size,
                     (max_y - (min_y - 1 - self.curr_drop_score[1])) * self.settings.cell_size,
                 )
-                self.drop_effect_surface.set_alpha(180)
+                self.drop_effect_surface.set_alpha(225)
 
             elif self.curr_drop_score[0] is False:
                 self.score += self.curr_drop_score[1]
@@ -206,7 +206,6 @@ class Game:
                     self.last_spin_kick = f"{self.current_piece.shape}-SPIN\n"
                 else:
                     self.last_spin_kick = ""
-
         if cleared_lines > 0:
             self.combo += 1
             self.clearance_type_surf.set_alpha(255)
@@ -232,6 +231,7 @@ class Game:
                 self.score = (self.level + 1) * 50 * self.combo
         elif isSet:
             self.combo = 0
+            self.last_spin_kick = ""
         self.cleared_lines += cleared_lines
 
     def draw(self):
@@ -331,7 +331,15 @@ class Game:
         b = self.drop_effect_surface.get_alpha()
         curr_time = self.timer.current_time() * 1000
         if b > 0 and curr_time - Game.drop_effect_last_tick > Game.drop_effect_time and self.drop_effect:
-            self.drop_effect.inflate_ip(-450 * self.dt, -500 * self.dt)
+            amount_x = int(350 * self.dt)
+            amount_y = int(1200 * self.dt)
+
+            self.drop_effect.x += amount_x
+            self.drop_effect.width -= 2 * amount_x
+
+            self.drop_effect.y += amount_y
+            self.drop_effect.height -= amount_y
+
             self.drop_effect_surface.set_alpha(b - 5)
             Game.drop_effect_last_tick = curr_time
             pygame.draw.rect(self.drop_effect_surface, (255, 255, 255), self.drop_effect)
