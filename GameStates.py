@@ -8,16 +8,14 @@ class GameStates(enum.Enum):
     in_settings = "in_settings"
 
     practice_settings = "practice_settings"
-    practice_game = "practice_game"
 
     custom_settings = "custom_settings"
-    custom_game = "custom_game"
 
     classic_settings = "classic_settings"
-    Tetris = "Tetris"
 
     dig_settings = "dig_settings"
-    dig_mode = "dig_mode"
+
+    game = "game"
 
     paused = "paused"
     game_over = "game_over"

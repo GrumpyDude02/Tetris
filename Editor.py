@@ -1,6 +1,6 @@
 import Globals as gp
 import json, pygame
-from block import block
+from Block import block
 import Tools.functions as functions
 
 

@@ -2,7 +2,7 @@ import pygame
 from copy import deepcopy
 import Globals as gp
 from Tools.functions import mod
-from block import block
+from Block import block
 from pygame.math import Vector2 as v
 
 lock_delay = 500

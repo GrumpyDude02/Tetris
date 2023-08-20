@@ -3,6 +3,7 @@ from GameStates import GameStates
 from Tools.Timer import Timer
 import Globals as gp
 from Tetrominos import Tetrominos
+import Block
 from copy import deepcopy
 
 preview_pos = pygame.Vector2(1, 6)
@@ -37,6 +38,12 @@ class Game:
     col_index_left = 4
     col_index_right = 5
     clear_animation_time = 75
+
+    # Modes
+    Classic = "Classic"
+    Custom = "Custom"
+    Dig = "Dig"
+    Practice = "Practice"
 
     def init_surfaces(self) -> None:
         self.animate_line_clear = False
@@ -93,24 +100,50 @@ class Game:
         self.completed_sets = 1
         self.preview_tetrominos = self.current_piece = self.curr_drop_score = self.placed_blocks = self.held_piece = None
 
-    def set_attributes(self, data):
-        self.blocks_to_draw = []
+    def init_mode(self, data):
+        self.mode = data["Mode"]
         self.level = data["Level"]
+        self.shape = data["Shape"]
         self.completed_sets = self.level + 1
+        self.increment_level = not data["LockSpeed"]
+
+        if self.shape == "All":
+            self.init_queue()
+            self.set_shapes()
+        else:
+            self.shape = data["Shape"]
+            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+            self.preview_tetrominos = [
+                Tetrominos(pos, self.shape, self.settings.cell_size * 0.8) for pos in preview_tetrominos_pos
+            ]
+
         self.placed_blocks = deepcopy(data["Grid"])
         if self.placed_blocks is None:
             self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
-        for row in self.placed_blocks:
-            for block in row:
-                if block is not None:
-                    block.width = self.settings.cell_size
-                    self.blocks_to_draw.append(block)
-        self.shape = data["Shape"]
-        self.preview_tetrominos = [
-            Tetrominos(pos, self.shape, self.settings.cell_size * 0.8) for pos in preview_tetrominos_pos
-        ]
-        self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
-        self.increment_level = not data["LockSpeed"]
+
+        if self.mode is Game.Custom or self.mode is Game.Practice:
+            self.blocks_to_draw = []
+            for row in self.placed_blocks:
+                for block in row:
+                    if block is not None:
+                        block.width = self.settings.cell_size
+                        self.blocks_to_draw.append(block)
+
+        elif self.mode is Game.Dig:
+            self.placed_blocks = [[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)]
+            random_block_index = previous_random_index = None
+            for i in range(gp.BOARD_Y_CELL_NUMBER - 1, 10, -1):
+                for j in range(gp.PLAYABLE_AREA_CELLS):
+                    self.placed_blocks[i][j] = Block.block(
+                        pygame.Vector2(j, i), self.game.settings.cell_size, (180, 180, 180), None
+                    )
+                    self.blocks_to_draw.append(self.placed_blocks[i][j])
+                while random_block_index == previous_random_index:
+                    random_block_index = random.randint(0, gp.PLAYABLE_AREA_CELLS - 1)
+
+                previous_random_index = random_block_index
+                self.blocks_to_draw.remove(self.placed_blocks[i][random_block_index])
+                self.placed_blocks[i][random_block_index] = None
 
     def reset_game(self) -> None:
         functions.reset_board(self.placed_blocks, self.tetrominos)
@@ -421,8 +454,7 @@ class Game:
                 functions.shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
             return
 
-    # TODO: refactor
-    def update_classic(self):
+    def update(self):
         self.destroy = []
         cleared_rows_num = 0
         wasSet = False
@@ -442,56 +474,27 @@ class Game:
                 self.start_clear_animation()
 
             self.tetrominos.append(self.current_piece)
-            self.current_piece = self.update_queue()
-            self.set_shapes()
+            if self.mode is Game.Classic or self.shape == "All":
+                self.current_piece = self.update_queue()
+                self.set_shapes()
+            else:
+                self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = True
 
         elif self.current_piece.state == Tetrominos.is_held:
-            self.current_piece = self.update_queue()
-            self.set_shapes()
-
-        if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
-            self.level += 1
-            self.completed_sets += 1
-
-        self.clear_lines()
-        self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
-        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
-        for tetromino in self.destroy:
-            self.destroy.remove(tetromino)
-
-    # TODO: reafactor
-    def update_generic(self):
-        self.destroy = []
-        cleared_rows_num = 0
-        wasSet = False
-
-        self.timer.update_dt()
-        self.dt = min(self.timer.delta_time(), 0.066)
-        self.current_time = self.timer.current_time() * 1000
-        self.timer.update_timer()
-        self.game.clock.tick(gp.FPS)
-
-        if self.current_piece.state == Tetrominos.is_set:
-            wasSet = True
-
-            self.cleared_rows = functions.check_line(self.placed_blocks)
-            cleared_rows_num = len(self.cleared_rows)
-            if cleared_rows_num > 0:
-                self.start_clear_animation()
-
-            self.tetrominos.append(self.current_piece)
-            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
-            self.switch_available = True
-
-        elif self.current_piece.state == Tetrominos.is_held:
-            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
+            if self.mode is Game.Classic or self.shape == "All":
+                self.current_piece = self.update_queue()
+                self.set_shapes()
+            else:
+                self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = False
+
         if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
             self.completed_sets += 1
-        self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
+
         self.clear_lines()
+        self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
         self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)

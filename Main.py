@@ -1,5 +1,4 @@
 import Globals as gp
-import GameModes
 import GameMenus
 from Premitives.Game import Game
 from Editor import Editor
@@ -148,12 +147,7 @@ class Main:
         self.pending_state = next_state
 
     def start_game(self):
-        self.Games = {
-            GameStates.Tetris: GameModes.Classic(self),
-            GameStates.practice_game: GameModes.PracticeGame(self),
-            GameStates.custom_game: GameModes.CustomGame(self),
-            GameStates.dig_mode: GameModes.Dig(self),
-        }
+        self.Game = Game(self, GameStates.game)
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
         self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
@@ -181,50 +175,49 @@ class Main:
         self.CustomSettings.resize()
         self.DigSettings.resize()
         self.GameOver.resize()
-        for value in self.Games.values():
-            value.resize()
+        self.Game.resize()
 
     def loop(self):
         while self.state != GameStates.quitting:
-            if self.state in list(self.Games.keys()):
-                self.Games[self.state].loop()
+            if self.state is GameStates.game:
+                self.Game.loop()
 
             elif self.state == GameStates.main_menu:
                 self.MainMenu.loop()
 
             elif self.state == GameStates.classic_settings:
                 self.data = self.ClassicSettings.loop()
-                self.Games[GameStates.Tetris].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.practice_settings:
                 self.data = self.PracticeMenu.loop()
-                self.Games[GameStates.practice_game].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.custom_settings:
                 self.data = self.CustomSettings.loop()
-                self.Games[GameStates.custom_game].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.dig_settings:
                 self.data = self.DigSettings.loop()
-                self.Games[GameStates.dig_mode].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.changing_res:
                 self.resize()
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.paused:
-                self.Pause.loop(self.Games[self.last_played].main_surface)
+                self.Pause.loop(self.Game.main_surface)
 
             elif self.state == GameStates.in_settings:
                 self.SettingsMenu.loop()
 
             elif self.state == GameStates.resetting:
-                self.Games[self.last_played].reset_game()
-                self.Games[self.last_played].set_attributes(self.data)
+                self.Game.reset_game()
+                self.Game.init_mode(self.data)
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.game_over:
-                self.GameOver.loop(self.Games[self.last_played].main_surface)
+                self.GameOver.loop(self.Game.main_surface)
             else:
                 print("Failed to enter", self.state)
                 break

@@ -1,9 +1,8 @@
-import pygame, Tools.functions as functions
 import Globals as gp
 from GameStates import GameStates
-from Tetrominos import Tetrominos
 from Tools.Buttons import TextButtons, DefaultTemplate
-from Premitives.Menu import Menu, Background, TransparentMenu, direction
+from Premitives.Menu import Menu, Background, TransparentMenu
+from Premitives.Game import Game
 from Tools.Slider import Slider
 from Tools.Carousel import Carousel
 
@@ -217,7 +216,7 @@ class ClassicSettings(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
-                self.set_state(GameStates.Tetris)
+                self.set_state(GameStates.game)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
 
@@ -226,7 +225,7 @@ class ClassicSettings(Menu):
     def loop(self) -> int:
         super().loop()
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
-        return {"Level": self.sliders["Level"].output, "LockSpeed": lock}
+        return {"Mode": Game.Classic, "Shape": "All", "Grid": None, "Level": self.sliders["Level"].output, "LockSpeed": lock}
 
 
 class DigSettings(Menu):
@@ -291,7 +290,7 @@ class DigSettings(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
-                self.set_state(GameStates.dig_mode)
+                self.set_state(GameStates.game)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
 
@@ -302,6 +301,8 @@ class DigSettings(Menu):
         super().loop()
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
         return {
+            "Mode": Game.Dig,
+            "Grid": None,
             "Shape": self.carousels["ShapeSelector"].list[self.carousels["ShapeSelector"].current_index],
             "Level": self.sliders["Level"].output,
             "LockSpeed": lock,
@@ -376,7 +377,7 @@ class PracticeMenu(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
-                self.set_state(GameStates.practice_game)
+                self.set_state(GameStates.game)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
         t = self.carousels["PresetSelector"].check_input()
@@ -389,6 +390,7 @@ class PracticeMenu(Menu):
         super().loop()
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
         return {
+            "Mode": Game.Practice,
             "Level": self.sliders["Level"].output,
             "Grid": self.game.editor.placed_blocks_reference,
             "Shape": self.carousels["PresetSelector"].list[self.carousels["PresetSelector"].current_index].split("-")[0],
@@ -490,7 +492,7 @@ class CustomSettings(Menu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
-                self.set_state(GameStates.custom_game)
+                self.set_state(GameStates.game)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.main_menu)
             elif b is self.buttons["ERASE"]:
@@ -503,6 +505,7 @@ class CustomSettings(Menu):
         super().loop()
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
         return {
+            "Mode": Game.Custom,
             "Shape": self.carousels["ShapeSelector"].list[self.carousels["ShapeSelector"].current_index],
             "Level": self.sliders["Level"].output,
             "Grid": self.game.editor.placed_blocks_reference,

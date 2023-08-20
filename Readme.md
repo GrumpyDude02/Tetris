@@ -74,7 +74,9 @@ https://you.have.fail/
 
 https://gamebanana.com/sounds/download/44751#FileInfo_425499
 
-## TODO: 
-- refactor all of the game classes into a single one (into the main one)
-- add a gameover sound effect
-- save dig mode time
+## TODO:
+
+- ~~redraw blocks.~~
+- ~~refactor all of the game classes into a single one (into the main one).~~
+- add a gameover sound effect.
+- save dig mode time.

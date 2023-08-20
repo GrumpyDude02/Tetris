@@ -1,6 +1,6 @@
 import random, pygame
 import Globals as gp
-from block import block
+from Block import block
 
 
 def shift_blocks_down(placed_blocks_ar: list[list[block]], playable_field, cleared_row: int) -> None:
