@@ -2,6 +2,8 @@ import pygame
 from pygame.math import Vector2 as v
 import Globals as gp
 
+# useless comment
+
 
 class block:
     def __init__(self, pos: pygame.Vector2, cell_size: int, color: pygame.color, tetromino, block_spacing: int = 1) -> None:
