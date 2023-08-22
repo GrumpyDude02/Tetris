@@ -21,7 +21,6 @@ class Carousel:
     ) -> None:
         self.list = table
         self.len = len(self.list)
-        self.font = font
         self.position = position
         self.current_index = 0
         self.button = button
@@ -32,6 +31,7 @@ class Carousel:
         self.InitArrows(sc_size[0], sc_size[1], font)
 
     def InitArrows(self, width: int, height: int, font: pygame.font.Font):
+        self.font = font
         self.bounding_rect = pygame.Rect(
             round(self.position[0] * width),
             round(self.position[1] * height),

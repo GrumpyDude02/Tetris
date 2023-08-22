@@ -7,17 +7,19 @@ class GameStates(enum.Enum):
     selection_menu = "selection_menu"
     in_settings = "in_settings"
 
+    video_settings = "video_settings"
+    sound_settings = "sound_settings"
+    controls_settings = "controls_settings"
+
     practice_settings = "practice_settings"
-    practice_game = "practice_game"
 
     custom_settings = "custom_settings"
-    custom_game = "custom_game"
 
     classic_settings = "classic_settings"
-    Tetris = "Tetris"
 
     dig_settings = "dig_settings"
-    dig_mode = "dig_mode"
+
+    game = "game"
 
     paused = "paused"
     game_over = "game_over"

@@ -1,7 +1,6 @@
 import Globals as gp
-import GameModes
 import GameMenus
-from Premitives.Game import Game
+from Primitives.Game import Game
 from Editor import Editor
 from GameStates import GameStates
 import sys, pygame, json, os
@@ -42,6 +41,8 @@ class Main:
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
             self.fullscreen = data["FullScreen"]
+            self.volume = data["SoundLevel"]
+            self.play_sound = data["PlaySound"]
             self.InitBorders()
 
         def set_resolution(self, new_resolution):
@@ -64,6 +65,8 @@ class Main:
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
             self.fullscreen = False
+            self.volume = 0.5
+            self.play_sound = True
             self.InitBorders()
             self.save_settings()
 
@@ -76,11 +79,54 @@ class Main:
                     "BoardWidth": self.board_width,
                     "BoardHeight": self.board_height,
                     "FullScreen": False,
+                    "SoundLevel": self.volume,
+                    "PlaySound": self.play_sound,
                 }
                 json.dump(data, f, indent=4)
 
+    class Sound:
+        def __init__(self, settings) -> None:
+            pygame.mixer.init()
+            self.settings = settings
+            try:
+                self.sounds = {
+                    "hit": pygame.mixer.Sound("./Assets/Sounds/hit.mp3"),
+                    "harddrop": pygame.mixer.Sound("./Assets/Sounds/harddrop.mp3"),
+                    "hold": pygame.mixer.Sound("./Assets/Sounds/hold.ogg"),
+                    "clear": pygame.mixer.Sound("./Assets/Sounds/erase1.wav"),
+                    "clear1": pygame.mixer.Sound("./Assets/Sounds/erase2.wav"),
+                    "clear2": pygame.mixer.Sound("./Assets/Sounds/erase3.wav"),
+                    "clear3": pygame.mixer.Sound("./Assets/Sounds/erase4.wav"),
+                    "locking": pygame.mixer.Sound("./Assets/Sounds/lock.wav"),
+                    "rotate": pygame.mixer.Sound("./Assets/Sounds/rotate.wav"),
+                    "gameover": pygame.mixer.Sound("./Assets/Sounds/topout.ogg"),
+                }
+                self.set_volume(self.settings.volume)
+            except FileNotFoundError as e:
+                print(e)
+                print("Failed to load sounds, path for sounds not found")
+                self.sounds = None
+                self.settings.play_sound = False
+
+        def set_volume(self, volume):
+            self.settings.volume = volume
+            for value in self.sounds.values():
+                if value is not None:
+                    value.set_volume(self.settings.volume)
+            self.sounds["harddrop"].set_volume(self.settings.volume * 0.5)
+
+        def play(self, sound_name):
+            if self.settings.play_sound is False:
+                return
+            ref = self.sounds.get(sound_name)
+            if ref is None:
+                return
+            ref.fadeout(500)
+            ref.play(fade_ms=50)
+
     def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
+        self.sound = Main.Sound(self.settings)
         self.editor = Editor(self.settings, (0.745, 0.04))
         self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
         pygame.init()
@@ -89,17 +135,12 @@ class Main:
             (self.settings.width, self.settings.height), self.window_style | pygame.HWSURFACE, bit_depth, vsync=vsync_active
         )
         pygame.display.set_caption("Tetris")
-        pygame.mixer.pre_init(
-            frequency=44100,
-            size=32,
-            channels=2,
-            buffer=512,
-        )
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         self.clock = pygame.time.Clock()
         self.state = GameStates.initilized
         self.last_played = None
         self.pending_state = None
+        self.previous_state_for_settings = None
         self.shared_bg = GameMenus.Background(self.settings)
         self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)
         self.transition_surface.fill(gp.BLACK)
@@ -116,20 +157,22 @@ class Main:
         self.pending_state = next_state
 
     def start_game(self):
-        self.Games = {
-            GameStates.Tetris: GameModes.Classic(self),
-            GameStates.practice_game: GameModes.PracticeGame(self),
-            GameStates.custom_game: GameModes.CustomGame(self),
-            GameStates.dig_mode: GameModes.Dig(self),
-        }
+        self.Game = Game(self, GameStates.game)
+
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
-        self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
+
+        self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, bg=self.shared_bg)
+        self.VideoSettings = GameMenus.VideoMenu(self, GameStates.video_settings, backdround=self.shared_bg)
+        self.SoundSettings = GameMenus.SoundMenu(self, GameStates.sound_settings, backdround=self.shared_bg)
+
         self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.classic_settings, self.shared_bg)
         self.CustomSettings = GameMenus.CustomSettings(self, GameStates.custom_settings)
         self.DigSettings = GameMenus.DigSettings(self, GameStates.dig_settings)
+
         self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
         self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice_settings)
+
         self.set_state(GameStates.main_menu)
         self.loop()
 
@@ -143,55 +186,68 @@ class Main:
         self.editor.resize()
         self.MainMenu.resize()
         self.Pause.resize()
+
         self.SettingsMenu.resize()
+        self.SoundSettings.resize()
+        self.VideoSettings.resize()
+
         self.ClassicSettings.resize()
         self.PracticeMenu.resize()
         self.CustomSettings.resize()
+        self.DigSettings.resize()
         self.GameOver.resize()
-        for value in self.Games.values():
-            value.resize()
+        self.Game.resize()
 
     def loop(self):
         while self.state != GameStates.quitting:
-            if self.state in list(self.Games.keys()):
-                self.Games[self.state].loop()
+            if self.state is GameStates.game:
+                self.Game.loop()
 
             elif self.state == GameStates.main_menu:
+                self.previous_state_for_settings = GameStates.main_menu
                 self.MainMenu.loop()
+
+            elif self.state == GameStates.in_settings:
+                self.SettingsMenu.loop(self.previous_state_for_settings)
+
+            elif self.state == GameStates.video_settings:
+                self.VideoSettings.loop()
+
+            elif self.state == GameStates.sound_settings:
+                self.SoundSettings.loop()
 
             elif self.state == GameStates.classic_settings:
                 self.data = self.ClassicSettings.loop()
-                self.Games[GameStates.Tetris].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.practice_settings:
                 self.data = self.PracticeMenu.loop()
-                self.Games[GameStates.practice_game].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.custom_settings:
                 self.data = self.CustomSettings.loop()
-                self.Games[GameStates.custom_game].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.dig_settings:
                 self.data = self.DigSettings.loop()
-                self.Games[GameStates.dig_mode].set_attributes(self.data)
+                self.Game.init_mode(self.data)
 
             elif self.state == GameStates.changing_res:
                 self.resize()
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.paused:
-                self.Pause.loop(self.Games[self.last_played].main_surface)
-
-            elif self.state == GameStates.in_settings:
-                self.SettingsMenu.loop()
+                self.previous_state_for_settings = GameStates.paused
+                self.Pause.loop(self.Game.main_surface)
 
             elif self.state == GameStates.resetting:
-                self.Games[self.last_played].reset_game()
-                self.Games[self.last_played].set_attributes(self.data)
+                self.Game.reset_game()
+                self.Game.init_mode(self.data)
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.game_over:
-                self.GameOver.loop(self.Games[self.last_played].main_surface)
+                self.GameOver.loop(self.Game.main_surface)
+
             else:
                 print("Failed to enter", self.state)
                 break

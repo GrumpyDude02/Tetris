@@ -25,6 +25,7 @@ DefaultTemplate = ButtonTemplate(
 class Buttons:
     idle = "idle"
     armed = "armed"
+    active = ""
     hover = "hover"
 
     def __init__(self, template: ButtonTemplate, size: list, pos: list, sc_size: list, Next: list = None) -> None:
