@@ -23,9 +23,6 @@ class Tetrominos:
     # in miliseconds
 
     def __init__(self, pivot_pos: pygame.Vector2, shape: str, block_width, block_spacing: int = 1) -> None:
-        # self.isSet = False
-        # self.isHeld = False
-        # self.destroy = False
         self.state = Tetrominos.falling
         self.pivot = pivot_pos
         self.shape = shape
