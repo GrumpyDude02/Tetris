@@ -1,6 +1,6 @@
 import Globals as gp
 import GameMenus
-from Premitives.Game import Game
+from Primitives.Game import Game
 from Editor import Editor
 from GameStates import GameStates
 import sys, pygame, json, os
@@ -131,6 +131,7 @@ class Main:
         self.state = GameStates.initilized
         self.last_played = None
         self.pending_state = None
+        self.previous_state_for_settings = None
         self.shared_bg = GameMenus.Background(self.settings)
         self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)
         self.transition_surface.fill(gp.BLACK)
@@ -148,14 +149,20 @@ class Main:
 
     def start_game(self):
         self.Game = Game(self, GameStates.game)
+
         self.MainMenu = GameMenus.MainMenu(self, GameStates.main_menu, self.shared_bg)
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
-        self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, backdround=self.shared_bg)
+
+        self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, bg=self.shared_bg)
+        self.VideoSetting = GameMenus.VideoMenu(self, GameStates.video_settings, backdround=self.shared_bg)
+
         self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.classic_settings, self.shared_bg)
         self.CustomSettings = GameMenus.CustomSettings(self, GameStates.custom_settings)
         self.DigSettings = GameMenus.DigSettings(self, GameStates.dig_settings)
+
         self.GameOver = GameMenus.GameOver(self, GameStates.game_over)
         self.PracticeMenu = GameMenus.PracticeMenu(self, GameStates.practice_settings)
+
         self.set_state(GameStates.main_menu)
         self.loop()
 
@@ -183,7 +190,14 @@ class Main:
                 self.Game.loop()
 
             elif self.state == GameStates.main_menu:
+                self.previous_state_for_settings = GameStates.main_menu
                 self.MainMenu.loop()
+
+            elif self.state == GameStates.in_settings:
+                self.SettingsMenu.loop(self.previous_state_for_settings)
+
+            elif self.state == GameStates.video_settings:
+                self.VideoSetting.loop()
 
             elif self.state == GameStates.classic_settings:
                 self.data = self.ClassicSettings.loop()
@@ -206,10 +220,8 @@ class Main:
                 self.set_state(self.pending_state)
 
             elif self.state == GameStates.paused:
+                self.previous_state_for_settings = GameStates.paused
                 self.Pause.loop(self.Game.main_surface)
-
-            elif self.state == GameStates.in_settings:
-                self.SettingsMenu.loop()
 
             elif self.state == GameStates.resetting:
                 self.Game.reset_game()
@@ -218,6 +230,7 @@ class Main:
 
             elif self.state == GameStates.game_over:
                 self.GameOver.loop(self.Game.main_surface)
+
             else:
                 print("Failed to enter", self.state)
                 break
