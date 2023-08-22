@@ -124,17 +124,13 @@ class SettingsMenu(Menu):
         self.buttons = {
             "VIDEO": TextButtons("VIDEO", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.25), sc_size=sc_size),
             "SOUND": TextButtons("SOUND", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.4), sc_size=sc_size),
-            "CONTROLS": TextButtons(
-                "CONTROLS", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.55), sc_size=sc_size
-            ),
             "BACK": TextButtons("BACK", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.70), sc_size=sc_size),
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["VIDEO"])
 
         self.buttons["VIDEO"].next_buttons = [self.buttons["BACK"], None, self.buttons["SOUND"], None]
-        self.buttons["SOUND"].next_buttons = [self.buttons["VIDEO"], None, self.buttons["CONTROLS"], None]
-        self.buttons["CONTROLS"].next_buttons = [self.buttons["SOUND"], None, self.buttons["BACK"], None]
-        self.buttons["BACK"].next_buttons = [self.buttons["CONTROLS"], None, self.buttons["VIDEO"], None]
+        self.buttons["SOUND"].next_buttons = [self.buttons["VIDEO"], None, self.buttons["BACK"], None]
+        self.buttons["BACK"].next_buttons = [self.buttons["SOUND"], None, self.buttons["VIDEO"], None]
 
     def handle_events(self):
         super().handle_events()
@@ -144,8 +140,6 @@ class SettingsMenu(Menu):
                 self.set_state(GameStates.video_settings)
             elif b is self.buttons["SOUND"]:
                 self.set_state(GameStates.sound_settings)
-            elif b is self.buttons["CONTROLS"]:
-                self.set_state(GameStates.controls_settings)
             elif b is self.buttons["BACK"]:
                 self.set_state(self.last_state)
 

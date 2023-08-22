@@ -535,6 +535,7 @@ class Game:
 
     def loop(self):
         self.music_paused = False
+        self.timer.start_timer()
         while self.game.state == self.mode_state:
             if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
                 self.set_state(GameStates.game_over, self.mode_state)
@@ -543,3 +544,4 @@ class Game:
             self.update()
             self.draw()
             pygame.display.flip()
+        self.timer.pause_timer()
