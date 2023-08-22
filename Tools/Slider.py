@@ -95,6 +95,15 @@ class Slider:
                 )
             self.button_outline.center = self.button_rect.center
 
+    def set_output(self, value):
+        self.output = int(value)
+        self.button_rect.centerx = func.map_values(
+            self.output,
+            self.range,
+            (self.rectangle_bar.left, self.rectangle_bar.left + self.rectangle_bar.width),
+        )
+        self.button_outline.center = self.button_rect.center
+
     def draw(self, surface: pygame.Surface):
         pygame.draw.rect(
             surface,

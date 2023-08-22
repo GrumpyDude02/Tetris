@@ -41,6 +41,8 @@ class Main:
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
             self.fullscreen = data["FullScreen"]
+            self.volume = data["SoundLevel"]
+            self.play_sound = data["PlaySound"]
             self.InitBorders()
 
         def set_resolution(self, new_resolution):
@@ -63,6 +65,8 @@ class Main:
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
             self.fullscreen = False
+            self.volume = 0.5
+            self.play_sound = True
             self.InitBorders()
             self.save_settings()
 
@@ -75,12 +79,15 @@ class Main:
                     "BoardWidth": self.board_width,
                     "BoardHeight": self.board_height,
                     "FullScreen": False,
+                    "SoundLevel": self.volume,
+                    "PlaySound": self.play_sound,
                 }
                 json.dump(data, f, indent=4)
 
     class Sound:
-        def __init__(self, volume) -> None:
+        def __init__(self, settings) -> None:
             pygame.mixer.init()
+            self.settings = settings
             try:
                 self.sounds = {
                     "hit": pygame.mixer.Sound("./Assets/Sounds/hit.mp3"),
@@ -94,30 +101,32 @@ class Main:
                     "rotate": pygame.mixer.Sound("./Assets/Sounds/rotate.wav"),
                     "gameover": pygame.mixer.Sound("./Assets/Sounds/topout.ogg"),
                 }
-                for value in self.sounds.values():
-                    if value is not None:
-                        value.set_volume(volume)
-                self.sounds["harddrop"].set_volume(volume * 0.2)
-                self.active_sound = True
+                self.set_volume(self.settings.volume)
             except FileNotFoundError as e:
                 print(e)
                 print("Failed to load sounds, path for sounds not found")
                 self.sounds = None
-                self.active_sound = True
+                self.settings.play_sound = False
 
-            self.sound_queue = []
+        def set_volume(self, volume):
+            self.settings.volume = volume
+            for value in self.sounds.values():
+                if value is not None:
+                    value.set_volume(self.settings.volume)
+            self.sounds["harddrop"].set_volume(self.settings.volume * 0.5)
 
         def play(self, sound_name):
-            if self.active_sound is True:
-                ref = self.sounds.get(sound_name)
-                if ref is None:
-                    return
-                ref.fadeout(500)
-                ref.play(fade_ms=50)
+            if self.settings.play_sound is False:
+                return
+            ref = self.sounds.get(sound_name)
+            if ref is None:
+                return
+            ref.fadeout(500)
+            ref.play(fade_ms=50)
 
     def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
-        self.sound = Main.Sound(0.5)
+        self.sound = Main.Sound(self.settings)
         self.editor = Editor(self.settings, (0.745, 0.04))
         self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
         pygame.init()
@@ -154,7 +163,8 @@ class Main:
         self.Pause = GameMenus.PauseScreen(self, GameStates.paused)
 
         self.SettingsMenu = GameMenus.SettingsMenu(self, GameStates.in_settings, bg=self.shared_bg)
-        self.VideoSetting = GameMenus.VideoMenu(self, GameStates.video_settings, backdround=self.shared_bg)
+        self.VideoSettings = GameMenus.VideoMenu(self, GameStates.video_settings, backdround=self.shared_bg)
+        self.SoundSettings = GameMenus.SoundMenu(self, GameStates.sound_settings, backdround=self.shared_bg)
 
         self.ClassicSettings = GameMenus.ClassicSettings(self, GameStates.classic_settings, self.shared_bg)
         self.CustomSettings = GameMenus.CustomSettings(self, GameStates.custom_settings)
@@ -176,7 +186,11 @@ class Main:
         self.editor.resize()
         self.MainMenu.resize()
         self.Pause.resize()
+
         self.SettingsMenu.resize()
+        self.SoundSettings.resize()
+        self.VideoSettings.resize()
+
         self.ClassicSettings.resize()
         self.PracticeMenu.resize()
         self.CustomSettings.resize()
@@ -197,7 +211,10 @@ class Main:
                 self.SettingsMenu.loop(self.previous_state_for_settings)
 
             elif self.state == GameStates.video_settings:
-                self.VideoSetting.loop()
+                self.VideoSettings.loop()
+
+            elif self.state == GameStates.sound_settings:
+                self.SoundSettings.loop()
 
             elif self.state == GameStates.classic_settings:
                 self.data = self.ClassicSettings.loop()

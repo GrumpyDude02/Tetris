@@ -131,6 +131,11 @@ class SettingsMenu(Menu):
         }
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["VIDEO"])
 
+        self.buttons["VIDEO"].next_buttons = [self.buttons["BACK"], None, self.buttons["SOUND"], None]
+        self.buttons["SOUND"].next_buttons = [self.buttons["VIDEO"], None, self.buttons["CONTROLS"], None]
+        self.buttons["CONTROLS"].next_buttons = [self.buttons["SOUND"], None, self.buttons["BACK"], None]
+        self.buttons["BACK"].next_buttons = [self.buttons["CONTROLS"], None, self.buttons["VIDEO"], None]
+
     def handle_events(self):
         super().handle_events()
         b = self.cursor.button
@@ -196,7 +201,70 @@ class VideoMenu(Menu):
 
 
 class SoundMenu(Menu):
-    pass
+    def __init__(self, game, state, backdround: Background = None):
+        super().__init__(game, state, bg=backdround)
+        self.buttons = {
+            "CONFIRM": TextButtons(
+                "CONFIRM",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.30, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+            "BACK": TextButtons(
+                "BACK",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.50, 0.86),
+                (self.settings.width, self.settings.height),
+            ),
+        }
+        self.sliders = {
+            "SOUND VOLUME": Slider(
+                DefaultTemplate,
+                "Sound Level",
+                self.game.main_font,
+                (0.45, 0.35),
+                (0.16, 0.05),
+                (0, 100),
+                (self.settings.width, self.settings.height),
+            )
+        }
+        self.carousels = {
+            "MUTE": Carousel(
+                [str(not self.settings.play_sound), str(self.settings.play_sound)],
+                DefaultTemplate,
+                (0.44, 0.45),
+                self.game.main_font,
+                (0.2, 0.1),
+                (self.settings.width, self.settings.height),
+                text="MUTE",
+            ),
+        }
+        self.buttons["CONFIRM"].next_buttons = [None, self.buttons["BACK"], None, self.buttons["BACK"]]
+        self.buttons["BACK"].next_buttons = [None, self.buttons["CONFIRM"], None, self.buttons["CONFIRM"]]
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["CONFIRM"])
+
+    def handle_events(self):
+        super().handle_events()
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["CONFIRM"]:
+                self.game.sound.set_volume(self.sliders["SOUND VOLUME"].output / 100)
+                self.settings.play_sound = (
+                    False if self.carousels["MUTE"].list[self.carousels["MUTE"].current_index] == "True" else True
+                )
+                self.set_state(GameStates.in_settings)
+            elif b is self.buttons["BACK"]:
+                self.set_state(GameStates.in_settings)
+
+        self.carousels["MUTE"].check_input()
+
+    def loop(self):
+        self.sliders["SOUND VOLUME"].set_output(self.settings.volume * 100)
+        super().loop()
 
 
 class ControlsMenu(Menu):
@@ -595,29 +663,29 @@ class PauseScreen(TransparentMenu):
                 sc_size=(self.settings.width, self.settings.height),
             ),
         }
-        self.buttons["EXIT"].next_buttons = [
-            None,
-            self.buttons["RESET"],
-            self.buttons["RESET"],
-            self.buttons["RESUME"],
-        ]
         self.buttons["RESUME"].next_buttons = [
-            None,
             self.buttons["EXIT"],
             None,
             self.buttons["SETTINGS"],
+            None,
         ]
         self.buttons["SETTINGS"].next_buttons = [
-            None,
             self.buttons["RESUME"],
             None,
             self.buttons["RESET"],
+            None,
         ]
         self.buttons["RESET"].next_buttons = [
+            self.buttons["SETTINGS"],
+            None,
+            self.buttons["EXIT"],
+            None,
+        ]
+        self.buttons["EXIT"].next_buttons = [
+            self.buttons["RESET"],
             None,
             self.buttons["RESUME"],
             None,
-            self.buttons["EXIT"],
         ]
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
         self.do_fade = True
