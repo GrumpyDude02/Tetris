@@ -1,8 +1,8 @@
 import Globals as gp
 from GameStates import GameStates
 from Tools.Buttons import TextButtons, DefaultTemplate
-from Premitives.Menu import Menu, Background, TransparentMenu
-from Premitives.Game import Game
+from Primitives.Menu import Menu, Background, TransparentMenu
+from Primitives.Game import Game
 from Tools.Slider import Slider
 from Tools.Carousel import Carousel
 
@@ -44,7 +44,7 @@ class MainMenu(Menu):
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "SETTINGS": TextButtons(
-                "RESOLUTION",
+                "SETTINGS",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
@@ -118,6 +118,38 @@ class MainMenu(Menu):
 
 
 class SettingsMenu(Menu):
+    def __init__(self, game, state, child_menus: list = None, previous_menu=None, bg: Background = None):
+        super().__init__(game, state, child_menus, previous_menu, bg)
+        sc_size = (self.settings.width, self.settings.height)
+        self.buttons = {
+            "VIDEO": TextButtons("VIDEO", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.25), sc_size=sc_size),
+            "SOUND": TextButtons("SOUND", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.4), sc_size=sc_size),
+            "CONTROLS": TextButtons(
+                "CONTROLS", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.55), sc_size=sc_size
+            ),
+            "BACK": TextButtons("BACK", DefaultTemplate, self.game.main_font, (0.16, 0.1), (0.42, 0.70), sc_size=sc_size),
+        }
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["VIDEO"])
+
+    def handle_events(self):
+        super().handle_events()
+        b = self.cursor.button
+        if b.check_input(self.mouse_mode):
+            if b is self.buttons["VIDEO"]:
+                self.set_state(GameStates.video_settings)
+            elif b is self.buttons["SOUND"]:
+                self.set_state(GameStates.sound_settings)
+            elif b is self.buttons["CONTROLS"]:
+                self.set_state(GameStates.controls_settings)
+            elif b is self.buttons["BACK"]:
+                self.set_state(self.last_state)
+
+    def loop(self, state):
+        self.last_state = state
+        super().loop()
+
+
+class VideoMenu(Menu):
     def __init__(self, game, state, backdround: Background = None):
         super().__init__(game, state, bg=backdround)
 
@@ -160,7 +192,15 @@ class SettingsMenu(Menu):
                     self.set_pending_state(GameStates.in_settings)
                     break
             if self.cursor.button is self.buttons["BACK"]:
-                self.set_state(GameStates.main_menu)
+                self.set_state(GameStates.in_settings)
+
+
+class SoundMenu(Menu):
+    pass
+
+
+class ControlsMenu(Menu):
+    pass
 
 
 class ClassicSettings(Menu):
@@ -514,28 +554,40 @@ class CustomSettings(Menu):
 
 
 class PauseScreen(TransparentMenu):
+    def create_blurred_surface(self):
+        super().create_blurred_surface()
+        self.title_pos.y *= 0.3
+
     def __init__(self, game, state):
         super().__init__(game, state, "PAUSED")
         self.create_blurred_surface()
         self.buttons = {
-            "EXIT": TextButtons(
-                "EXIT",
-                DefaultTemplate,
-                self.game.main_font,
-                (0.16, 0.1),
-                (0.52, 0.60),
-                sc_size=(self.settings.width, self.settings.height),
-            ),
             "RESUME": TextButtons(
                 "RESUME",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.32, 0.60),
+                (0.42, 0.30),
+                sc_size=(self.settings.width, self.settings.height),
+            ),
+            "SETTINGS": TextButtons(
+                "SETTINGS",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.42, 0.45),
                 sc_size=(self.settings.width, self.settings.height),
             ),
             "RESET": TextButtons(
                 "RESET",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.42, 0.60),
+                sc_size=(self.settings.width, self.settings.height),
+            ),
+            "EXIT": TextButtons(
+                "EXIT",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
@@ -544,21 +596,27 @@ class PauseScreen(TransparentMenu):
             ),
         }
         self.buttons["EXIT"].next_buttons = [
-            self.buttons["RESET"],
+            None,
             self.buttons["RESET"],
             self.buttons["RESET"],
             self.buttons["RESUME"],
         ]
         self.buttons["RESUME"].next_buttons = [
-            self.buttons["RESET"],
+            None,
             self.buttons["EXIT"],
-            self.buttons["RESET"],
+            None,
+            self.buttons["SETTINGS"],
+        ]
+        self.buttons["SETTINGS"].next_buttons = [
+            None,
+            self.buttons["RESUME"],
+            None,
             self.buttons["RESET"],
         ]
         self.buttons["RESET"].next_buttons = [
+            None,
             self.buttons["RESUME"],
-            self.buttons["RESUME"],
-            self.buttons["EXIT"],
+            None,
             self.buttons["EXIT"],
         ]
         self.cursor = Menu.Cursor(gp.BLUE, self.buttons["RESUME"])
@@ -570,6 +628,8 @@ class PauseScreen(TransparentMenu):
         if b.check_input(self.mouse_mode):
             if b is self.buttons["RESUME"]:
                 self.set_state(self.game.last_played)
+            elif b is self.buttons["SETTINGS"]:
+                self.set_state(GameStates.in_settings)
             elif b is self.buttons["RESET"]:
                 self.set_state(GameStates.resetting)
                 self.set_pending_state(self.game.last_played)

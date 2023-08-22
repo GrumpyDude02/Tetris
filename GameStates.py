@@ -7,6 +7,10 @@ class GameStates(enum.Enum):
     selection_menu = "selection_menu"
     in_settings = "in_settings"
 
+    video_settings = "video_settings"
+    sound_settings = "sound_settings"
+    controls_settings = "controls_settings"
+
     practice_settings = "practice_settings"
 
     custom_settings = "custom_settings"
