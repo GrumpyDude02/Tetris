@@ -496,7 +496,8 @@ class Game:
 
         self.clear_lines()
         self.update_HUD(wasSet, cleared_rows_num, gp.LINE_NUMBER_SCORE)
-        self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
+        if not self.animate_line_clear:
+            self.current_piece.update(self.level, self.dt, self.current_time, self.placed_blocks, self.sound)
         for tetromino in self.destroy:
             self.destroy.remove(tetromino)
 
