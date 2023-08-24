@@ -262,7 +262,7 @@ class Game:
 
             if self.combo > 1:
                 self.clearance_type += f"combo x{self.combo}"
-                self.score = (self.level + 1) * 50 * self.combo
+                self.score += (self.level + 1) * 50 * self.combo
         elif isSet:
             self.combo = 0
             self.last_spin_kick = ""
