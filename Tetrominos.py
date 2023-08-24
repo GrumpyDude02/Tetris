@@ -301,7 +301,7 @@ class Tetrominos:
         self.state = Tetrominos.is_set
         for block in self.blocks:
             placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])] = block
-            block = v((block.map_pos[0] + 1) * block.width, (block.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * block.width)
+            block.sc_pos = v((block.map_pos[0] + 1) * block.width, (block.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * block.width)
 
     def set_shape(self, new_shape: str) -> None:
         block_size = self.blocks[0].width
