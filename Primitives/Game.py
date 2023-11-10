@@ -45,6 +45,9 @@ class Game:
     Dig = "Dig"
     Practice = "Practice"
 
+    def set_state(self, new_state, pending_state: str = None, last_played_mode=None):
+        self.game.set_state(new_state, pending_state, last_played_mode)
+
     def init_surfaces(self) -> None:
         self.animate_line_clear = False
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
@@ -162,9 +165,6 @@ class Game:
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
             tetromino.set_shape(shape)
 
-    def set_state(self, new_state: GameStates, last_mode: str = None):
-        self.game.set_state(new_state, last_mode)
-
     def swap_pieces(self) -> None:
         if self.held_piece is None:
             self.current_piece.state = Tetrominos.is_held
@@ -205,6 +205,9 @@ class Game:
         if self.preview_tetrominos is not None:
             for preview_piece in self.preview_tetrominos:
                 preview_piece.resize(self.settings.cell_size * 0.80)
+        if self.blocks_to_draw:
+            for block in self.blocks_to_draw:
+                block.resize(self.settings.cell_size)
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
@@ -508,18 +511,21 @@ class Game:
                 self.set_state(GameStates.quitting)
             if event.type == pygame.ACTIVEEVENT:
                 if event.state == 2:
-                    self.game.last_played = self.mode_state
                     self.state = Game.paused
-                    self.set_state(GameStates.paused)
+                    self.set_state(GameStates.paused, last_played_mode=self.mode_state)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.set_state(GameStates.paused, self.mode_state)
+                    self.set_state(GameStates.paused, last_played_mode=self.mode_state)
                     self.timer.pause_timer()
                     self.music_paused = True
                 if event.key == pygame.K_c:
                     if self.switch_available or self.held_piece is None:
                         self.sound.play("hold")
                     self.swap_pieces()
+            if event.type == pygame.VIDEORESIZE:
+                self.settings.set_resolution((event.w, event.h))
+                self.set_state(GameStates.changing_res)
+                self.game.set_pending_state(self.mode_state)
 
         if not self.animate_line_clear:
             self.curr_drop_score = self.current_piece.handle_events(

@@ -41,6 +41,7 @@ class Main:
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
             self.fullscreen = data["FullScreen"]
+            self.resizable = data["Resizable"]
             self.volume = data["SoundLevel"]
             self.play_sound = data["PlaySound"]
             self.InitBorders()
@@ -65,6 +66,7 @@ class Main:
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
             self.fullscreen = False
+            self.resizable = False
             self.volume = 0.5
             self.play_sound = True
             self.InitBorders()
@@ -79,6 +81,7 @@ class Main:
                     "BoardWidth": self.board_width,
                     "BoardHeight": self.board_height,
                     "FullScreen": False,
+                    "Resizable": self.resizable,
                     "SoundLevel": self.volume,
                     "PlaySound": self.play_sound,
                 }
@@ -124,11 +127,11 @@ class Main:
             ref.fadeout(500)
             ref.play(fade_ms=50)
 
-    def __init__(self, full_screen: bool = False, vsync_active: bool = False) -> None:
+    def __init__(self, resizable: bool = False, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
         self.sound = Main.Sound(self.settings)
         self.editor = Editor(self.settings, (0.745, 0.04))
-        self.window_style = pygame.FULLSCREEN | pygame.SCALED if full_screen or self.settings.fullscreen else 0
+        self.update_windows_style()
         pygame.init()
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
         self.screen = pygame.display.set_mode(
@@ -148,13 +151,13 @@ class Main:
         self.transition_surface.set_alpha(self.alpha)
         self.data = ()
 
-    def set_state(self, new_state, last_mode: str = None):
-        if last_mode:
-            self.last_played = last_mode
+    def set_state(self, new_state, pending_state: str = None, last_played_mode=None):
+        """last_state used for when pausing the game"""
+        if pending_state:
+            self.pending_state = pending_state
+        if last_played_mode:
+            self.last_played = last_played_mode
         self.state = new_state
-
-    def set_pending_state(self, next_state):
-        self.pending_state = next_state
 
     def start_game(self):
         self.Game = Game(self, GameStates.game)
@@ -175,6 +178,14 @@ class Main:
 
         self.set_state(GameStates.main_menu)
         self.loop()
+
+    def update_windows_style(self):
+        flag = 0
+        if self.settings.resizable:
+            flag |= pygame.RESIZABLE
+        if self.settings.fullscreen:
+            flag |= pygame.FULLSCREEN | pygame.SCALED
+        self.window_style = flag
 
     def resize(self):
         self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)

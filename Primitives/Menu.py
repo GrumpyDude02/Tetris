@@ -89,11 +89,8 @@ class Menu:
         self.mouse_mode = True
         self.state = state
 
-    def set_state(self, new_state, last_mode: str = None):
-        self.game.set_state(new_state, last_mode)
-
-    def set_pending_state(self, next_state):
-        self.game.pending_state = next_state
+    def set_state(self, new_state, pending_state: str = None, last_played_mode=None):
+        self.game.set_state(new_state, pending_state, last_played_mode)
 
     def switch_input(self, event: pygame.event):
         if event.type == pygame.MOUSEMOTION:
@@ -172,6 +169,9 @@ class Menu:
                 self.handle_nav(event)
             elif event.type == pygame.MOUSEMOTION:
                 self.mouse_mode = True
+            elif event.type == pygame.VIDEORESIZE:
+                self.settings.set_resolution((event.w, event.h))
+                self.set_state(GameStates.changing_res, pending_state=self.state)
 
     def fade(self, direction, condition):
         last_tick = 0

@@ -187,8 +187,7 @@ class VideoMenu(Menu):
             for key, i in zip(self.buttons.keys(), range(0, 7)):
                 if self.cursor.button is self.buttons[key]:
                     self.settings.set_resolution(gp.RESOLUTIONS[i])
-                    self.set_state(GameStates.changing_res)
-                    self.set_pending_state(GameStates.in_settings)
+                    self.set_state(GameStates.changing_res, pending_state=GameStates.in_settings)
                     break
             if self.cursor.button is self.buttons["BACK"]:
                 self.set_state(GameStates.in_settings)
@@ -693,11 +692,9 @@ class PauseScreen(TransparentMenu):
             elif b is self.buttons["SETTINGS"]:
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["RESET"]:
-                self.set_state(GameStates.resetting)
-                self.set_pending_state(self.game.last_played)
+                self.set_state(GameStates.resetting, pending_state=self.game.last_played)
             elif b is self.buttons["EXIT"]:
-                self.set_pending_state(GameStates.main_menu)
-                self.set_state(GameStates.resetting)
+                self.set_state(GameStates.resetting, pending_state=GameStates.main_menu)
 
 
 class GameOver(TransparentMenu):
@@ -731,8 +728,6 @@ class GameOver(TransparentMenu):
         b = self.cursor.button
         if b.check_input(self.mouse_mode):
             if b is self.buttons["RESET"]:
-                self.set_state(GameStates.resetting)
-                self.set_pending_state(self.game.last_played)
+                self.set_state(GameStates.resetting, last_played_mode=self.game.last_played)
             if b is self.buttons["EXIT"]:
-                self.set_pending_state(GameStates.main_menu)
-                self.set_state(GameStates.resetting)
+                self.set_state(GameStates.resetting, pending_state=GameStates.main_menu)
