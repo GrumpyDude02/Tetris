@@ -10,20 +10,20 @@ preview_pos = pygame.Vector2(1, 6)
 
 
 elements_coor = {
-    "board": (0.364, 0.01666),
-    "next_text": (0.68, 0.01666),
-    "hold_text": (0.24, 0.40),
-    "line_text": (0.15, 0.26),
-    "level_text": (0.15, 0.173),
-    "time": (0.15, 0.08),
-    "score": (0.15, 0.7),
-    "clearance_type": (0.15, 0.76),
-    "preview_surface": (0.68, 0.05),
+    "board": (0, 0),
+    "next_text": (0.70, 0.01666),
+    "hold_text": (0.14, 0.40),
+    "line_text": (0.065, 0.26),
+    "level_text": (0.065, 0.173),
+    "time": (0.065, 0.08),
+    "score": (0.065, 0.7),
+    "clearance_type": (0.065, 0.76),
+    "preview_surface": (0.70, 0.05),
 }
 
 preview_tetrominos_pos = [[preview_pos.x, preview_pos.y + i] for i in range(0, 21, 3)]
 
-HOLD_POS = (10, 16)
+HOLD_POS_H = 16
 
 
 class Game:
@@ -93,6 +93,10 @@ class Game:
         self.last_spin_kick = ""
         self.clearance_type = ""
         self.blit_offset = [0, 0]
+        self.held_piece_pos = (
+            elements_coor["hold_text"][0] * self.settings.width / self.settings.cell_size,
+            HOLD_POS_H + self.settings.offset[1] // self.settings.cell_size,
+        )
         self.destroy = []
         self.tetrominos = []
         self.blocks_to_draw = []
@@ -169,7 +173,7 @@ class Game:
         if self.held_piece is None:
             self.current_piece.state = Tetrominos.is_held
             self.held_piece = deepcopy(self.current_piece)
-            self.held_piece.set_pos(HOLD_POS)
+            self.held_piece.set_pos(self.held_piece_pos)
             self.held_piece.reset_color()
 
         elif self.switch_available:
@@ -180,7 +184,7 @@ class Game:
             self.current_piece.set_pos(gp.SPAWN_LOCATION)
             self.current_piece.state = Tetrominos.falling
 
-            self.held_piece.set_pos(HOLD_POS)
+            self.held_piece.set_pos(self.held_piece_pos)
             self.held_piece.state = Tetrominos.is_held
             self.held_piece.reset_color()
 
@@ -197,9 +201,16 @@ class Game:
 
     def resize(self) -> None:
         self.init_surfaces()
+        self.held_piece_pos = (
+            elements_coor["hold_text"][0] * self.settings.width / self.settings.cell_size,
+            HOLD_POS_H + self.settings.offset[1] // self.settings.cell_size,
+        )
         if self.current_piece is not None:
             self.current_piece.resize(self.settings.cell_size)
-            self.current_piece.set_pos(gp.SPAWN_LOCATION)
+            # self.current_piece.set_pos(gp.SPAWN_LOCATION)
+        if self.held_piece:
+            self.held_piece.resize(self.settings.cell_size)
+            self.held_piece.set_pos((self.held_piece_pos))
         for tetrmino in self.tetrominos:
             tetrmino.resize(self.settings.cell_size)
         if self.preview_tetrominos is not None:
@@ -397,8 +408,8 @@ class Game:
         self.main_surface.blit(
             self.board_surface,
             (
-                int(elements_coor["board"][0] * self.settings.width) + self.blit_offset[0],
-                int(elements_coor["board"][1] * self.settings.height) + self.blit_offset[1],
+                int(elements_coor["board"][0] * self.settings.width) + self.settings.offset[0] + self.blit_offset[0],
+                int(elements_coor["board"][1] * self.settings.height) + self.settings.offset[1] + self.blit_offset[1],
             ),
         )
 
@@ -524,8 +535,7 @@ class Game:
                     self.swap_pieces()
             if event.type == pygame.VIDEORESIZE:
                 self.settings.set_resolution((event.w, event.h))
-                self.set_state(GameStates.changing_res)
-                self.game.set_pending_state(self.mode_state)
+                self.set_state(GameStates.changing_res, self.mode_state)
 
         if not self.animate_line_clear:
             self.curr_drop_score = self.current_piece.handle_events(

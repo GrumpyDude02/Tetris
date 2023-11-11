@@ -18,6 +18,8 @@ class Main:
                     self.load_data(data)
             except FileNotFoundError:
                 self.load_defaults()
+            finally:
+                self.offset = ((self.width - 12 * self.cell_size) // 2, (self.height - 24 * self.cell_size) // 2)
 
         def InitBorders(self):
             self.grid = []
@@ -47,13 +49,15 @@ class Main:
             self.InitBorders()
 
         def set_resolution(self, new_resolution):
-            self.selected_res = new_resolution
+            self.selected_res = max(new_resolution, (gp.MIN_WIDTH, gp.MIN_HEIGHT))
             self.width = self.selected_res[0]
             self.height = self.selected_res[1]
-            self.cell_size = round(gp.BASE_CELL_SIZE * (self.height / gp.BASE_RESOLUTION[1]))
-            self.font_size = round(gp.BASE_FONT_SIZE * (self.height / gp.BASE_RESOLUTION[1]))
+            scaling_factor = min((self.width / gp.BASE_RESOLUTION[0]) * 1.4, self.height / gp.BASE_RESOLUTION[1])
+            self.cell_size = round(gp.BASE_CELL_SIZE * scaling_factor)
+            self.font_size = round(gp.BASE_FONT_SIZE * scaling_factor)
             self.board_width = 12 * self.cell_size
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
+            self.offset = ((self.width - 12 * self.cell_size) // 2, (self.height - 24 * self.cell_size) // 2)
             self.InitBorders()
             self.save_settings()
 
@@ -130,7 +134,7 @@ class Main:
     def __init__(self, resizable: bool = False, full_screen: bool = False, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
         self.sound = Main.Sound(self.settings)
-        self.editor = Editor(self.settings, (0.745, 0.04))
+        self.editor = Editor(self.settings, (gp.EDITOR_BOARD_X, 0.04))
         self.update_windows_style()
         pygame.init()
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)

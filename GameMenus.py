@@ -448,7 +448,7 @@ class PracticeMenu(Menu):
             "PresetSelector": Carousel(
                 carousel_list,
                 DefaultTemplate,
-                (0.75, 0.85),
+                (gp.EDITOR_BOARD_X, 0.85),
                 self.game.main_font,
                 (0.2, 0.1),
                 (self.settings.width, self.settings.height),

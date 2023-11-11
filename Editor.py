@@ -20,12 +20,12 @@ class Editor:
         self.settings = settings
         self.size = size
         self.position = board_posistion
-        self.resize()
         self.loaded_presets = {
             "Custom": [[[None for i in range(gp.PLAYABLE_AREA_CELLS)] for j in range(gp.BOARD_Y_CELL_NUMBER)], []]
         }
         self.placed_blocks_reference = None
         self.drawn_blocks_reference = None
+        self.resize()
 
     def resize(self):
         self.board_width = self.settings.board_width * self.size
@@ -43,6 +43,11 @@ class Editor:
                         pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
                     )
         self.board_surface = functions.generate_surf((self.board_width, self.board_height))
+        if self.drawn_blocks_reference:
+            for blocks in self.placed_blocks_reference:
+                for block in blocks:
+                    if block:
+                        block.resize(self.settings.cell_size * self.size)
 
     def load_presets(self, name) -> int:
         try:
