@@ -152,45 +152,79 @@ class VideoMenu(Menu):
     def __init__(self, game, state, backdround: Background = None):
         super().__init__(game, state, bg=backdround)
 
-        self.buttons = {}
-        y_pos = 0.05
-        for resolution in gp.RESOLUTIONS:
-            key = "x".join([str(resolution[0]), str(resolution[1])])
-            self.buttons[key] = TextButtons(
-                key,
+        self.buttons = {
+            "BACK": TextButtons(
+                "BACK",
                 DefaultTemplate,
                 self.game.main_font,
                 (0.16, 0.1),
-                (0.42, y_pos),
+                (0.60, 0.70),
                 sc_size=(self.settings.width, self.settings.height),
-            )
-            y_pos += 0.12
-        self.buttons["BACK"] = TextButtons(
-            "BACK",
-            DefaultTemplate,
-            self.game.main_font,
-            (0.16, 0.1),
-            (0.42, 0.88),
-            sc_size=(self.settings.width, self.settings.height),
-        )
-
-        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["960x540"])
-        self.buttons["960x540"].next_buttons = [self.buttons["BACK"], None, self.buttons["1024x576"], None]
-        self.buttons["BACK"].next_buttons = [self.buttons["2560x1440"], None, self.buttons["960x540"], None]
-        keys = list(self.buttons.keys())
-        for i in range(1, len(keys) - 1):
-            self.buttons[keys[i]].next_buttons = [self.buttons[keys[i - 1]], None, self.buttons[keys[i + 1]], None]
+            ),
+            "APPLY": TextButtons(
+                "APPLY",
+                DefaultTemplate,
+                self.game.main_font,
+                (0.16, 0.1),
+                (0.25, 0.70),
+                sc_size=(self.settings.width, self.settings.height),
+            ),
+        }
+        self.carousels = {
+            "RESOLUTION": Carousel(
+                ["x".join((str(i[0]), str(i[1]))) for i in gp.RESOLUTIONS],
+                DefaultTemplate,
+                (0.35, 0.2),
+                self.game.main_font,
+                (0.3, 0.2),
+                sc_size=(self.settings.width, self.settings.height),
+                text="Resolution:",
+            ),
+            "FULLSCREEN": Carousel(
+                [str(self.settings.fullscreen), str(not self.settings.fullscreen)],
+                DefaultTemplate,
+                (0.35, 0.35),
+                self.game.main_font,
+                (0.3, 0.2),
+                (self.settings.width, self.settings.height),
+                text="Full-Screen:",
+            ),
+        }
+        self.cursor = Menu.Cursor(gp.BLUE, self.buttons["BACK"])
+        self.buttons["BACK"].next_buttons = [None, self.buttons["APPLY"], None, self.buttons["APPLY"]]
+        self.buttons["APPLY"].next_buttons = [None, self.buttons["BACK"], None, self.buttons["BACK"]]
+        self.check_resolution()
 
     def handle_events(self):
         super().handle_events()
         if self.cursor.button.check_input(self.mouse_mode):
-            for key, i in zip(self.buttons.keys(), range(0, 7)):
-                if self.cursor.button is self.buttons[key]:
-                    self.settings.set_resolution(gp.RESOLUTIONS[i])
-                    self.set_state(GameStates.changing_res, pending_state=GameStates.in_settings)
-                    break
             if self.cursor.button is self.buttons["BACK"]:
                 self.set_state(GameStates.in_settings)
+            if self.cursor.button is self.buttons["APPLY"]:
+                self.settings.fullscreen = True if self.carousels["FULLSCREEN"].current_item() == "True" else False
+                new_res = tuple([int(i) for i in self.carousels["RESOLUTION"].current_item().split("x")])
+                self.settings.set_resolution(new_res)
+                self.set_state(GameStates.changing_res, pending_state=GameStates.video_settings)
+        for value in self.carousels.values():
+            value.check_input()
+
+    def check_resolution(self):
+        exists = (self.settings.width, self.settings.height) in gp.RESOLUTIONS
+        if self.carousels["RESOLUTION"].length() > len(gp.RESOLUTIONS) and exists:
+            self.carousels["RESOLUTION"].pop(-1)
+        elif self.carousels["RESOLUTION"].length() > len(gp.RESOLUTIONS) and not exists:
+            self.carousels["RESOLUTION"].current_index = -1
+            self.carousels["RESOLUTION"].list[self.carousels["RESOLUTION"].current_index] = "x".join(
+                [str(i) for i in (self.settings.width, self.settings.height)]
+            )
+        elif self.carousels["RESOLUTION"].length() == len(gp.RESOLUTIONS) and not exists:
+            self.carousels["RESOLUTION"].add_element("x".join([str(i) for i in (self.settings.width, self.settings.height)]))
+            self.carousels["RESOLUTION"].current_index = -1
+        self.carousels["RESOLUTION"].update_text()
+
+    def resize(self):
+        super().resize()
+        self.check_resolution()
 
 
 class SoundMenu(Menu):
@@ -246,9 +280,7 @@ class SoundMenu(Menu):
         if b.check_input(self.mouse_mode):
             if b is self.buttons["CONFIRM"]:
                 self.game.sound.set_volume(self.sliders["SOUND VOLUME"].output / 100)
-                self.settings.play_sound = (
-                    False if self.carousels["MUTE"].list[self.carousels["MUTE"].current_index] == "True" else True
-                )
+                self.settings.play_sound = False if self.carousels["MUTE"].current_item() == "True" else True
                 self.set_state(GameStates.in_settings)
             elif b is self.buttons["BACK"]:
                 self.set_state(GameStates.in_settings)
@@ -292,7 +324,7 @@ class ClassicSettings(Menu):
                 self.game.main_font,
                 (0.45, 0.35),
                 (0.16, 0.05),
-                (0, 15),
+                (1, 15),
                 (self.settings.width, self.settings.height),
                 True,
             )
@@ -325,8 +357,14 @@ class ClassicSettings(Menu):
 
     def loop(self) -> int:
         super().loop()
-        lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
-        return {"Mode": Game.Classic, "Shape": "All", "Grid": None, "Level": self.sliders["Level"].output, "LockSpeed": lock}
+        lock = True if self.carousels["LockSpeed"].current_item() == "True" else False
+        return {
+            "Mode": Game.Classic,
+            "Shape": "All",
+            "Grid": None,
+            "Level": self.sliders["Level"].output - 1,
+            "LockSpeed": lock,
+        }
 
 
 class DigSettings(Menu):
@@ -357,7 +395,7 @@ class DigSettings(Menu):
                 self.game.main_font,
                 (0.45, 0.35),
                 (0.16, 0.05),
-                (0, 15),
+                (1, 15),
                 (self.settings.width, self.settings.height),
                 True,
             )
@@ -400,12 +438,12 @@ class DigSettings(Menu):
 
     def loop(self) -> int:
         super().loop()
-        lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
+        lock = True if self.carousels["LockSpeed"].current_item() == "True" else False
         return {
             "Mode": Game.Dig,
             "Grid": None,
             "Shape": self.carousels["ShapeSelector"].list[self.carousels["ShapeSelector"].current_index],
-            "Level": self.sliders["Level"].output,
+            "Level": self.sliders["Level"].output - 1,
             "LockSpeed": lock,
         }
 
@@ -420,7 +458,7 @@ class PracticeMenu(Menu):
                 self.game.main_font,
                 (0.31, 0.30),
                 (0.16, 0.05),
-                (0, 15),
+                (1, 15),
                 (self.settings.width, self.settings.height),
                 True,
             )
@@ -489,10 +527,10 @@ class PracticeMenu(Menu):
     def loop(self) -> int:
         self.game.editor.select_preset(self.carousels["PresetSelector"].list[self.carousels["PresetSelector"].current_index])
         super().loop()
-        lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
+        lock = True if self.carousels["LockSpeed"].current_item == "True" else False
         return {
             "Mode": Game.Practice,
-            "Level": self.sliders["Level"].output,
+            "Level": self.sliders["Level"].output - 1,
             "Grid": self.game.editor.placed_blocks_reference,
             "Shape": self.carousels["PresetSelector"].list[self.carousels["PresetSelector"].current_index].split("-")[0],
             "LockSpeed": lock,
@@ -509,7 +547,7 @@ class CustomSettings(Menu):
                 self.game.main_font,
                 (0.31, 0.30),
                 (0.16, 0.05),
-                (0, 15),
+                (1, 15),
                 (self.settings.width, self.settings.height),
                 True,
             )
@@ -607,8 +645,8 @@ class CustomSettings(Menu):
         lock = True if self.carousels["LockSpeed"].list[self.carousels["LockSpeed"].current_index] == "True" else False
         return {
             "Mode": Game.Custom,
-            "Shape": self.carousels["ShapeSelector"].list[self.carousels["ShapeSelector"].current_index],
-            "Level": self.sliders["Level"].output,
+            "Shape": self.carousels["ShapeSelector"].current_item(),
+            "Level": self.sliders["Level"].output - 1,
             "Grid": self.game.editor.placed_blocks_reference,
             "LockSpeed": lock,
         }

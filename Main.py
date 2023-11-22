@@ -43,7 +43,6 @@ class Main:
             self.board_width = data["BoardWidth"]
             self.board_height = data["BoardHeight"]
             self.fullscreen = data["FullScreen"]
-            self.resizable = data["Resizable"]
             self.volume = data["SoundLevel"]
             self.play_sound = data["PlaySound"]
             self.InitBorders()
@@ -70,7 +69,6 @@ class Main:
             self.board_height = (gp.BOARD_Y_CELL_NUMBER - gp.BOARD_SHIFT) * self.cell_size
             self.board_width = 12 * self.cell_size
             self.fullscreen = False
-            self.resizable = False
             self.volume = 0.5
             self.play_sound = True
             self.InitBorders()
@@ -84,8 +82,7 @@ class Main:
                     "FontSize": self.font_size,
                     "BoardWidth": self.board_width,
                     "BoardHeight": self.board_height,
-                    "FullScreen": False,
-                    "Resizable": self.resizable,
+                    "FullScreen": self.fullscreen,
                     "SoundLevel": self.volume,
                     "PlaySound": self.play_sound,
                 }
@@ -131,7 +128,7 @@ class Main:
             ref.fadeout(500)
             ref.play(fade_ms=50)
 
-    def __init__(self, resizable: bool = False, full_screen: bool = False, vsync_active: bool = False) -> None:
+    def __init__(self, vsync_active: bool = False) -> None:
         self.settings = Main.Settings()
         self.sound = Main.Sound(self.settings)
         self.editor = Editor(self.settings, (gp.EDITOR_BOARD_X, 0.04))
@@ -185,13 +182,14 @@ class Main:
 
     def update_windows_style(self):
         flag = 0
-        if self.settings.resizable:
-            flag |= pygame.RESIZABLE
         if self.settings.fullscreen:
-            flag |= pygame.FULLSCREEN | pygame.SCALED
+            flag = pygame.FULLSCREEN | pygame.SCALED
+        else:
+            flag = pygame.RESIZABLE
         self.window_style = flag
 
     def resize(self):
+        self.update_windows_style()
         self.transition_surface = pygame.Surface((self.settings.width, self.settings.height), pygame.HWACCEL)
         self.main_font = pygame.font.Font("Assets/Font/OpenSans-ExtraBold.ttf", self.settings.font_size)
         bit_depth = pygame.display.mode_ok((self.settings.width, self.settings.height), self.window_style, 32)
@@ -271,4 +269,4 @@ class Main:
 
 
 if __name__ == "__main__":
-    Main(False, False).start_game()
+    Main().start_game()

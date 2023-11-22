@@ -20,7 +20,6 @@ class Carousel:
         text: str = None,
     ) -> None:
         self.list = table
-        self.len = len(self.list)
         self.position = position
         self.current_index = 0
         self.button = button
@@ -83,12 +82,24 @@ class Carousel:
     def check_input(self) -> tuple[bool, str]:
         if self.arrow2.check_input():
             self.current_index += 1
-            self.current_index %= self.len
+            self.current_index %= self.length()
             self.update_text()
             return (True, self.list[self.current_index])
         if self.arrow1.check_input():
             self.current_index -= 1
-            self.current_index %= self.len
+            self.current_index %= self.length()
             self.update_text()
             return (True, self.list[self.current_index])
         return (False, None)
+
+    def current_item(self):
+        return self.list[self.current_index]
+
+    def add_element(self, element):
+        self.list.append(element)
+
+    def length(self) -> int:
+        return len(self.list)
+
+    def pop(self, index):
+        self.list.pop(index)

@@ -298,7 +298,7 @@ class Game:
             Game.last_time = curr_time
 
         LINES = self.game.main_font.render(f"LINES : {self.cleared_lines} / {target_lines}", True, gp.WHITE)
-        LEVEL = self.game.main_font.render(f"LEVEL : {self.level}", True, gp.WHITE)
+        LEVEL = self.game.main_font.render(f"LEVEL : {self.level + 1}", True, gp.WHITE)
         HOLD = self.game.main_font.render("HOLD : ", True, gp.WHITE)
         NEXT = self.game.main_font.render("NEXT : ", True, gp.WHITE)
         SCORE = self.game.main_font.render(f"SCORE : {self.score}", True, gp.WHITE)
