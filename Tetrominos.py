@@ -254,7 +254,7 @@ class Tetrominos:
 
     # Super Rotation System
     def SRS_rotate(self, clockwise: bool, turns, placed_blocks: list[list[block]] = None, current_time: float = 0) -> int:
-        if self.shape == "O" or not placed_blocks:
+        if self.shape == "O" or not placed_blocks or self.state == Tetrominos.hard_dropped:
             return 0
         old_blocks = deepcopy(self.blocks)
         old_r_index = self.rotation_index

@@ -170,6 +170,8 @@ class Game:
             tetromino.set_shape(shape)
 
     def swap_pieces(self) -> None:
+        if self.current_piece.state in (Tetrominos.is_set, Tetrominos.hard_dropped):
+            return
         if self.held_piece is None:
             self.current_piece.rest_lock_timer(self.current_time)
             self.current_piece.state = Tetrominos.is_held
@@ -504,7 +506,7 @@ class Game:
                 self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = False
 
-        if not self.level > 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
+        if self.level <= 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
             self.level += 1
             self.completed_sets += 1
 
@@ -517,6 +519,10 @@ class Game:
 
     def handle_events(self):
         events = pygame.event.get()
+        if not self.animate_line_clear:
+            self.curr_drop_score = self.current_piece.handle_events(
+                self.current_time, events, self.placed_blocks, self.dt, self.sound
+            )
         for event in events:
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
@@ -536,11 +542,6 @@ class Game:
             if event.type == pygame.VIDEORESIZE:
                 self.settings.set_resolution((event.w, event.h))
                 self.set_state(GameStates.changing_res, self.mode_state)
-
-        if not self.animate_line_clear:
-            self.curr_drop_score = self.current_piece.handle_events(
-                self.current_time, events, self.placed_blocks, self.dt, self.sound
-            )
 
     def update_queue(self) -> Tetrominos:
         shape = self.next_shapes.pop(0)
