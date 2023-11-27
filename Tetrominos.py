@@ -5,12 +5,6 @@ from Tools.functions import mod
 from Block import block
 from pygame.math import Vector2 as v
 
-lock_delay = 500
-lock_start_time = 0
-animation_start = 0
-flashing_animation_time = 50
-down_pressed = False
-
 
 class Tetrominos:
     is_set = "is_set"
@@ -20,7 +14,12 @@ class Tetrominos:
     flashing = "flashing"
     destroy = "destroy"
     is_held = "is_held"
-    # in miliseconds
+
+    lock_delay = 500
+    lock_start_time = 0
+    animation_start = 0
+    flashing_animation_time = 50
+    down_pressed = False
 
     def __init__(self, pivot_pos: pygame.Vector2, shape: str, block_width, block_spacing: int = 1) -> None:
         self.state = Tetrominos.falling
@@ -48,10 +47,9 @@ class Tetrominos:
 
     # (True -> hard-dropped | False -> going down, cell numbers to bottom, rotation_index)
     def handle_events(self, current_time, events: list[pygame.Event], placed_blocks: list[list], dt: float, sounds) -> tuple:
-        global down_pressed, animation_start
         if self.animate:
             return
-        down_pressed = False
+        Tetrominos.down_pressed = False
         keys = pygame.key.get_pressed()
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -64,7 +62,7 @@ class Tetrominos:
                 elif event.key == pygame.K_a:
                     sounds.play("rotate")
                     return (None, None, self.SRS_rotate(True, 2, placed_blocks, current_time))
-                elif event.key == pygame.K_SPACE and not down_pressed:
+                elif event.key == pygame.K_SPACE and not Tetrominos.down_pressed:
                     self.start_animation(current_time)
                     sounds.play("harddrop")
                     return (True, self.hard_drop(placed_blocks), None)
@@ -100,23 +98,22 @@ class Tetrominos:
                     sounds.play("hit")
                     self.move("left", current_time, placed_blocks)
         if keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY and self.state != Tetrominos.locking:
-            down_pressed = True
+            Tetrominos.down_pressed = True
             self.VUpdate = current_time
             return (False, self.move("down", current_time, placed_blocks), None)
         return None
 
     def update_animation(self, current_time, placed_blocks, sound):
-        global animation_start
         if self.state == Tetrominos.locking:
             self.color = (min(self.color[0] + 15, 255), min(self.color[1] + 15, 255), min(self.color[2] + 15, 255))
             self.set_color(self.color)
-            if current_time - lock_start_time > lock_delay:
+            if current_time - Tetrominos.lock_start_time > Tetrominos.lock_delay:
                 self.state = Tetrominos.is_set
                 sound.play("locking")
 
         elif self.state == Tetrominos.hard_dropped:
             self.set_color()
-            if current_time - animation_start > flashing_animation_time:
+            if current_time - Tetrominos.animation_start > Tetrominos.flashing_animation_time:
                 self.state = Tetrominos.is_set
 
         if self.state == Tetrominos.is_set:
@@ -125,7 +122,6 @@ class Tetrominos:
             self.set_blocks(placed_blocks)
 
     def update(self, level, dt, current_time, placed_blocks, sound):
-        global down_pressed
         if max(self.blocks, key=lambda x: x.map_pos[1]) == 25:
             self.increment_score = False
         self.update_animation(current_time, placed_blocks, sound)
@@ -151,21 +147,19 @@ class Tetrominos:
             self.pivot += movement
 
     def move(self, direction: pygame.Vector2, current_time, placed_blocks: list[list]) -> int:
-        global lock_start_time, down_pressed, animation_start
         self.collision_direction = [direction, True]
         direction_vec = gp.MOVES[direction]
 
         if not self.collide(direction_vec, placed_blocks):
             self.collision_direction = [direction, False]
-            # lock_start_time = current_time
 
             if self.state == Tetrominos.locking:
-                self.state = Tetrominos.falling
-                self.reset_color()
+                self.rest_lock_timer(current_time)
 
             for block in self.blocks:
                 block.move(direction_vec)
             self.pivot += direction_vec
+            # self.center = self.blocks[0]
             a = min(self.blocks, key=lambda x: x.map_pos[1]).map_pos[1]
             if direction_vec == gp.MOVES["down"] and a > self.max_row:
                 self.max_row = a
@@ -173,11 +167,11 @@ class Tetrominos:
 
         elif (
             direction_vec == gp.MOVES["down"]
-            and not down_pressed
+            and not Tetrominos.down_pressed
             and self.state is not Tetrominos.hard_dropped
             and self.state is not Tetrominos.locking
         ):
-            lock_start_time = current_time
+            Tetrominos.lock_start_time = current_time
             self.state = Tetrominos.locking
             self.max_row = self.blocks[0].map_pos[1]
         return 0
@@ -226,7 +220,6 @@ class Tetrominos:
 
     # classic rotation but with wall kicks(boundaries only)
     def rotate(self, clockwise: bool, placed_blocks, current_time=0) -> None:
-        global lock_start_time
         if self.shape == "O":
             return
         old = deepcopy(self.blocks)
@@ -261,7 +254,6 @@ class Tetrominos:
 
     # Super Rotation System
     def SRS_rotate(self, clockwise: bool, turns, placed_blocks: list[list[block]] = None, current_time: float = 0) -> int:
-        global lock_start_time
         if self.shape == "O" or not placed_blocks:
             return 0
         old_blocks = deepcopy(self.blocks)
@@ -276,18 +268,17 @@ class Tetrominos:
         for i in range(0, 5):
             offset = self.offset_list[old_r_index][i] - self.offset_list[self.rotation_index][i]
             if not self.collide(offset, placed_blocks):
-                lock_start_time = current_time
                 self.pivot += offset
+                if self.state is Tetrominos.locking:
+                    self.rest_lock_timer(current_time)
                 for block in self.blocks:
                     block.move(offset)
-                if self.state is Tetrominos.locking:
-                    self.reset_color()
-                    self.state = Tetrominos.falling
                 self.center = self.blocks[0]
-                lock_start_time = current_time
+
                 return i
         self.blocks = old_blocks
         self.rotation_index = old_r_index
+        self.center = self.blocks[0]
         return 0
 
     def set_pos(self, new_pos: pygame.Vector2) -> None:
@@ -320,6 +311,10 @@ class Tetrominos:
         self.set_color(self.color)
 
     def start_animation(self, start_time):
-        global animation_start
         self.animate = True
-        animation_start = start_time
+        Tetrominos.animation_start = start_time
+
+    def rest_lock_timer(self, current_time):
+        self.reset_color()
+        self.state = Tetrominos.falling
+        Tetrominos.lock_start_time = current_time

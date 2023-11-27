@@ -171,12 +171,13 @@ class Game:
 
     def swap_pieces(self) -> None:
         if self.held_piece is None:
+            self.current_piece.rest_lock_timer(self.current_time)
             self.current_piece.state = Tetrominos.is_held
             self.held_piece = deepcopy(self.current_piece)
             self.held_piece.set_pos(self.held_piece_pos)
-            self.held_piece.reset_color()
 
         elif self.switch_available:
+            self.current_piece.rest_lock_timer(self.current_time)
             temp = self.current_piece
             self.current_piece = self.held_piece
             self.held_piece = temp
@@ -186,7 +187,6 @@ class Game:
 
             self.held_piece.set_pos(self.held_piece_pos)
             self.held_piece.state = Tetrominos.is_held
-            self.held_piece.reset_color()
 
             self.switch_available = False
 
