@@ -111,7 +111,7 @@ class Game:
         self.mode = data.get("Mode")
         self.level = data.get("Level")
         self.shape = data.get("Shape")
-        self.completed_sets = self.level + 1
+        self.completed_sets = 0
         self.increment_level = not data["LockSpeed"]
 
         if self.shape == "All":
@@ -157,7 +157,7 @@ class Game:
         functions.reset_board(self.placed_blocks, self.tetrominos)
         self.timer.reset()
         self.level = self.cleared_lines = self.score = 0
-        self.completed_sets = 1
+        self.completed_sets = 0
         Game.col_index_left = 4
         Game.col_index_right = 5
         self.animate_line_clear = False
@@ -170,7 +170,7 @@ class Game:
             tetromino.set_shape(shape)
 
     def swap_pieces(self) -> None:
-        if self.current_piece.state in (Tetrominos.is_set, Tetrominos.hard_dropped):
+        if self.current_piece.state not in (Tetrominos.falling, Tetrominos.locking):
             return
         if self.held_piece is None:
             self.current_piece.rest_lock_timer(self.current_time)
@@ -505,8 +505,7 @@ class Game:
             else:
                 self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.switch_available = False
-
-        if self.level <= 15 and self.cleared_lines > self.completed_sets * 10 and self.increment_level:
+        if self.increment_level and self.level < 15 and self.cleared_lines > (self.completed_sets + 1) * 10:
             self.level += 1
             self.completed_sets += 1
 

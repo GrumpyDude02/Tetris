@@ -159,7 +159,6 @@ class Tetrominos:
             for block in self.blocks:
                 block.move(direction_vec)
             self.pivot += direction_vec
-            # self.center = self.blocks[0]
             a = min(self.blocks, key=lambda x: x.map_pos[1]).map_pos[1]
             if direction_vec == gp.MOVES["down"] and a > self.max_row:
                 self.max_row = a
@@ -254,7 +253,7 @@ class Tetrominos:
 
     # Super Rotation System
     def SRS_rotate(self, clockwise: bool, turns, placed_blocks: list[list[block]] = None, current_time: float = 0) -> int:
-        if self.shape == "O" or not placed_blocks or self.state == Tetrominos.hard_dropped:
+        if self.shape == "O" or not placed_blocks or self.state not in (Tetrominos.falling, Tetrominos.locking):
             return 0
         old_blocks = deepcopy(self.blocks)
         old_r_index = self.rotation_index

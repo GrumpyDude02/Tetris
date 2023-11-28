@@ -121,7 +121,7 @@ class Arrow(Buttons):
         x = self.pos[0]
         y = self.pos[1]
         size = self.size
-        offset = 10
+        offset = 6
         self.vertecies = []
         if self.direction == "left":
             self.vertecies = [
