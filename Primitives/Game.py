@@ -518,10 +518,6 @@ class Game:
 
     def handle_events(self):
         events = pygame.event.get()
-        if not self.animate_line_clear:
-            self.curr_drop_score = self.current_piece.handle_events(
-                self.current_time, events, self.placed_blocks, self.dt, self.sound
-            )
         for event in events:
             if event.type == pygame.QUIT:
                 self.set_state(GameStates.quitting)
@@ -541,6 +537,10 @@ class Game:
             if event.type == pygame.VIDEORESIZE:
                 self.settings.set_resolution((event.w, event.h))
                 self.set_state(GameStates.changing_res, self.mode_state)
+        if not self.animate_line_clear or self.current_piece.state in (Tetrominos.falling, Tetrominos.locking):
+            self.curr_drop_score = self.current_piece.handle_events(
+                self.current_time, events, self.placed_blocks, self.dt, self.sound
+            )
 
     def update_queue(self) -> Tetrominos:
         shape = self.next_shapes.pop(0)

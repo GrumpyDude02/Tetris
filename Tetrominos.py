@@ -272,8 +272,6 @@ class Tetrominos:
                     self.rest_lock_timer(current_time)
                 for block in self.blocks:
                     block.move(offset)
-                self.center = self.blocks[0]
-
                 return i
         self.blocks = old_blocks
         self.rotation_index = old_r_index
