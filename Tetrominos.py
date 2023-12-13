@@ -19,6 +19,7 @@ class Tetrominos:
     lock_start_time = 0
     animation_start = 0
     flashing_animation_time = 50
+    last_key = None
     down_pressed = False
 
     def __init__(self, pivot_pos: pygame.Vector2, shape: str, block_width, block_spacing: int = 1) -> None:
@@ -32,7 +33,6 @@ class Tetrominos:
         ]
         self.center = self.blocks[0]
         self.acc = 0
-        self.keys_held = [False, False]
         self.collision_direction = [None, None]
         self.HUpdate = 0
         self.VUpdate = 0
@@ -66,42 +66,31 @@ class Tetrominos:
                     self.start_animation(current_time)
                     sounds.play("harddrop")
                     return (True, self.hard_drop(placed_blocks), None)
-                elif event.key == pygame.K_LEFT:
-                    self.keys_held[0] = True
-                    self.key_held_time = 0
-                    sounds.play("hit")
-                    self.move("left", current_time, placed_blocks)
-                elif event.key == pygame.K_RIGHT:
-                    self.keys_held[1] = True
-                    self.key_held_time = 0
-                    sounds.play("hit")
-                    self.move("right", current_time, placed_blocks)
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    self.keys_held[0] = False
-                    self.key_held_time = 0
-                if event.key == pygame.K_RIGHT:
-                    self.keys_held[1] = False
-                    self.key_held_time = 0
-        if self.keys_held[1]:
-            self.key_held_time += dt * 1000
-            if self.key_held_time > 250:
-                if keys[pygame.K_RIGHT] and current_time - self.HUpdate > gp.MOVE_DELAY:
-                    self.HUpdate = current_time
-                    sounds.play("hit")
-                    self.move("right", current_time, placed_blocks)
-        elif self.keys_held[0]:
-            self.key_held_time += dt * 1000
-            if self.key_held_time > 250:
-                if keys[pygame.K_LEFT] and current_time - self.HUpdate > gp.MOVE_DELAY:
-                    self.HUpdate = current_time
-                    sounds.play("hit")
-                    self.move("left", current_time, placed_blocks)
+        self.key_held_time += dt * 1000
+        if keys[pygame.K_RIGHT]:
+            self.handle_hmov(current_time, sounds, "right", placed_blocks)
+        if keys[pygame.K_LEFT]:
+            self.handle_hmov(current_time, sounds, "left", placed_blocks)
+
+        if not (keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]):
+            Tetrominos.last_key = None
+            self.key_held_time = 0
+
         if keys[pygame.K_DOWN] and current_time - self.VUpdate > gp.MOVE_DELAY and self.state != Tetrominos.locking:
             Tetrominos.down_pressed = True
             self.VUpdate = current_time
             return (False, self.move("down", current_time, placed_blocks), None)
         return None
+
+    def handle_hmov(self, current_time, sounds, direction, placed_blocks):
+        if Tetrominos.last_key is None:
+            Tetrominos.last_key = pygame.K_RIGHT
+            sounds.play("hit")
+            self.move(direction, current_time, placed_blocks)
+        elif Tetrominos.last_key is not None and current_time - self.HUpdate > gp.MOVE_DELAY and self.key_held_time > 250:
+            self.HUpdate = current_time
+            sounds.play("hit")
+            self.move(direction, current_time, placed_blocks)
 
     def update_animation(self, current_time, placed_blocks, sound):
         if self.state == Tetrominos.locking:
