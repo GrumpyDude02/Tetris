@@ -66,6 +66,7 @@ class Tetrominos:
                     self.start_animation(current_time)
                     sounds.play("harddrop")
                     return (True, self.hard_drop(placed_blocks), None)
+
         self.key_held_time += dt * 1000
         if keys[pygame.K_RIGHT]:
             self.handle_hmov(current_time, sounds, "right", placed_blocks)
@@ -84,10 +85,10 @@ class Tetrominos:
 
     def handle_hmov(self, current_time, sounds, direction, placed_blocks):
         if Tetrominos.last_key is None:
-            Tetrominos.last_key = pygame.K_RIGHT
+            Tetrominos.last_key = 1
             sounds.play("hit")
             self.move(direction, current_time, placed_blocks)
-        elif Tetrominos.last_key is not None and current_time - self.HUpdate > gp.MOVE_DELAY and self.key_held_time > 250:
+        elif current_time - self.HUpdate > gp.MOVE_DELAY and self.key_held_time > 250:
             self.HUpdate = current_time
             sounds.play("hit")
             self.move(direction, current_time, placed_blocks)
