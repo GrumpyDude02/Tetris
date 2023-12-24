@@ -71,7 +71,7 @@ class Game:
         random.shuffle(self.shapes_list)
         self.next_shapes.append(self.shapes_list[0])
         self.preview_tetrominos = [
-            Tetrominos(pos, shape, self.settings.cell_size * 0.80)
+            Tetrominos(pos, shape, self.settings.cell_size * 0.80, state=0)
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
 
@@ -121,7 +121,7 @@ class Game:
             self.shape = data.get("Shape")
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.preview_tetrominos = [
-                Tetrominos(pos, self.shape, self.settings.cell_size * 0.8) for pos in preview_tetrominos_pos
+                Tetrominos(pos, self.shape, self.settings.cell_size * 0.8, state=0) for pos in preview_tetrominos_pos
             ]
 
         self.blocks_to_draw = []

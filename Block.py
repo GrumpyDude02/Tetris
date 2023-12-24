@@ -40,6 +40,33 @@ class block:
             ),
         )
 
+    def draw_highlight(self, window):
+        width = int(self.width * 0.12)
+        self.sc_pos = v((self.map_pos[0] + 1) * self.width, (self.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * self.width)
+        if self.map_pos[1] > gp.Y_BORDER_OFFSET + 1:
+            pygame.draw.rect(
+                window,
+                (255, 255, 255),
+                pygame.Rect(self.sc_pos[0] - 1, self.sc_pos[1] - 1, self.width + 1, self.width + 1),
+                width=width,
+            )
+        pygame.draw.rect(
+            window,
+            (max(self.color[0] - 40, 0), max(self.color[1] - 40, 0), max(self.color[2] - 40, 0)),
+            pygame.Rect(self.sc_pos[0], self.sc_pos[1], self.width - self.spacing, self.width - self.spacing),
+            width=width,
+        )
+        pygame.draw.rect(
+            window,
+            self.color,
+            pygame.Rect(
+                self.sc_pos[0] + width,
+                self.sc_pos[1] + width,
+                self.width - self.spacing - width * 2,
+                self.width - self.spacing - width * 2,
+            ),
+        )
+
     def overlap(self, pos, placed_blocks: list[list]):
         return bool(placed_blocks[int(pos.y)][int(pos.x)])
 

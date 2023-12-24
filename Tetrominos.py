@@ -14,6 +14,7 @@ class Tetrominos:
     flashing = "flashing"
     destroy = "destroy"
     is_held = "is_held"
+    preview = "preview"
 
     lock_delay = 500
     lock_start_time = 0
@@ -22,8 +23,8 @@ class Tetrominos:
     last_key = None
     down_pressed = False
 
-    def __init__(self, pivot_pos: pygame.Vector2, shape: str, block_width, block_spacing: int = 1) -> None:
-        self.state = Tetrominos.falling
+    def __init__(self, pivot_pos: pygame.Vector2, shape: str, block_width, block_spacing: int = 1, state="falling") -> None:
+        self.state = Tetrominos.falling if state == "falling" else Tetrominos.preview
         self.pivot = pivot_pos
         self.shape = shape
         self.color = gp.SHAPES[self.shape][1]
@@ -168,7 +169,7 @@ class Tetrominos:
     def hard_drop(self, placed_blocks: list[list]) -> int:
         translate = self.project(placed_blocks)
         for block in self.blocks:
-            block.map_pos[1] += translate
+            block.map_pos[1] = block.map_pos[1] + translate
             placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])] = block
         self.state = Tetrominos.hard_dropped
         return translate
@@ -192,20 +193,22 @@ class Tetrominos:
         return False
 
     def draw(self, window: pygame.Surface, shadow_surf: pygame.Surface = None, placed_blocks: list[list] = None) -> None:
-        for block in self.blocks:
-            block.draw(window)
-
-        if shadow_surf is None:
-            return
-        if self.state != Tetrominos.is_set and self.state != Tetrominos.hard_dropped:
+        if self.state is Tetrominos.falling:
+            for block in self.blocks:
+                block.draw_highlight(window)
             pygame.draw.circle(
                 window, (255, 255, 255), self.center.sc_pos + v(self.center.width / 2, self.center.width / 2), 2
             )
-            shadow = deepcopy(self)
-            translate = self.project(placed_blocks)
-            for block in shadow.blocks:
-                block.map_pos[1] += translate
-                block.draw(shadow_surf)
+            if shadow_surf is not None:
+                shadow = deepcopy(self)
+                translate = self.project(placed_blocks)
+
+                for block in shadow.blocks:
+                    block.map_pos[1] += translate
+                    block.draw(shadow_surf)
+        else:
+            for block in self.blocks:
+                block.draw(window)
 
     # classic rotation but with wall kicks(boundaries only)
     def rotate(self, clockwise: bool, placed_blocks, current_time=0) -> None:

@@ -19,6 +19,7 @@ class Background:
             [random.randrange(2, (self.settings.width // self.settings.cell_size) - 4, 4), 0],
             random.choice(list(gp.SHAPES.keys())),
             self.settings.cell_size,
+            state=0,
         )
         t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))
         return t
