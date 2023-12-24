@@ -1,6 +1,7 @@
 import pygame, random, Tools.functions as functions
 from GameStates import GameStates
 from Tools.Timer import Timer
+from Tools.Particles import Particle
 import Globals as gp
 from Tetrominos import Tetrominos
 import Block
@@ -100,6 +101,7 @@ class Game:
         self.destroy = []
         self.tetrominos = []
         self.blocks_to_draw = []
+        self.particles = []
         self.switch_available = False
         self.do_fade = True
         self.increment_level = True
@@ -164,6 +166,7 @@ class Game:
         self.held_piece = None
         self.last_spin_kick = ""
         self.destroy = []
+        self.particles = []
 
     def set_shapes(self):
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
@@ -406,7 +409,7 @@ class Game:
 
         self.board_surface.blit(self.shadow_surf, (0, 0))
         self.board_surface.blit(self.drop_effect_surface, (0, 0))
-
+        self.draw_particles()
         self.main_surface.blit(
             self.board_surface,
             (
@@ -414,6 +417,10 @@ class Game:
                 int(elements_coor["board"][1] * self.settings.height) + self.settings.offset[1] + self.blit_offset[1],
             ),
         )
+
+    def draw_particles(self):
+        for particle in self.particles:
+            pygame.draw.circle(self.board_surface, particle.color, particle.pos, particle.size)
 
     def fade(self, direction, condition):
         last_tick = 0
@@ -455,6 +462,36 @@ class Game:
                 )
             elif self.blocks_to_draw is not None:
                 self.blocks_to_draw.remove(self.placed_blocks[i][Game.col_index_right])
+
+            for k in range(random.randint(10, 30)):
+                self.particles.append(
+                    Particle(
+                        [
+                            self.placed_blocks[i][Game.col_index_left].sc_pos[0] + self.settings.cell_size // 2,
+                            self.placed_blocks[i][Game.col_index_left].sc_pos[1] + self.settings.cell_size // 2,
+                        ],
+                        [random.randint(-100, 100), random.randint(-100, 100)],
+                        1000,
+                        random.randrange(2, 14),
+                        self.current_time,
+                        acc=[random.randint(-250, 250), random.randint(500, 1000)],
+                        color=self.placed_blocks[i][Game.col_index_left].tetromino.color,
+                    )
+                )
+                self.particles.append(
+                    Particle(
+                        [
+                            self.placed_blocks[i][Game.col_index_right].sc_pos[0] + self.settings.cell_size // 2,
+                            self.placed_blocks[i][Game.col_index_right].sc_pos[1] + self.settings.cell_size // 2,
+                        ],
+                        [random.randint(-100, 100), random.randint(-100, 100)],
+                        1000,
+                        random.randrange(2, 14),
+                        self.current_time,
+                        acc=[random.randint(-250, 250), random.randint(500, 1000)],
+                        color=self.placed_blocks[i][Game.col_index_right].tetromino.color,
+                    )
+                )
             self.placed_blocks[i][Game.col_index_left] = None
             self.placed_blocks[i][Game.col_index_right] = None
         lines = len(self.cleared_rows)
@@ -481,6 +518,11 @@ class Game:
         self.dt = min(self.timer.delta_time(), 0.066)
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
+
+        for particle in self.particles:
+            particle.update(self.dt, 20, self.current_time)
+            if particle.done:
+                self.particles.remove(particle)
 
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
