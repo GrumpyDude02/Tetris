@@ -2,7 +2,7 @@ class Particle:
     def __init__(
         self,
         pos: list,
-        speed: float,
+        speed: list,
         duration: float,
         size: int,
         start_time,

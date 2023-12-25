@@ -3,6 +3,7 @@ import Globals as gp
 from GameStates import GameStates
 from Tetrominos import Tetrominos
 from Tools.Buttons import Buttons
+from Tools.Particles import Particle
 
 
 direction = {"up": 0, "right": 1, "down": 2, "left": 3}
@@ -13,6 +14,7 @@ class Background:
         self.objects = []
         self.destroy = []
         self.settings = settings
+        self.generate_particles()
 
     def generate_tetromino(self) -> Tetrominos:
         t = Tetrominos(
@@ -24,8 +26,22 @@ class Background:
         t.SRS_rotate(random.choice([True, False]), random.randint(0, 2))
         return t
 
+    def generate_particles(self):
+        self.particles = [
+            Particle(
+                [random.randint(0, self.settings.width), random.randint(0, self.settings.height)],
+                (0, 0),
+                None,
+                random.uniform(0.5, 2),
+                None,
+            )
+            for k in range(random.randint(100, 500))
+        ]
+
     def draw(self, surface):
         surface.fill(gp.BLACK)
+        for particle in self.particles:
+            pygame.draw.circle(surface, particle.color, particle.pos, particle.size)
         for tetromino in self.objects:
             tetromino.draw(surface)
 
@@ -46,6 +62,7 @@ class Background:
     def resize(self):
         for object in self.objects:
             object.resize(self.settings.cell_size)
+        self.generate_particles()
 
 
 class Menu:

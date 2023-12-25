@@ -76,6 +76,18 @@ class Game:
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
 
+    def generate_stars(self):
+        self.stars = [
+            Particle(
+                [random.randint(0, self.settings.width), random.randint(0, self.settings.height)],
+                (0, 0),
+                None,
+                random.uniform(0.5, 2),
+                None,
+            )
+            for k in range(random.randint(100, 500))
+        ]
+
     def __init__(self, game, state, shape: str = None) -> None:
         if shape:
             self.shape = shape
@@ -107,7 +119,9 @@ class Game:
         self.increment_level = True
         self.drop_effect = None
         self.completed_sets = 1
+        self.cleared_rows = 0
         self.preview_tetrominos = self.current_piece = self.curr_drop_score = self.placed_blocks = self.held_piece = None
+        self.generate_stars()
 
     def init_mode(self, data: dict):
         self.mode = data.get("Mode")
@@ -167,6 +181,7 @@ class Game:
         self.last_spin_kick = ""
         self.destroy = []
         self.particles = []
+        self.generate_stars()
 
     def set_shapes(self):
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
@@ -206,6 +221,7 @@ class Game:
 
     def resize(self) -> None:
         self.init_surfaces()
+        self.generate_stars()
         self.held_piece_pos = (
             elements_coor["hold_text"][0] * self.settings.width / self.settings.cell_size,
             HOLD_POS_H + self.settings.offset[1] // self.settings.cell_size,
@@ -224,6 +240,7 @@ class Game:
         if self.blocks_to_draw:
             for block in self.blocks_to_draw:
                 block.resize(self.settings.cell_size)
+        self.animate_line_clear = True
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
@@ -289,6 +306,8 @@ class Game:
 
     def draw(self):
         self.main_surface.fill(gp.BLACK)
+        for particle in self.stars:
+            pygame.draw.circle(self.main_surface, particle.color, particle.pos, particle.size)
         self.draw_board()
         self.draw_HUD()
         self.game.screen.blit(self.main_surface, (0, 0))
@@ -444,7 +463,7 @@ class Game:
         self.animate_line_clear = True
 
     def clear_lines(self):
-        if not self.animate_line_clear:
+        if not (self.animate_line_clear and self.cleared_rows):
             return
         if self.current_time - Game.animation_start_time < Game.clear_animation_time:
             return
@@ -463,33 +482,37 @@ class Game:
             elif self.blocks_to_draw is not None:
                 self.blocks_to_draw.remove(self.placed_blocks[i][Game.col_index_right])
 
-            for k in range(random.randint(10, 30)):
+            left_block = self.placed_blocks[i][Game.col_index_left]
+            right_block = self.placed_blocks[i][Game.col_index_right]
+            particle_number = random.randint(5, 15)
+
+            for k in range(particle_number):
                 self.particles.append(
                     Particle(
                         [
-                            self.placed_blocks[i][Game.col_index_left].sc_pos[0] + self.settings.cell_size // 2,
-                            self.placed_blocks[i][Game.col_index_left].sc_pos[1] + self.settings.cell_size // 2,
+                            left_block.sc_pos[0] + self.settings.cell_size // 2,
+                            left_block.sc_pos[1] + self.settings.cell_size // 2,
                         ],
-                        [random.randint(-100, 100), random.randint(-100, 100)],
-                        1000,
-                        random.randrange(2, 14),
+                        [random.randint(-100, 100), random.randint(-300, 100)],
+                        2000,
+                        random.randrange(round(self.settings.cell_size * 0.15), round(self.settings.cell_size * 0.35)),
                         self.current_time,
-                        acc=[random.randint(-250, 250), random.randint(500, 1000)],
-                        color=self.placed_blocks[i][Game.col_index_left].tetromino.color,
+                        [random.randint(-250, 250), random.randint(500, 1000)],
+                        color=left_block.tetromino.color if left_block.tetromino is not None else (50, 50, 50),
                     )
                 )
                 self.particles.append(
                     Particle(
                         [
-                            self.placed_blocks[i][Game.col_index_right].sc_pos[0] + self.settings.cell_size // 2,
-                            self.placed_blocks[i][Game.col_index_right].sc_pos[1] + self.settings.cell_size // 2,
+                            right_block.sc_pos[0] + self.settings.cell_size // 2,
+                            right_block.sc_pos[1] + self.settings.cell_size // 2,
                         ],
-                        [random.randint(-100, 100), random.randint(-100, 100)],
-                        1000,
-                        random.randrange(2, 14),
+                        [random.randint(-100, 100), random.randint(-300, 100)],
+                        2000,
+                        random.randrange(round(self.settings.cell_size * 0.15), round(self.settings.cell_size * 0.35)),
                         self.current_time,
-                        acc=[random.randint(-250, 250), random.randint(500, 1000)],
-                        color=self.placed_blocks[i][Game.col_index_right].tetromino.color,
+                        [random.randint(-250, 250), random.randint(500, 1000)],
+                        color=right_block.tetromino.color if right_block.tetromino is not None else (50, 50, 50),
                     )
                 )
             self.placed_blocks[i][Game.col_index_left] = None
@@ -520,7 +543,7 @@ class Game:
         self.game.clock.tick(gp.FPS)
 
         for particle in self.particles:
-            particle.update(self.dt, 20, self.current_time)
+            particle.update(self.dt, 5, self.current_time)
             if particle.done:
                 self.particles.remove(particle)
 
