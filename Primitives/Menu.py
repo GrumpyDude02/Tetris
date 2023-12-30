@@ -27,6 +27,7 @@ class Background:
         return t
 
     def generate_particles(self):
+        n = random.randint(100, 500)
         self.particles = [
             Particle(
                 [random.randint(0, self.settings.width), random.randint(0, self.settings.height)],
@@ -35,7 +36,7 @@ class Background:
                 random.uniform(0.5, 2),
                 None,
             )
-            for k in range(random.randint(100, 500))
+            for k in range(n)
         ]
 
     def draw(self, surface):
@@ -50,10 +51,16 @@ class Background:
         if current_time - Menu.last_spawn_time > random.randrange(1200, 6000, 500):
             Menu.last_spawn_time = current_time
             self.objects.append(self.generate_tetromino())
+
         for object in self.objects:
             object.smooth_fall(1, dt)
             if object.pivot.y > self.settings.height // self.settings.cell_size + 5:
                 self.destroy.append(object)
+
+        for particle in self.particles:
+            particle.pos[1] += 10 * dt
+            if particle.pos[1] > self.settings.height + 10:
+                particle.pos = [random.randint(0, self.settings.width), -50]
 
     def destroy_tetrominos(self):
         for tetromino in self.destroy:

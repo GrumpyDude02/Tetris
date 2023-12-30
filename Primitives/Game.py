@@ -57,7 +57,7 @@ class Game:
         )
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
-        self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), 0, (0, 0, 0))
+        self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), None, (0, 0, 0))
         self.clearance_type_surf = functions.generate_surf(
             (int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0)
         )
@@ -546,6 +546,11 @@ class Game:
             particle.update(self.dt, 5, self.current_time)
             if particle.done:
                 self.particles.remove(particle)
+
+        for star in self.stars:
+            star.pos[1] += 20 * self.dt
+            if star.pos[1] > self.settings.height + 10:
+                star.pos = [random.randint(0, self.settings.width), -50]
 
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True

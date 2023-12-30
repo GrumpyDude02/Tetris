@@ -64,14 +64,14 @@ def blurSurf(surface, amt):
     return surf
 
 
-def generate_surf(surf_size: tuple, transparency_amount: int = 0, color_key: tuple = None) -> pygame.Surface:
+def generate_surf(surf_size: tuple, transparency_amount: int = None, color_key: tuple = None) -> pygame.Surface:
     try:
         surface = pygame.Surface(surf_size, pygame.HWACCEL)
     except pygame.error:
         surface = pygame.Surface(surf_size)
     if color_key is not None:
         surface.set_colorkey(color_key)
-    if transparency_amount:
+    if transparency_amount is not None:
         surface.set_alpha(transparency_amount)
     return surface
 
