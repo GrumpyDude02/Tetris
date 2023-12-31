@@ -50,7 +50,6 @@ class Game:
         self.game.set_state(new_state, pending_state, last_played_mode)
 
     def init_surfaces(self) -> None:
-        self.animate_line_clear = False
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
         self.drop_effect_surface = functions.generate_surf(
             (self.settings.board_width, self.settings.board_height), 255, (0, 0, 0)
@@ -95,6 +94,7 @@ class Game:
             self.preview_tetrominos = [
                 Tetrominos(pos, self.shape, self.settings.cell_size / 2) for pos in preview_tetrominos_pos
             ]
+        self.animate_line_clear = False
         self.game = game
         self.settings = self.game.settings
         self.sound = self.game.sound
@@ -240,7 +240,6 @@ class Game:
         if self.blocks_to_draw:
             for block in self.blocks_to_draw:
                 block.resize(self.settings.cell_size)
-        self.animate_line_clear = True
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
@@ -607,6 +606,7 @@ class Game:
             if event.type == pygame.VIDEORESIZE:
                 self.settings.set_resolution((event.w, event.h))
                 self.set_state(GameStates.changing_res, self.mode_state)
+                return
         if not self.animate_line_clear or self.current_piece.state in (Tetrominos.falling, Tetrominos.locking):
             self.curr_drop_score = self.current_piece.handle_events(
                 self.current_time, events, self.placed_blocks, self.dt, self.sound
