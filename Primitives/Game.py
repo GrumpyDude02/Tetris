@@ -50,10 +50,13 @@ class Game:
         self.game.set_state(new_state, pending_state, last_played_mode)
 
     def init_surfaces(self) -> None:
-        self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
+        self.board_surface = functions.generate_surf(
+            (self.settings.board_width, self.settings.board_height), color_key=(0, 0, 0)
+        )
         self.drop_effect_surface = functions.generate_surf(
             (self.settings.board_width, self.settings.board_height), 255, (0, 0, 0)
         )
+        self.transparent_board = functions.generate_surf((self.settings.board_width, self.settings.board_height), 180)
         self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
         self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), None, (0, 0, 0))
@@ -428,12 +431,18 @@ class Game:
         self.board_surface.blit(self.shadow_surf, (0, 0))
         self.board_surface.blit(self.drop_effect_surface, (0, 0))
         self.draw_particles()
+
+        pos = (
+            int(elements_coor["board"][0] * self.settings.width) + self.settings.offset[0] + self.blit_offset[0],
+            int(elements_coor["board"][1] * self.settings.height) + self.settings.offset[1] + self.blit_offset[1],
+        )
+        self.main_surface.blit(
+            self.transparent_board,
+            pos,
+        )
         self.main_surface.blit(
             self.board_surface,
-            (
-                int(elements_coor["board"][0] * self.settings.width) + self.settings.offset[0] + self.blit_offset[0],
-                int(elements_coor["board"][1] * self.settings.height) + self.settings.offset[1] + self.blit_offset[1],
-            ),
+            pos,
         )
 
     def draw_particles(self):
