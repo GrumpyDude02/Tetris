@@ -50,7 +50,6 @@ class Game:
         self.game.set_state(new_state, pending_state, last_played_mode)
 
     def init_surfaces(self) -> None:
-        self.animate_line_clear = False
         self.board_surface = functions.generate_surf((self.settings.board_width, self.settings.board_height))
         self.drop_effect_surface = functions.generate_surf(
             (self.settings.board_width, self.settings.board_height), 255, (0, 0, 0)
@@ -89,6 +88,7 @@ class Game:
         ]
 
     def __init__(self, game, state, shape: str = None) -> None:
+        self.animate_line_clear = False
         if shape:
             self.shape = shape
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
@@ -240,7 +240,6 @@ class Game:
         if self.blocks_to_draw:
             for block in self.blocks_to_draw:
                 block.resize(self.settings.cell_size)
-        self.animate_line_clear = True
 
     def update_HUD(self, isSet: bool, cleared_lines: int, score_list: list) -> None:
         if self.current_piece.collision_direction[1] == True:
