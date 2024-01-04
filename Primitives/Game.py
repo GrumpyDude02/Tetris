@@ -88,6 +88,7 @@ class Game:
         ]
 
     def __init__(self, game, state, shape: str = None) -> None:
+        self.animate_line_clear = False
         if shape:
             self.shape = shape
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
