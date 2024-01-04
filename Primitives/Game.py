@@ -7,7 +7,7 @@ from Tetrominos import Tetrominos
 import Block
 from copy import deepcopy
 
-preview_pos = pygame.Vector2(1, 6)
+preview_pos = pygame.Vector2(1, 5)
 
 
 elements_coor = {
@@ -19,10 +19,11 @@ elements_coor = {
     "time": (0.065, 0.08),
     "score": (0.065, 0.7),
     "clearance_type": (0.065, 0.76),
-    "preview_surface": (0.70, 0.05),
+    "preview_surface": (0.70, 0.07),
 }
 
 preview_tetrominos_pos = [[preview_pos.x, preview_pos.y + i] for i in range(0, 21, 3)]
+preview_surf_scale = (4.5, 18)
 
 HOLD_POS_H = 16
 
@@ -50,20 +51,45 @@ class Game:
         self.game.set_state(new_state, pending_state, last_played_mode)
 
     def init_surfaces(self) -> None:
+        self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
         self.board_surface = functions.generate_surf(
             (self.settings.board_width, self.settings.board_height), color_key=(0, 0, 0)
+        )
+        self.preview_surface = functions.generate_surf(
+            (preview_surf_scale[0] * self.settings.cell_size, preview_surf_scale[1] * self.settings.cell_size),
+            None,
+            (0, 0, 0),
+        )
+        self.clearance_type_surf = functions.generate_surf(
+            (int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0)
+        )
+
+        self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
+        self.transparent_board = functions.generate_surf((self.settings.board_width, self.settings.board_height), 180)
+        self.transparent_prev = functions.generate_surf(
+            (preview_surf_scale[0] * self.settings.cell_size, preview_surf_scale[1] * self.settings.cell_size), 180
         )
         self.drop_effect_surface = functions.generate_surf(
             (self.settings.board_width, self.settings.board_height), 255, (0, 0, 0)
         )
-        self.transparent_board = functions.generate_surf((self.settings.board_width, self.settings.board_height), 180)
-        self.main_surface = functions.generate_surf((self.settings.width, self.settings.height))
-        self.shadow_surf = functions.generate_surf((12 * self.settings.cell_size, self.settings.height), 80, (0, 0, 0))
-        self.preview_surface = functions.generate_surf((5 * self.settings.cell_size, self.settings.height), None, (0, 0, 0))
-        self.clearance_type_surf = functions.generate_surf(
-            (int(0.20 * self.settings.width), int(0.3 * self.settings.height)), color_key=(0, 0, 0)
-        )
         self.clearance_type_surf.set_alpha(255)
+
+        self.preview_rect = self.preview_surface.get_rect()
+
+        self.hold_rect_pos = (
+            (elements_coor["hold_text"][0] - 0.015) * self.settings.width,
+            (elements_coor["hold_text"][1] + 0.05) * self.settings.height,
+        )
+        self.held_piece_pos = (
+            (self.hold_rect_pos[0] + (self.settings.cell_size * 6) / 2.5) // self.settings.cell_size,
+            (self.hold_rect_pos[1] + (self.settings.cell_size * 6)) // self.settings.cell_size,
+        )
+        self.hold_rect = pygame.Rect(
+            self.hold_rect_pos[0],
+            self.hold_rect_pos[1],
+            self.settings.cell_size * 6,
+            self.settings.cell_size * 6,
+        )
 
     def init_queue(self):
         self.index = 1
@@ -109,10 +135,6 @@ class Game:
         self.last_spin_kick = ""
         self.clearance_type = ""
         self.blit_offset = [0, 0]
-        self.held_piece_pos = (
-            elements_coor["hold_text"][0] * self.settings.width / self.settings.cell_size,
-            HOLD_POS_H + self.settings.offset[1] // self.settings.cell_size,
-        )
         self.destroy = []
         self.tetrominos = []
         self.blocks_to_draw = []
@@ -190,6 +212,9 @@ class Game:
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
             tetromino.set_shape(shape)
 
+    def center_piece(self):
+        pass
+
     def swap_pieces(self) -> None:
         if self.current_piece.state not in (Tetrominos.falling, Tetrominos.locking):
             return
@@ -225,10 +250,6 @@ class Game:
     def resize(self) -> None:
         self.init_surfaces()
         self.generate_stars()
-        self.held_piece_pos = (
-            elements_coor["hold_text"][0] * self.settings.width / self.settings.cell_size,
-            HOLD_POS_H + self.settings.offset[1] // self.settings.cell_size,
-        )
         if self.current_piece is not None:
             self.current_piece.resize(self.settings.cell_size)
             # self.current_piece.set_pos(gp.SPAWN_LOCATION)
@@ -315,7 +336,14 @@ class Game:
         self.game.screen.blit(self.main_surface, (0, 0))
 
     def draw_HUD(self, target_lines: str = "\u221E") -> None:
+        preview_surf_pos = (
+            int(elements_coor["preview_surface"][0] * self.settings.width),
+            int(elements_coor["preview_surface"][1] * self.settings.height),
+        )
         self.preview_surface.fill(gp.BLACK)
+
+        pygame.draw.rect(self.preview_surface, (96, 96, 96), self.preview_rect, int(self.settings.cell_size * 0.12))
+        pygame.draw.rect(self.main_surface, (96, 96, 96), self.hold_rect, int(self.settings.cell_size * 0.12))
         self.clearance_type_surf.fill(gp.BLACK)
         a = self.clearance_type_surf.get_alpha()
         curr_time = self.timer.current_time() * 1000
@@ -370,11 +398,12 @@ class Game:
             ),
         )
         self.main_surface.blit(
+            self.transparent_prev,
+            preview_surf_pos,
+        )
+        self.main_surface.blit(
             self.preview_surface,
-            (
-                int(elements_coor["preview_surface"][0] * self.settings.width),
-                int(elements_coor["preview_surface"][1] * self.settings.height),
-            ),
+            preview_surf_pos,
         )
         self.main_surface.blit(
             SCORE,

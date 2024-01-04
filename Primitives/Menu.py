@@ -143,7 +143,7 @@ class Menu:
             self.cursor.draw(self.game.screen)
 
     def update(self):
-        dt = 1 / self.game.clock.tick(gp.FPS)
+        dt = 1 / (self.game.clock.tick(gp.FPS) + 1e-16)
         if self.background is not None:
             current_time = pygame.time.get_ticks()
             self.background.update(current_time, dt)
