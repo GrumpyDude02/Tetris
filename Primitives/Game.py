@@ -84,12 +84,6 @@ class Game:
             (self.hold_rect_pos[0] + (self.settings.cell_size * 6) / 2.5) // self.settings.cell_size,
             (self.hold_rect_pos[1] + (self.settings.cell_size * 6)) // self.settings.cell_size,
         )
-        self.hold_rect = pygame.Rect(
-            self.hold_rect_pos[0],
-            self.hold_rect_pos[1],
-            self.settings.cell_size * 6,
-            self.settings.cell_size * 6,
-        )
 
     def init_queue(self):
         self.index = 1
@@ -100,7 +94,12 @@ class Game:
         random.shuffle(self.shapes_list)
         self.next_shapes.append(self.shapes_list[0])
         self.preview_tetrominos = [
-            Tetrominos(pos, shape, self.settings.cell_size * 0.80, state=0)
+            Tetrominos(
+                ((preview_surf_scale[0] - gp.SHAPES_DIM[shape][0] - gp.MIN_SHAPES_BLOCK_POS[shape][0]) / 2, pos[1]),
+                shape,
+                self.settings.cell_size * 0.80,
+                state=0,
+            )
             for pos, shape in zip(preview_tetrominos_pos, self.shapes_list)
         ]
 
@@ -117,12 +116,6 @@ class Game:
         ]
 
     def __init__(self, game, state, shape: str = None) -> None:
-        if shape:
-            self.shape = shape
-            self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
-            self.preview_tetrominos = [
-                Tetrominos(pos, self.shape, self.settings.cell_size / 2) for pos in preview_tetrominos_pos
-            ]
         self.animate_line_clear = False
         self.game = game
         self.settings = self.game.settings
@@ -162,7 +155,16 @@ class Game:
             self.shape = data.get("Shape")
             self.current_piece = Tetrominos(gp.SPAWN_LOCATION, self.shape, self.settings.cell_size)
             self.preview_tetrominos = [
-                Tetrominos(pos, self.shape, self.settings.cell_size * 0.8, state=0) for pos in preview_tetrominos_pos
+                Tetrominos(
+                    (
+                        (preview_surf_scale[0] - gp.SHAPES_DIM[self.shape][0] - gp.MIN_SHAPES_BLOCK_POS[self.shape][0]) / 2,
+                        pos[1],
+                    ),
+                    self.shape,
+                    self.settings.cell_size * 0.8,
+                    state=0,
+                )
+                for pos in preview_tetrominos_pos
             ]
 
         self.blocks_to_draw = []
@@ -210,10 +212,7 @@ class Game:
 
     def set_shapes(self):
         for shape, tetromino in zip(self.next_shapes, self.preview_tetrominos):
-            tetromino.set_shape(shape)
-
-    def center_piece(self):
-        pass
+            tetromino.set_shape(shape, preview_surf_scale, True, False)
 
     def swap_pieces(self) -> None:
         if self.current_piece.state not in (Tetrominos.falling, Tetrominos.locking):
@@ -222,6 +221,7 @@ class Game:
             self.current_piece.rest_lock_timer(self.current_time)
             self.current_piece.state = Tetrominos.is_held
             self.held_piece = deepcopy(self.current_piece)
+
             self.held_piece.set_pos(self.held_piece_pos)
 
         elif self.switch_available:
@@ -229,7 +229,6 @@ class Game:
             temp = self.current_piece
             self.current_piece = self.held_piece
             self.held_piece = temp
-
             self.current_piece.set_pos(gp.SPAWN_LOCATION)
             self.current_piece.state = Tetrominos.falling
 
@@ -343,7 +342,6 @@ class Game:
         self.preview_surface.fill(gp.BLACK)
 
         pygame.draw.rect(self.preview_surface, (96, 96, 96), self.preview_rect, int(self.settings.cell_size * 0.12))
-        pygame.draw.rect(self.main_surface, (96, 96, 96), self.hold_rect, int(self.settings.cell_size * 0.12))
         self.clearance_type_surf.fill(gp.BLACK)
         a = self.clearance_type_surf.get_alpha()
         curr_time = self.timer.current_time() * 1000
@@ -578,7 +576,6 @@ class Game:
         self.dt = min(self.timer.delta_time(), 0.066)
         self.timer.update_timer()
         self.game.clock.tick(gp.FPS)
-
         for particle in self.particles:
             particle.update(self.dt, 5, self.current_time)
             if particle.done:
