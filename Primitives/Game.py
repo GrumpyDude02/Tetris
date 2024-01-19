@@ -116,6 +116,7 @@ class Game:
         ]
 
     def __init__(self, game, state, shape: str = None) -> None:
+        self.shape = shape
         self.animate_line_clear = False
         self.game = game
         self.settings = self.game.settings
