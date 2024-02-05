@@ -1,4 +1,4 @@
-import pygame
+import pygame, math
 from copy import deepcopy
 import Globals as gp
 from Tools.functions import mod
@@ -218,8 +218,8 @@ class Tetrominos:
         rot = (1, 0) if clockwise else (-1, 0)
         for block in self.blocks:
             temp = block.map_pos - self.pivot
-            block.map_pos[0] = round(temp[0] * rot[0] - temp[1] * rot[1] + self.pivot[0])
-            block.map_pos[1] = round((temp[1]) * rot[0] + temp[0] * rot[1] + self.pivot[1])
+            block.map_pos[0] = math.ceil(temp[0] * rot[0] - temp[1] * rot[1] + self.pivot[0])
+            block.map_pos[1] = math.ceil((temp[1]) * rot[0] + temp[0] * rot[1] + self.pivot[1])
         self.rotation_index = mod(self.rotation_index, 4)
         outside_right_block = max(self.blocks, key=lambda x: x.map_pos[0])
         outside_left_block = min(self.blocks, key=lambda x: x.map_pos[0])
@@ -284,13 +284,34 @@ class Tetrominos:
             placed_blocks[int(block.map_pos[1])][int(block.map_pos[0])] = block
             block.sc_pos = v((block.map_pos[0] + 1) * block.width, (block.map_pos[1] - gp.Y_BORDER_OFFSET - 1) * block.width)
 
-    def set_shape(self, new_shape: str) -> None:
+    def set_shape(
+        self, new_shape: str, boundary_size: tuple = None, center_horizontal: bool = True, center_vert: bool = True
+    ) -> None:
+        if boundary_size is not None:
+            self.center_tetromino(new_shape, (0, 0), boundary_size, center_horizontal, center_vert)
+
         block_size = self.blocks[0].width
         self.blocks = [block(pos + self.pivot, block_size, gp.SHAPES[new_shape][1], self) for pos in gp.SHAPES[new_shape][0]]
+        # TODO: change color
 
     def resize(self, block_size: int = None):
         for block in self.blocks:
             block.resize(block_size)
+
+    def get_dim(self):
+        if self.rotation_index % 2 == 0:
+            return gp.SHAPES_DIM[self.shape]
+        return (gp.SHAPES_DIM[self.shape][1], gp.SHAPES_DIM[self.shape][0])
+
+    def center_tetromino(self, shape, boundary_pos, boundary_size, center_horizontal: bool = True, center_vert: bool = True):
+        self.shape = shape
+        dim = self.get_dim()
+        l = [self.pivot[0], self.pivot[1]]
+        if center_horizontal:
+            l[0] = boundary_pos[0] + (boundary_size[0] - dim[0] - gp.MIN_SHAPES_BLOCK_POS[shape][0]) / 2
+        if center_vert:
+            l[1] = boundary_pos[1] + (boundary_size[1] - dim[1] - gp.MIN_SHAPES_BLOCK_POS[shape][1]) / 2
+        self.pivot = tuple(l)
 
     def set_color(self, color: tuple = (255, 255, 255)):
         for block in self.blocks:

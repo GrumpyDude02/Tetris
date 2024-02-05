@@ -27,10 +27,10 @@ class Background:
         return t
 
     def generate_particles(self):
-        n = random.randint(100, 500)
+        n = random.randint(100, 300)
         self.particles = [
             Particle(
-                [random.randint(0, self.settings.width), random.randint(0, self.settings.height)],
+                [random.randint(0, self.settings.width), random.randint(-10, self.settings.height)],
                 (0, 0),
                 None,
                 random.uniform(0.5, 2),
@@ -59,7 +59,7 @@ class Background:
 
         for particle in self.particles:
             particle.pos[1] += 10 * dt
-            if particle.pos[1] > self.settings.height + 10:
+            if particle.pos[1] > self.settings.height + 5:
                 particle.pos = [random.randint(0, self.settings.width), -50]
 
     def destroy_tetrominos(self):
@@ -143,7 +143,7 @@ class Menu:
             self.cursor.draw(self.game.screen)
 
     def update(self):
-        dt = 1 / self.game.clock.tick(gp.FPS)
+        dt = 1 / (self.game.clock.tick(gp.FPS) + 1e-16)
         if self.background is not None:
             current_time = pygame.time.get_ticks()
             self.background.update(current_time, dt)
