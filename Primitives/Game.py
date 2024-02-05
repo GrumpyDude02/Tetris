@@ -28,6 +28,42 @@ preview_surf_scale = (4.5, 18)
 HOLD_POS_H = 16
 
 
+def shift_blocks_down(placed_blocks_ar: list[list[Block.block]], playable_field, cleared_row: int) -> None:
+    for row in range(cleared_row - 1, -1, -1):
+        for col in range(playable_field):
+            block = placed_blocks_ar[row][col]
+            if block:
+                block.map_pos[1] += 1
+                placed_blocks_ar[row + 1][col] = block
+                placed_blocks_ar[row][col] = None
+
+
+def check_line(placed_blocks_ar: list[list[Block.block]]) -> list:
+    row_indexes = []
+    for row, lines in enumerate(placed_blocks_ar):
+        if all(item for item in lines):
+            for item in lines:
+                item.color = (255, 255, 255)
+                item.spacing = 0
+            row_indexes.append(row)
+    return row_indexes
+
+
+def game_over(placed_blocks_ar, spawn_column) -> bool:
+    if any(block for block in placed_blocks_ar[spawn_column - 1]):
+        return True
+    if any(block for block in placed_blocks_ar[spawn_column]):
+        return True
+    return False
+
+
+def reset_board(placed_blocks: int, tetrominos: int):
+    for row in range(len(placed_blocks)):
+        for col in range(len(placed_blocks[row])):
+            placed_blocks[row][col] = None
+    tetrominos.clear()
+
+
 class Game:
     start_time = 0
     last_time = 0
@@ -198,7 +234,7 @@ class Game:
                 self.placed_blocks[i][random_block_index] = None
 
     def reset_game(self) -> None:
-        functions.reset_board(self.placed_blocks, self.tetrominos)
+        reset_board(self.placed_blocks, self.tetrominos)
         self.timer.reset()
         self.level = self.cleared_lines = self.score = 0
         self.completed_sets = 0
@@ -447,7 +483,7 @@ class Game:
             pygame.draw.rect(self.drop_effect_surface, (255, 255, 255), self.drop_effect)
 
         self.current_piece.draw(self.board_surface, self.shadow_surf, self.placed_blocks)
-        functions.draw_borders(self.board_surface, self.game.settings.grid, (96, 96, 96))
+        functions.draw_rects(self.board_surface, self.game.settings.grid, (96, 96, 96))  # drawing borders
 
         for block in self.blocks_to_draw:
             block.draw(self.board_surface)
@@ -564,7 +600,7 @@ class Game:
             Game.col_index_left = 4
             self.animate_line_clear = False
             for i in self.cleared_rows:
-                functions.shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
+                shift_blocks_down(self.placed_blocks, gp.PLAYABLE_AREA_CELLS, i)
             return
 
     def update(self):
@@ -589,7 +625,7 @@ class Game:
 
         if self.current_piece.state == Tetrominos.is_set:
             wasSet = True
-            self.cleared_rows = functions.check_line(self.placed_blocks)
+            self.cleared_rows = check_line(self.placed_blocks)
             cleared_rows_num = len(self.cleared_rows)
 
             if cleared_rows_num > 0:
@@ -660,7 +696,7 @@ class Game:
         self.music_paused = False
         self.timer.start_timer()
         while self.game.state == self.mode_state:
-            if functions.game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
+            if game_over(self.placed_blocks, gp.SPAWN_LOCATION[1]):
                 self.set_state(GameStates.game_over, self.mode_state)
             pygame.display.set_caption("Tetris FPS:" + str(round(self.game.clock.get_fps())))
             self.handle_events()

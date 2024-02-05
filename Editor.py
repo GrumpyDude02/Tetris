@@ -113,7 +113,7 @@ class Editor:
 
     def draw(self, surface):
         self.board_surface.fill((0, 0, 0))
-        functions.draw_borders(self.board_surface, self.grid, (96, 96, 96))
+        functions.draw_rects(self.board_surface, self.grid, (96, 96, 96))
         if self.drawn_blocks_reference is not None:
             for block in self.drawn_blocks_reference:
                 block.draw(self.board_surface)

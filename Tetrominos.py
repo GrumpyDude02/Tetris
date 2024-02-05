@@ -1,4 +1,4 @@
-import pygame
+import pygame, math
 from copy import deepcopy
 import Globals as gp
 from Tools.functions import mod
@@ -218,8 +218,8 @@ class Tetrominos:
         rot = (1, 0) if clockwise else (-1, 0)
         for block in self.blocks:
             temp = block.map_pos - self.pivot
-            block.map_pos[0] = round(temp[0] * rot[0] - temp[1] * rot[1] + self.pivot[0])
-            block.map_pos[1] = round((temp[1]) * rot[0] + temp[0] * rot[1] + self.pivot[1])
+            block.map_pos[0] = math.ceil(temp[0] * rot[0] - temp[1] * rot[1] + self.pivot[0])
+            block.map_pos[1] = math.ceil((temp[1]) * rot[0] + temp[0] * rot[1] + self.pivot[1])
         self.rotation_index = mod(self.rotation_index, 4)
         outside_right_block = max(self.blocks, key=lambda x: x.map_pos[0])
         outside_left_block = min(self.blocks, key=lambda x: x.map_pos[0])

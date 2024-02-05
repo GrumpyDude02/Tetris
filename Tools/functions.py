@@ -3,42 +3,6 @@ import Globals as gp
 from Block import block
 
 
-def shift_blocks_down(placed_blocks_ar: list[list[block]], playable_field, cleared_row: int) -> None:
-    for row in range(cleared_row - 1, -1, -1):
-        for col in range(playable_field):
-            block = placed_blocks_ar[row][col]
-            if block:
-                block.map_pos[1] += 1
-                placed_blocks_ar[row + 1][col] = block
-                placed_blocks_ar[row][col] = None
-
-
-def check_line(placed_blocks_ar: list[list[block]]) -> list:
-    row_indexes = []
-    for row, lines in enumerate(placed_blocks_ar):
-        if all(item for item in lines):
-            for item in lines:
-                item.color = (255, 255, 255)
-                item.spacing = 0
-            row_indexes.append(row)
-    return row_indexes
-
-
-def game_over(placed_blocks_ar, spawn_column) -> bool:
-    if any(block for block in placed_blocks_ar[spawn_column - 1]):
-        return True
-    if any(block for block in placed_blocks_ar[spawn_column]):
-        return True
-    return False
-
-
-def reset_board(placed_blocks: int, tetrominos: int):
-    for row in range(len(placed_blocks)):
-        for col in range(len(placed_blocks[row])):
-            placed_blocks[row][col] = None
-    tetrominos.clear()
-
-
 def mod(m, n) -> int:
     return (m % n + n) % n
 
@@ -76,7 +40,7 @@ def generate_surf(surf_size: tuple, transparency_amount: int = None, color_key: 
     return surface
 
 
-def draw_borders(window: pygame.Surface, grid, color) -> None:
+def draw_rects(window: pygame.Surface, grid: list[pygame.Rect], color) -> None:
     for rect in grid:
         pygame.draw.rect(window, color, rect)
 
