@@ -398,59 +398,44 @@ class Game:
             self.held_piece.draw(self.main_surface)
         for preview in self.preview_tetrominos:
             preview.draw(self.preview_surface, None, self.placed_blocks)
-        self.main_surface.blit(
-            HOLD,
+        self.main_surface.fblits(
             (
-                int(elements_coor["hold_text"][0] * self.settings.width),
-                int(elements_coor["hold_text"][1] * self.settings.height),
+                (HOLD,
+                    (
+                    int(elements_coor["hold_text"][0] * self.settings.width),
+                    int(elements_coor["hold_text"][1] * self.settings.height),
+                    )
             ),
-        )
-        self.main_surface.blit(
-            NEXT,
-            (
-                int(elements_coor["next_text"][0] * self.settings.width),
-                int(elements_coor["next_text"][1] * self.settings.height),
-            ),
-        )
-        self.main_surface.blit(
-            self.render_timer(),
-            (
-                int(elements_coor["time"][0] * self.settings.width),
-                int(elements_coor["time"][1] * self.settings.height),
-            ),
-        )
-        self.main_surface.blit(
-            LEVEL,
-            (
-                int(elements_coor["level_text"][0] * self.settings.width),
-                int(elements_coor["level_text"][1] * self.settings.height),
-            ),
-        )
-        self.main_surface.blit(
-            LINES,
-            (
-                int(elements_coor["line_text"][0] * self.settings.width),
-                int(elements_coor["line_text"][1] * self.settings.height),
-            ),
-        )
-        self.main_surface.blit(
-            self.transparent_prev,
-            preview_surf_pos,
-        )
-        self.main_surface.blit(
-            self.preview_surface,
-            preview_surf_pos,
-        )
-        self.main_surface.blit(
-            SCORE,
-            (int(elements_coor["score"][0] * self.settings.width), int(elements_coor["score"][1] * self.settings.height)),
-        )
-        self.main_surface.blit(
-            self.clearance_type_surf,
-            (
-                int(elements_coor["clearance_type"][0] * self.settings.width),
-                int(elements_coor["clearance_type"][1] * self.settings.height),
-            ),
+                (NEXT,
+                (
+                    int(elements_coor["next_text"][0] * self.settings.width),
+                    int(elements_coor["next_text"][1] * self.settings.height),
+                )
+                ),
+                (self.render_timer(),
+                    (
+                    int(elements_coor["time"][0] * self.settings.width),
+                    int(elements_coor["time"][1] * self.settings.height),
+                    )
+                ),
+                (LEVEL,
+                    (
+                    int(elements_coor["level_text"][0] * self.settings.width),
+                    int(elements_coor["level_text"][1] * self.settings.height),
+                    )
+                ),
+                (LINES,
+                    (
+                    int(elements_coor["line_text"][0] * self.settings.width),
+                    int(elements_coor["line_text"][1] * self.settings.height),
+                    )
+                ),
+                (self.transparent_prev,preview_surf_pos),
+                (self.preview_surface,preview_surf_pos),
+                (self.preview_surface,preview_surf_pos),
+                (SCORE,(int(elements_coor["score"][0] * self.settings.width), int(elements_coor["score"][1] * self.settings.height))),
+                (self.clearance_type_surf,(int(elements_coor["clearance_type"][0] * self.settings.width),int(elements_coor["clearance_type"][1] * self.settings.height)))
+            )
         )
         if self.blit_offset[0] > 0:
             self.blit_offset[0] = self.blit_offset[0] - self.dt * 2.5 * self.settings.cell_size
@@ -492,23 +477,14 @@ class Game:
             tetromino.draw(self.board_surface, None, self.placed_blocks)
             if tetromino.destroy:
                 self.destroy.append(tetromino)
-
-        self.board_surface.blit(self.shadow_surf, (0, 0))
-        self.board_surface.blit(self.drop_effect_surface, (0, 0))
+        self.board_surface.fblits(((self.shadow_surf, (0, 0)),(self.drop_effect_surface, (0, 0))))
         self.draw_particles()
 
         pos = (
             int(elements_coor["board"][0] * self.settings.width) + self.settings.offset[0] + self.blit_offset[0],
             int(elements_coor["board"][1] * self.settings.height) + self.settings.offset[1] + self.blit_offset[1],
         )
-        self.main_surface.blit(
-            self.transparent_board,
-            pos,
-        )
-        self.main_surface.blit(
-            self.board_surface,
-            pos,
-        )
+        self.main_surface.fblits(((self.transparent_board,pos),(self.board_surface,pos)))
 
     def draw_particles(self):
         for particle in self.particles:
